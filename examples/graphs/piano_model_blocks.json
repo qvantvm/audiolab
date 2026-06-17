@@ -1,0 +1,307 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_model_blocks",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 104,
+    "pedal": "off"
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "piano_model_blocks",
+        "optimizer": "random_search",
+        "loss": "piano_model",
+        "max_iters": 24,
+        "seed": 7,
+        "panel": [
+          {
+            "midi_note": 24,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_024_C1_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 40,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_040_E2_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 57,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_057_A3_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 76,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_076_E5_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 96,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_096_C7_vel_104_pedal_off.wav"
+          }
+        ],
+        "tunables": [
+          {
+            "path": "blocks.hammer.params.hammer_noise",
+            "min": 0.0,
+            "max": 0.2
+          },
+          {
+            "path": "blocks.hammer.params.hammer_low_note_widen",
+            "min": 0.0,
+            "max": 0.28
+          },
+          {
+            "path": "blocks.string_bank.params.brightness_base",
+            "min": 0.25,
+            "max": 0.95
+          },
+          {
+            "path": "blocks.string_bank.params.brightness_velocity_scale",
+            "min": 0.12,
+            "max": 0.9
+          },
+          {
+            "path": "blocks.string_bank.params.treble_brightness_boost",
+            "min": 0.03,
+            "max": 0.45
+          },
+          {
+            "path": "blocks.string_bank.params.secondary_waveguide_mix",
+            "min": 0.0,
+            "max": 0.75
+          },
+          {
+            "path": "blocks.string_bank.params.secondary_decay_ratio",
+            "min": 0.35,
+            "max": 2.0
+          },
+          {
+            "path": "blocks.string_bank.params.decay_t60_low_s",
+            "min": 2.0,
+            "max": 12.0
+          },
+          {
+            "path": "blocks.string_bank.params.decay_t60_mid_s",
+            "min": 1.5,
+            "max": 8.0
+          },
+          {
+            "path": "blocks.string_bank.params.decay_t60_high_s",
+            "min": 1.6,
+            "max": 6.0
+          },
+          {
+            "path": "blocks.string_bank.params.detune_cents_mid_high",
+            "min": 0.0,
+            "max": 2.5
+          },
+          {
+            "path": "blocks.string_bank.params.low_note_brightness_damping",
+            "min": 0.05,
+            "max": 0.70
+          },
+          {
+            "path": "blocks.string_bank.params.treble_shimmer_gain",
+            "min": 0.0,
+            "max": 0.2
+          },
+          {
+            "path": "blocks.stereo.params.stereo_spread_ms",
+            "min": 0.05,
+            "max": 1.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "hammer",
+      "type": "ModelHammerExcitation",
+      "params": {
+        "hammer_noise": 0.08,
+        "low_note_hammer_noise_boost": 0.0,
+        "hammer_low_note_widen": 0.1,
+        "hammer_attack_ms": 6.0,
+        "seed": 1234
+      }
+    },
+    {
+      "id": "string_bank",
+      "type": "PianoStringBank",
+      "params": {
+        "brightness_base": 0.6,
+        "brightness_velocity_scale": 0.35,
+        "treble_brightness_boost": 0.0,
+        "treble_brightness_exponent": 2.0,
+        "decay_t60_low_s": 6.5,
+        "decay_t60_mid_s": 4.0,
+        "decay_t60_high_s": 2.5,
+        "decay_velocity_scale_s": 0.8,
+        "decay_mid_note_pos": 0.55,
+        "detune_cents_mid_high": 0.7,
+        "low_single_string_max_midi": 43,
+        "low_second_string_detune_cents": 0.35,
+        "low_second_string_gain": 0.24,
+        "low_note_brightness_damping": 0.3,
+        "low_note_decay_boost_s": 1.2,
+        "low_note_decay_exponent": 2.0,
+        "treble_shimmer_gain": 0.0,
+        "secondary_waveguide_mix": 0.0,
+        "secondary_decay_ratio": 1.0
+      }
+    },
+    {
+      "id": "body",
+      "type": "ResonanceBank",
+      "params": {
+        "frequencies": [
+          180.0,
+          420.0,
+          980.0
+        ],
+        "gains": [
+          0.036,
+          0.027,
+          0.020
+        ]
+      }
+    },
+    {
+      "id": "clip",
+      "type": "SoftClip",
+      "params": {
+        "drive": 1.2
+      }
+    },
+    {
+      "id": "stereo",
+      "type": "ModelStereoOutput",
+      "params": {
+        "stereo_spread_ms": 0.35,
+        "peak_normalize_db": null,
+        "gain_db": 0.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0,
+        "gain_db": 0.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "inputs.midi_note",
+      "to": "hammer.midi_note"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "hammer.frequency"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "hammer.velocity"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "string_bank.frequency"
+    },
+    {
+      "from": "hammer.audio",
+      "to": "string_bank.excitation"
+    },
+    {
+      "from": "inputs.midi_note",
+      "to": "string_bank.midi_note"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "string_bank.velocity"
+    },
+    {
+      "from": "string_bank.audio",
+      "to": "body.audio"
+    },
+    {
+      "from": "body.audio",
+      "to": "clip.audio"
+    },
+    {
+      "from": "clip.audio",
+      "to": "stereo.audio"
+    },
+    {
+      "from": "stereo.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "hammer.audio",
+    "string_bank.audio",
+    "string_bank.brightness",
+    "body.audio",
+    "clip.audio",
+    "stereo.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "calibration": {
+        "x": -120.0,
+        "y": -180.0
+      },
+      "note_freq": {
+        "x": -80.0,
+        "y": 40.0
+      },
+      "hammer": {
+        "x": 220.0,
+        "y": 20.0
+      },
+      "string_bank": {
+        "x": 520.0,
+        "y": 20.0
+      },
+      "body": {
+        "x": 820.0,
+        "y": 20.0
+      },
+      "clip": {
+        "x": 1120.0,
+        "y": 20.0
+      },
+      "stereo": {
+        "x": 1420.0,
+        "y": 20.0
+      },
+      "out": {
+        "x": 1720.0,
+        "y": 20.0
+      }
+    }
+  }
+}

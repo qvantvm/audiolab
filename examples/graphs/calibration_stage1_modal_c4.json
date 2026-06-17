@@ -1,0 +1,70 @@
+{
+  "schema_version": "0.1",
+  "name": "calibration_stage1_modal_c4",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 120,
+    "pedal": "on"
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "modal_sanity",
+        "optimizer": "random_search",
+        "max_iters": 12,
+        "seed": 7,
+        "panel": [
+          {
+            "midi_note": 60,
+            "velocity": 120,
+            "pedal": "on",
+            "wav_path": "data/note_060_C4_vel_120_pedal_on.wav"
+          }
+        ],
+        "tunables": [
+          {"path": "blocks.string.params.inharmonicity_B", "min": 5e-5, "max": 5e-4},
+          {"path": "blocks.string.params.decay_seconds", "min": 0.8, "max": 6.0},
+          {"path": "blocks.string.params.brightness", "min": 0.3, "max": 1.0}
+        ]
+      }
+    },
+    {"id": "note_freq", "type": "MidiToFrequency", "params": {"a4": 440.0}},
+    {"id": "hammer", "type": "HammerExcitation", "params": {"brightness": 0.8, "seed": 3}},
+    {
+      "id": "string",
+      "type": "StiffStringModal",
+      "params": {
+        "partials": 48,
+        "inharmonicity_B": 0.00012,
+        "decay_seconds": 2.8,
+        "brightness": 0.8
+      }
+    },
+    {"id": "body", "type": "BodyEQ", "params": {}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "hammer.audio", "to": "string.excitation"},
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": ["hammer.audio", "string.audio", "out.audio"],
+  "ui": {
+    "nodes": {
+      "calibration": {"x": 40, "y": 40},
+      "note_freq": {"x": 80, "y": 120},
+      "hammer": {"x": 340, "y": 130},
+      "string": {"x": 610, "y": 120},
+      "body": {"x": 880, "y": 120},
+      "out": {"x": 1140, "y": 120}
+    }
+  }
+}

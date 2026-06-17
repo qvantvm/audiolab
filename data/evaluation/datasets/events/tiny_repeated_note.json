@@ -1,0 +1,5 @@
+[
+  {"time_s": 0.0, "type": "note_on", "note": 60, "velocity_norm": 0.5},
+  {"time_s": 0.2, "type": "note_on", "note": 60, "velocity_norm": 0.45},
+  {"time_s": 0.5, "type": "note_off", "note": 60}
+]

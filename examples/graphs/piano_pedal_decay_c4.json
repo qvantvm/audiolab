@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_pedal_decay_c4",
+  "sample_rate": 48000,
+  "duration": 4.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 90,
+    "pedal": "on"
+  },
+  "blocks": [
+    {"id": "note_freq", "type": "MidiToFrequency", "params": {}},
+    {"id": "hammer", "type": "HammerExcitation", "params": {"brightness": 0.75, "seed": 5}},
+    {"id": "string", "type": "StiffStringModal", "params": {"partials": 48, "decay_seconds": 2.0}},
+    {"id": "pedal_damping", "type": "SustainPedalDamping", "params": {"off_decay_seconds": 1.0, "on_decay_seconds": 5.0}},
+    {"id": "sympathetic", "type": "SympatheticResonanceBank", "params": {}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "inputs.pedal", "to": "pedal_damping.pedal"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "hammer.audio", "to": "string.excitation"},
+    {"from": "string.audio", "to": "pedal_damping.audio"},
+    {"from": "pedal_damping.audio", "to": "sympathetic.audio"},
+    {"from": "sympathetic.audio", "to": "out.audio"}
+  ],
+  "probes": ["string.audio", "pedal_damping.audio", "sympathetic.audio", "out.audio"]
+}

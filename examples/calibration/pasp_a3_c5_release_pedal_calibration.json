@@ -1,0 +1,5 @@
+{
+  "name": "pasp_a3_c5_release_pedal_calibration",
+  "graph": "examples/graphs/pasp_lifecycle_c4_pedal_hold.json",
+  "reference_root": "."
+}

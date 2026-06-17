@@ -1,0 +1,40 @@
+[
+  {
+    "cluster_id": "cluster_000_sympathetic_too_strong",
+    "description": "Items with failure tag 'sympathetic_too_strong'.",
+    "affected_items": ["tiny_repeated"],
+    "common_tags": ["sympathetic_too_strong"],
+    "common_categories": ["repeated_note"],
+    "likely_subsystem": "sympathetic resonance",
+    "confidence": "high",
+    "evidence": {
+      "affected_count": 1,
+      "sympathetic_energy_ratio_mean": 0.65
+    },
+    "recommended_next_experiment": "Reduce sympathetic_mix and sympathetic_coupling."
+  },
+  {
+    "cluster_id": "cluster_001_bad_tail",
+    "description": "Items with failure tag 'bad_tail'.",
+    "affected_items": ["tiny_single"],
+    "common_tags": ["bad_tail"],
+    "common_categories": ["single_note_release"],
+    "likely_subsystem": "damper/release",
+    "confidence": "medium",
+    "evidence": {
+      "affected_count": 1,
+      "tail_energy_error_mean": 0.42
+    },
+    "recommended_next_experiment": "Adjust damper ramp and sympathetic decay."
+  },
+  {
+    "cluster_id": "cluster_002_reference_missing",
+    "description": "Reference missing only.",
+    "affected_items": ["missing_ref"],
+    "common_tags": ["reference_missing"],
+    "common_categories": ["single_note_release"],
+    "likely_subsystem": "reference/alignment",
+    "confidence": "low",
+    "evidence": {"affected_count": 1}
+  }
+]

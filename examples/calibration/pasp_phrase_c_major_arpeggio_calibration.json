@@ -1,0 +1,17 @@
+{
+  "name": "pasp_phrase_c_major_arpeggio_calibration",
+  "graph": "examples/graphs/pasp_performance_c_major_arpeggio_pedal.json",
+  "reference_root": ".",
+  "reference_set": {
+    "name": "pasp_phrase_c_major_arpeggio",
+    "items": [
+      {
+        "name": "c_major_arpeggio_pedal",
+        "reference": "data/references/piano_phrases/c_major_arpeggio_pedal.wav",
+        "events": "data/references/piano_phrases/c_major_arpeggio_pedal_events.json",
+        "duration_s": 6.0
+      }
+    ]
+  },
+  "notes": "Reference WAV is optional. Provide data/references/piano_phrases/c_major_arpeggio_pedal.wav to enable audio comparison."
+}

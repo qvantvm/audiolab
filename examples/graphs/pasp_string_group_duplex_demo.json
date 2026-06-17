@@ -1,0 +1,29 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_string_group_duplex_demo",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity_norm": 0.5},
+  "blocks": [
+    {
+      "id": "note",
+      "type": "PASPStringGroupNoteModel",
+      "params": {
+        "contact_model": "bidirectional",
+        "num_modes": 32,
+        "duplex_enabled": true,
+        "duplex_mix": 0.08,
+        "duplex_decay_s": 0.4
+      }
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity_norm"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.audio", "note.bridge_audio", "out.audio"]
+}

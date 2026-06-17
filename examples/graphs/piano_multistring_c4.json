@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_multistring_c4",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 100
+  },
+  "blocks": [
+    {"id": "note_freq", "type": "MidiToFrequency", "params": {}},
+    {"id": "hammer", "type": "HammerExcitation", "params": {"brightness": 0.85, "seed": 4}},
+    {"id": "string", "type": "StiffStringModal", "params": {"partials": 56, "decay_seconds": 2.6}},
+    {"id": "unison", "type": "MultiStringUnison", "params": {"strings": 3, "detune_cents": 5.0}},
+    {"id": "bridge", "type": "BridgeMixer", "params": {"gain_db": 0.0}},
+    {"id": "body", "type": "ResonanceBank", "params": {}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "hammer.audio", "to": "string.excitation"},
+    {"from": "string.audio", "to": "unison.audio"},
+    {"from": "unison.audio", "to": "bridge.audio1"},
+    {"from": "bridge.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": ["string.audio", "unison.audio", "body.audio", "out.audio"]
+}

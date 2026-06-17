@@ -1,0 +1,565 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_model_inspired_waveguide",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 104,
+    "pedal": "off"
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "model_inspired_waveguide",
+        "optimizer": "random_search",
+        "max_iters": 24,
+        "seed": 7,
+        "panel": [
+          {
+            "midi_note": 24,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_024_C1_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 40,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_040_E2_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 57,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_057_A3_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 76,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_076_E5_vel_104_pedal_off.wav"
+          },
+          {
+            "midi_note": 96,
+            "velocity": 104,
+            "pedal": "off",
+            "wav_path": "data/note_096_C7_vel_104_pedal_off.wav"
+          }
+        ],
+        "tunables": [
+          {
+            "path": "blocks.hammer.params.attack_ms",
+            "min": 3.0,
+            "max": 9.0
+          },
+          {
+            "path": "blocks.hammer.params.decay_ms",
+            "min": 16.0,
+            "max": 55.0
+          },
+          {
+            "path": "blocks.felt.params.softness",
+            "min": 0.05,
+            "max": 0.6
+          },
+          {
+            "path": "blocks.string_low.params.decay",
+            "min": 0.990,
+            "max": 0.9998
+          },
+          {
+            "path": "blocks.string_low.params.brightness",
+            "min": 0.25,
+            "max": 0.9
+          },
+          {
+            "path": "blocks.string_high.params.decay",
+            "min": 0.990,
+            "max": 0.9998
+          },
+          {
+            "path": "blocks.string_high.params.brightness",
+            "min": 0.25,
+            "max": 0.9
+          },
+          {
+            "path": "blocks.body_taps.params.gain_db",
+            "min": -9.0,
+            "max": 3.0
+          },
+          {
+            "path": "blocks.clip.params.drive",
+            "min": 0.7,
+            "max": 1.8
+          }
+        ]
+      }
+    },
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "hammer_map",
+      "type": "HammerVelocityMapper",
+      "params": {
+        "force_gamma": 1.35,
+        "brightness_gamma": 0.7
+      }
+    },
+    {
+      "id": "hammer",
+      "type": "HammerExcitation",
+      "params": {
+        "brightness": 0.72,
+        "attack_ms": 6.0,
+        "decay_ms": 30.0,
+        "seed": 1234
+      }
+    },
+    {
+      "id": "felt",
+      "type": "HammerFeltFilter",
+      "params": {
+        "softness": 0.24
+      }
+    },
+    {
+      "id": "hammer_contact",
+      "type": "NonlinearHammer",
+      "params": {
+        "stiffness": 1.12
+      }
+    },
+    {
+      "id": "detune_low",
+      "type": "StringDetune",
+      "params": {
+        "cents": -0.7
+      }
+    },
+    {
+      "id": "detune_high",
+      "type": "StringDetune",
+      "params": {
+        "cents": 0.7
+      }
+    },
+    {
+      "id": "string_low",
+      "type": "WaveguideString",
+      "params": {
+        "decay": 0.9974,
+        "brightness": 0.68
+      }
+    },
+    {
+      "id": "string_high",
+      "type": "WaveguideString",
+      "params": {
+        "decay": 0.9970,
+        "brightness": 0.72
+      }
+    },
+    {
+      "id": "string_low_gain",
+      "type": "Gain",
+      "params": {
+        "gain_db": -5.2
+      }
+    },
+    {
+      "id": "string_high_gain",
+      "type": "Gain",
+      "params": {
+        "gain_db": -6.9
+      }
+    },
+    {
+      "id": "bridge",
+      "type": "Mixer",
+      "params": {
+        "gain_db": 0.0
+      }
+    },
+    {
+      "id": "tap_4ms",
+      "type": "Delay",
+      "params": {
+        "delay_ms": 4.1
+      }
+    },
+    {
+      "id": "tap_4ms_gain",
+      "type": "Gain",
+      "params": {
+        "gain_db": -14.0
+      }
+    },
+    {
+      "id": "tap_8ms",
+      "type": "Delay",
+      "params": {
+        "delay_ms": 7.7
+      }
+    },
+    {
+      "id": "tap_8ms_gain",
+      "type": "Gain",
+      "params": {
+        "gain_db": -16.5
+      }
+    },
+    {
+      "id": "tap_13ms",
+      "type": "Delay",
+      "params": {
+        "delay_ms": 12.8
+      }
+    },
+    {
+      "id": "tap_13ms_gain",
+      "type": "Gain",
+      "params": {
+        "gain_db": -19.2
+      }
+    },
+    {
+      "id": "tap_20ms",
+      "type": "Delay",
+      "params": {
+        "delay_ms": 19.6
+      }
+    },
+    {
+      "id": "tap_20ms_gain",
+      "type": "Gain",
+      "params": {
+        "gain_db": -21.9
+      }
+    },
+    {
+      "id": "body_taps",
+      "type": "Mixer",
+      "params": {
+        "gain_db": 0.0
+      }
+    },
+    {
+      "id": "body_taps_extra",
+      "type": "Mixer",
+      "params": {
+        "gain_db": 0.0
+      }
+    },
+    {
+      "id": "body_resonance",
+      "type": "ResonanceBank",
+      "params": {
+        "frequencies": [
+          180.0,
+          420.0,
+          980.0
+        ],
+        "gains": [
+          0.04,
+          0.025,
+          0.015
+        ]
+      }
+    },
+    {
+      "id": "clip",
+      "type": "SoftClip",
+      "params": {
+        "drive": 1.2
+      }
+    },
+    {
+      "id": "width",
+      "type": "StereoWidener",
+      "params": {
+        "width": 0.12
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0,
+        "gain_db": 0.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "hammer_map.velocity"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "hammer.velocity"
+    },
+    {
+      "from": "hammer_map.brightness",
+      "to": "hammer.brightness"
+    },
+    {
+      "from": "hammer.audio",
+      "to": "felt.audio"
+    },
+    {
+      "from": "felt.audio",
+      "to": "hammer_contact.audio"
+    },
+    {
+      "from": "hammer_map.force",
+      "to": "hammer_contact.force"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "detune_low.frequency"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "detune_high.frequency"
+    },
+    {
+      "from": "detune_low.frequency",
+      "to": "string_low.frequency"
+    },
+    {
+      "from": "detune_high.frequency",
+      "to": "string_high.frequency"
+    },
+    {
+      "from": "hammer_contact.audio",
+      "to": "string_low.excitation"
+    },
+    {
+      "from": "hammer_contact.audio",
+      "to": "string_high.excitation"
+    },
+    {
+      "from": "string_low.audio",
+      "to": "string_low_gain.audio"
+    },
+    {
+      "from": "string_high.audio",
+      "to": "string_high_gain.audio"
+    },
+    {
+      "from": "string_low_gain.audio",
+      "to": "bridge.audio1"
+    },
+    {
+      "from": "string_high_gain.audio",
+      "to": "bridge.audio2"
+    },
+    {
+      "from": "bridge.audio",
+      "to": "tap_4ms.audio"
+    },
+    {
+      "from": "bridge.audio",
+      "to": "tap_8ms.audio"
+    },
+    {
+      "from": "bridge.audio",
+      "to": "tap_13ms.audio"
+    },
+    {
+      "from": "bridge.audio",
+      "to": "tap_20ms.audio"
+    },
+    {
+      "from": "tap_4ms.audio",
+      "to": "tap_4ms_gain.audio"
+    },
+    {
+      "from": "tap_8ms.audio",
+      "to": "tap_8ms_gain.audio"
+    },
+    {
+      "from": "tap_13ms.audio",
+      "to": "tap_13ms_gain.audio"
+    },
+    {
+      "from": "tap_20ms.audio",
+      "to": "tap_20ms_gain.audio"
+    },
+    {
+      "from": "bridge.audio",
+      "to": "body_taps.audio1"
+    },
+    {
+      "from": "tap_4ms_gain.audio",
+      "to": "body_taps.audio2"
+    },
+    {
+      "from": "tap_8ms_gain.audio",
+      "to": "body_taps.audio3"
+    },
+    {
+      "from": "tap_13ms_gain.audio",
+      "to": "body_taps.audio4"
+    },
+    {
+      "from": "body_taps.audio",
+      "to": "body_taps_extra.audio1"
+    },
+    {
+      "from": "tap_20ms_gain.audio",
+      "to": "body_taps_extra.audio2"
+    },
+    {
+      "from": "body_taps_extra.audio",
+      "to": "body_resonance.audio"
+    },
+    {
+      "from": "body_resonance.audio",
+      "to": "clip.audio"
+    },
+    {
+      "from": "clip.audio",
+      "to": "width.audio"
+    },
+    {
+      "from": "width.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "hammer.audio",
+    "hammer_contact.audio",
+    "string_low.audio",
+    "string_high.audio",
+    "bridge.audio",
+    "body_taps_extra.audio",
+    "clip.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "calibration": {
+        "x": -100.0,
+        "y": -170.0
+      },
+      "note_freq": {
+        "x": -80.0,
+        "y": 40.0
+      },
+      "hammer_map": {
+        "x": -80.0,
+        "y": 210.0
+      },
+      "hammer": {
+        "x": 180.0,
+        "y": 210.0
+      },
+      "felt": {
+        "x": 440.0,
+        "y": 210.0
+      },
+      "hammer_contact": {
+        "x": 700.0,
+        "y": 210.0
+      },
+      "detune_low": {
+        "x": 180.0,
+        "y": -50.0
+      },
+      "detune_high": {
+        "x": 180.0,
+        "y": 70.0
+      },
+      "string_low": {
+        "x": 960.0,
+        "y": -50.0
+      },
+      "string_high": {
+        "x": 960.0,
+        "y": 90.0
+      },
+      "string_low_gain": {
+        "x": 1220.0,
+        "y": -50.0
+      },
+      "string_high_gain": {
+        "x": 1220.0,
+        "y": 90.0
+      },
+      "bridge": {
+        "x": 1480.0,
+        "y": 20.0
+      },
+      "tap_4ms": {
+        "x": 1740.0,
+        "y": -170.0
+      },
+      "tap_4ms_gain": {
+        "x": 2000.0,
+        "y": -170.0
+      },
+      "tap_8ms": {
+        "x": 1740.0,
+        "y": -40.0
+      },
+      "tap_8ms_gain": {
+        "x": 2000.0,
+        "y": -40.0
+      },
+      "tap_13ms": {
+        "x": 1740.0,
+        "y": 90.0
+      },
+      "tap_13ms_gain": {
+        "x": 2000.0,
+        "y": 90.0
+      },
+      "tap_20ms": {
+        "x": 1740.0,
+        "y": 220.0
+      },
+      "tap_20ms_gain": {
+        "x": 2000.0,
+        "y": 220.0
+      },
+      "body_taps": {
+        "x": 2260.0,
+        "y": -40.0
+      },
+      "body_taps_extra": {
+        "x": 2520.0,
+        "y": 80.0
+      },
+      "body_resonance": {
+        "x": 2780.0,
+        "y": 80.0
+      },
+      "clip": {
+        "x": 3040.0,
+        "y": 80.0
+      },
+      "width": {
+        "x": 3300.0,
+        "y": 80.0
+      },
+      "out": {
+        "x": 3560.0,
+        "y": 80.0
+      }
+    }
+  }
+}

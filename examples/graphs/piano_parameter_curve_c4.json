@@ -1,0 +1,47 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_parameter_curve_c4",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 96
+  },
+  "blocks": [
+    {"id": "note_freq", "type": "MidiToFrequency", "params": {"a4": 440.0}},
+    {
+      "id": "decay_curve",
+      "type": "ParameterCurve",
+      "params": {
+        "mode": "piecewise_linear",
+        "points": [{"x": 21, "y": 5.5}, {"x": 60, "y": 2.8}, {"x": 108, "y": 1.2}]
+      }
+    },
+    {"id": "hammer", "type": "HammerExcitation", "params": {"brightness": 0.8, "seed": 3}},
+    {"id": "string", "type": "StiffStringModal", "params": {"partials": 48, "brightness": 0.8}},
+    {"id": "body", "type": "BodyEQ", "params": {}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "inputs.midi_note", "to": "decay_curve.x"},
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "decay_curve.value", "to": "string.decay_seconds"},
+    {"from": "hammer.audio", "to": "string.excitation"},
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": ["decay_curve.value", "hammer.audio", "string.audio", "out.audio"],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 80, "y": 80},
+      "decay_curve": {"x": 80, "y": 240},
+      "hammer": {"x": 340, "y": 250},
+      "string": {"x": 610, "y": 160},
+      "body": {"x": 880, "y": 160},
+      "out": {"x": 1140, "y": 160}
+    }
+  }
+}

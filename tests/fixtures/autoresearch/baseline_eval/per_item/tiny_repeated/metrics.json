@@ -1,0 +1,7 @@
+{
+  "id": "tiny_repeated",
+  "category": "repeated_note",
+  "multi_res_stft_loss": 0.62,
+  "has_failure": true,
+  "failure_tags": [{"tag": "sympathetic_too_strong", "severity": "warning"}]
+}

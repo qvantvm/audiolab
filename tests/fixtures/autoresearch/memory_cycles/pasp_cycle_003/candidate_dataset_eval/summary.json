@@ -1,0 +1,9 @@
+{
+  "aggregate": {
+    "overall": {
+      "multi_res_stft_loss": {
+        "mean": 0.4
+      }
+    }
+  }
+}

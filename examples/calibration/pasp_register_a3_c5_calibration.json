@@ -1,0 +1,6 @@
+{
+  "name": "pasp_register_a3_c5_calibration",
+  "graph": "examples/graphs/pasp_register_a3_c5.json",
+  "reference_set": "examples/calibration/pasp_register_a3_c5_reference_set.json",
+  "reference_root": "."
+}

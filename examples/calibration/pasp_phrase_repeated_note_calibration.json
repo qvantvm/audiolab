@@ -1,0 +1,17 @@
+{
+  "name": "pasp_phrase_repeated_note_calibration",
+  "graph": "examples/graphs/pasp_performance_repeated_note.json",
+  "reference_root": ".",
+  "reference_set": {
+    "name": "pasp_phrase_repeated_note",
+    "items": [
+      {
+        "name": "repeated_c4",
+        "reference": "data/references/piano_phrases/repeated_c4.wav",
+        "events": "data/references/piano_phrases/repeated_c4_events.json",
+        "duration_s": 4.0
+      }
+    ]
+  },
+  "notes": "Reference WAV is optional. Provide data/references/piano_phrases/repeated_c4.wav to enable audio comparison."
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_family_b3_d4_velocity_sweep",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity_norm": 0.8},
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "pasp_family_c4_velocity",
+        "panel": [
+          {"midi_note": 60, "velocity_norm": 0.2, "velocity": 0.2, "wav_path": "data/references/piano/C4_v020.wav"},
+          {"midi_note": 60, "velocity_norm": 0.5, "velocity": 0.5, "wav_path": "data/references/piano/C4_v050.wav"},
+          {"midi_note": 60, "velocity_norm": 0.8, "velocity": 0.8, "wav_path": "data/references/piano/C4_v080.wav"},
+          {"midi_note": 60, "velocity_norm": 1.0, "velocity": 1.0, "wav_path": "data/references/piano/C4_v100.wav"}
+        ]
+      }
+    },
+    {"id": "note", "type": "PASPNoteFamilyModel", "params": {"contact_model": "bidirectional", "num_modes": 32}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity_norm"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.compression", "note.audio"]
+}

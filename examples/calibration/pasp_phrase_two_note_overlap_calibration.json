@@ -1,0 +1,17 @@
+{
+  "name": "pasp_phrase_two_note_overlap_calibration",
+  "graph": "examples/graphs/pasp_performance_two_note_overlap.json",
+  "reference_root": ".",
+  "reference_set": {
+    "name": "pasp_phrase_two_note_overlap",
+    "items": [
+      {
+        "name": "two_note_overlap",
+        "reference": "data/references/piano_phrases/two_note_overlap.wav",
+        "events": "data/references/piano_phrases/two_note_overlap_events.json",
+        "duration_s": 4.0
+      }
+    ]
+  },
+  "notes": "Reference WAV is optional. Provide data/references/piano_phrases/two_note_overlap.wav to enable audio comparison."
+}

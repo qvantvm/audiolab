@@ -1,0 +1,47 @@
+{
+  "schema_version": "0.1",
+  "name": "sine_test",
+  "sample_rate": 48000,
+  "duration": 1.0,
+  "block_size": 64,
+  "inputs": {},
+  "blocks": [
+    {
+      "id": "osc",
+      "type": "SineOscillator",
+      "params": {
+        "frequency": 440.0,
+        "amplitude": 0.25
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "osc.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "osc.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "osc": {
+        "x": 100,
+        "y": 100
+      },
+      "out": {
+        "x": 400,
+        "y": 100
+      }
+    }
+  }
+}

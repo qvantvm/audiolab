@@ -1,0 +1,12 @@
+{
+  "hypothesis": "Reduce sympathetic resonance tail on repeated notes.",
+  "likely_subsystem": "sympathetic resonance",
+  "allowed_parameters": [
+    "sympathetic_mix",
+    "sympathetic_decay_s"
+  ],
+  "primary_failure_tag": "sympathetic_too_strong",
+  "affected_items": [
+    "tiny_repeated"
+  ]
+}

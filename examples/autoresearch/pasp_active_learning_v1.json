@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "dataset_manifest": "data/evaluation/datasets/test_phrase_eval_tiny.json",
+  "evaluation_run": "tests/fixtures/autoresearch/baseline_eval",
+  "memory_dir": "tests/fixtures/autoresearch/memory_cycles",
+  "supported_register": {
+    "midi_min": 57,
+    "midi_max": 72
+  },
+  "output_dir": "experiments/autoresearch/active_learning/pasp_design_001",
+  "candidate_generation": {
+    "max_candidates": 50,
+    "max_recommendations": 10,
+    "include_synthetic_probes": true,
+    "include_reference_tasks": true
+  },
+  "scoring_weights": {
+    "failure_relevance": 1.0,
+    "coverage_gap": 0.8,
+    "subsystem_uncertainty": 0.7,
+    "historical_value": 0.5,
+    "guardrail_value": 0.4,
+    "cost": 0.4,
+    "redundancy": 0.5
+  },
+  "constraints": {
+    "max_duration_s": 10.0,
+    "max_notes_per_phrase": 8,
+    "max_reference_tasks": 5,
+    "allow_outside_supported_register": false
+  }
+}

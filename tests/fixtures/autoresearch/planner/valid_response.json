@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "planner_summary": "Valid mock proposal for sympathetic cluster.",
+  "proposals": [
+    {
+      "proposal_id": "mock_valid",
+      "rank": 1,
+      "target_cluster_id": "cluster_000_sympathetic_too_strong",
+      "hypothesis": "Reduce sympathetic_mix to lower late resonance tail.",
+      "likely_subsystem": "sympathetic resonance",
+      "confidence": "high",
+      "allowed_parameter_changes": [
+        {
+          "parameter": "sympathetic_mix",
+          "direction": "decrease",
+          "suggested_range": [0.0, 0.04],
+          "reason": "Lower sympathetic energy"
+        }
+      ],
+      "objective_weight_changes": {"sympathetic_energy_ratio": 2.0},
+      "guardrail_items": ["tiny_single"],
+      "expected_improvements": [
+        {"metric": "sympathetic_energy_ratio", "direction": "decrease", "reason": "Target cluster"}
+      ],
+      "regression_risks": [
+        {"risk": "May dry pedal phrases", "affected_categories": ["pedal_chord"], "mitigation": "Guardrails"}
+      ],
+      "forbidden_fixes_acknowledged": ["output_compression", "global_gain"],
+      "experiment_plan": {
+        "calibration_budget": {"max_trials": 20, "time_budget_s": 300},
+        "target_subset_policy": "affected_items_plus_guardrails",
+        "notes": "Mock valid"
+      }
+    }
+  ]
+}

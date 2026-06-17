@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "name": "pasp_phrase_eval_v1",
+  "description": "Small phrase-level PASP piano evaluation set for A3-C5. Generate reference WAVs with python data/generate_references.py (see data/references/README.md).",
+  "sample_rate": 48000,
+  "reference_root": "../../../",
+  "items": [
+    {
+      "id": "c4_single_release",
+      "category": "single_note_release",
+      "tags": ["single_note", "release", "no_pedal", "C4", "A3_C5"],
+      "duration_s": 3.0,
+      "events": "events/c4_single_release.json",
+      "reference_wav": "data/references/piano_phrases/audio/c4_single_release.wav",
+      "expected_register": "middle",
+      "notes": [60],
+      "velocities": [0.55],
+      "pedal": "none",
+      "description": "Single C4 note with release; no reference WAV required for render-only eval."
+    },
+    {
+      "id": "two_note_overlap",
+      "category": "two_note_overlap",
+      "tags": ["overlap", "polyphonic", "no_pedal", "A3_C5"],
+      "duration_s": 4.0,
+      "events": "events/two_note_overlap.json",
+      "reference_wav": "data/references/piano_phrases/audio/two_note_overlap.wav",
+      "expected_register": "middle",
+      "notes": [60, 64],
+      "velocities": [0.55, 0.5],
+      "pedal": "none"
+    },
+    {
+      "id": "repeated_c4",
+      "category": "repeated_note",
+      "tags": ["repeated_note", "C4", "A3_C5"],
+      "duration_s": 4.0,
+      "events": "events/repeated_c4.json",
+      "reference_wav": "data/references/piano_phrases/audio/repeated_c4.wav",
+      "expected_register": "middle",
+      "notes": [60],
+      "velocities": [0.6, 0.55],
+      "pedal": "none"
+    },
+    {
+      "id": "c_major_arpeggio_pedal",
+      "category": "arpeggio",
+      "tags": ["arpeggio", "pedal", "C_major", "polyphonic", "A3_C5"],
+      "duration_s": 6.0,
+      "events": "events/c_major_arpeggio_pedal.json",
+      "reference_wav": "data/references/piano_phrases/audio/c_major_arpeggio_pedal.wav",
+      "expected_register": "middle",
+      "notes": [60, 64, 67, 72],
+      "velocities": [0.55, 0.65],
+      "pedal": "sustain"
+    },
+    {
+      "id": "short_phrase",
+      "category": "short_phrase",
+      "tags": ["short_phrase", "pedal", "repeated_note", "polyphonic", "A3_C5"],
+      "duration_s": 5.0,
+      "events": "events/short_phrase.json",
+      "reference_wav": "data/references/piano_phrases/audio/short_phrase.wav",
+      "expected_register": "middle",
+      "notes": [57, 60, 64],
+      "velocities": [0.5, 0.58],
+      "pedal": "sustain"
+    }
+  ]
+}

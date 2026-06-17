@@ -1,0 +1,5 @@
+{
+  "name": "pasp_c4_release_calibration",
+  "graph": "examples/graphs/pasp_lifecycle_c4_release.json",
+  "reference_root": "."
+}

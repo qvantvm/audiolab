@@ -1,0 +1,391 @@
+{
+  "reference_set": {
+    "name": "pasp_register_a3_c5",
+    "items": [
+      {
+        "note": "A3",
+        "midi_note": 57,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/A3_v020.wav"
+      },
+      {
+        "note": "A3",
+        "midi_note": 57,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/A3_v050.wav"
+      },
+      {
+        "note": "A3",
+        "midi_note": 57,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/A3_v080.wav"
+      },
+      {
+        "note": "A3",
+        "midi_note": 57,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/A3_v100.wav"
+      },
+      {
+        "note": "A#3",
+        "midi_note": 58,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/As3_v020.wav"
+      },
+      {
+        "note": "A#3",
+        "midi_note": 58,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/As3_v050.wav"
+      },
+      {
+        "note": "A#3",
+        "midi_note": 58,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/As3_v080.wav"
+      },
+      {
+        "note": "A#3",
+        "midi_note": 58,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/As3_v100.wav"
+      },
+      {
+        "note": "B3",
+        "midi_note": 59,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/B3_v020.wav"
+      },
+      {
+        "note": "B3",
+        "midi_note": 59,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/B3_v050.wav"
+      },
+      {
+        "note": "B3",
+        "midi_note": 59,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/B3_v080.wav"
+      },
+      {
+        "note": "B3",
+        "midi_note": 59,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/B3_v100.wav"
+      },
+      {
+        "note": "C4",
+        "midi_note": 60,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/C4_v020.wav"
+      },
+      {
+        "note": "C4",
+        "midi_note": 60,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/C4_v050.wav"
+      },
+      {
+        "note": "C4",
+        "midi_note": 60,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/C4_v080.wav"
+      },
+      {
+        "note": "C4",
+        "midi_note": 60,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/C4_v100.wav"
+      },
+      {
+        "note": "C#4",
+        "midi_note": 61,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/Cs4_v020.wav"
+      },
+      {
+        "note": "C#4",
+        "midi_note": 61,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/Cs4_v050.wav"
+      },
+      {
+        "note": "C#4",
+        "midi_note": 61,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/Cs4_v080.wav"
+      },
+      {
+        "note": "C#4",
+        "midi_note": 61,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/Cs4_v100.wav"
+      },
+      {
+        "note": "D4",
+        "midi_note": 62,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/D4_v020.wav"
+      },
+      {
+        "note": "D4",
+        "midi_note": 62,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/D4_v050.wav"
+      },
+      {
+        "note": "D4",
+        "midi_note": 62,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/D4_v080.wav"
+      },
+      {
+        "note": "D4",
+        "midi_note": 62,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/D4_v100.wav"
+      },
+      {
+        "note": "D#4",
+        "midi_note": 63,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/Ds4_v020.wav"
+      },
+      {
+        "note": "D#4",
+        "midi_note": 63,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/Ds4_v050.wav"
+      },
+      {
+        "note": "D#4",
+        "midi_note": 63,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/Ds4_v080.wav"
+      },
+      {
+        "note": "D#4",
+        "midi_note": 63,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/Ds4_v100.wav"
+      },
+      {
+        "note": "E4",
+        "midi_note": 64,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/E4_v020.wav"
+      },
+      {
+        "note": "E4",
+        "midi_note": 64,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/E4_v050.wav"
+      },
+      {
+        "note": "E4",
+        "midi_note": 64,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/E4_v080.wav"
+      },
+      {
+        "note": "E4",
+        "midi_note": 64,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/E4_v100.wav"
+      },
+      {
+        "note": "F4",
+        "midi_note": 65,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/F4_v020.wav"
+      },
+      {
+        "note": "F4",
+        "midi_note": 65,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/F4_v050.wav"
+      },
+      {
+        "note": "F4",
+        "midi_note": 65,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/F4_v080.wav"
+      },
+      {
+        "note": "F4",
+        "midi_note": 65,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/F4_v100.wav"
+      },
+      {
+        "note": "F#4",
+        "midi_note": 66,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/Fs4_v020.wav"
+      },
+      {
+        "note": "F#4",
+        "midi_note": 66,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/Fs4_v050.wav"
+      },
+      {
+        "note": "F#4",
+        "midi_note": 66,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/Fs4_v080.wav"
+      },
+      {
+        "note": "F#4",
+        "midi_note": 66,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/Fs4_v100.wav"
+      },
+      {
+        "note": "G4",
+        "midi_note": 67,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/G4_v020.wav"
+      },
+      {
+        "note": "G4",
+        "midi_note": 67,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/G4_v050.wav"
+      },
+      {
+        "note": "G4",
+        "midi_note": 67,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/G4_v080.wav"
+      },
+      {
+        "note": "G4",
+        "midi_note": 67,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/G4_v100.wav"
+      },
+      {
+        "note": "G#4",
+        "midi_note": 68,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/Gs4_v020.wav"
+      },
+      {
+        "note": "G#4",
+        "midi_note": 68,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/Gs4_v050.wav"
+      },
+      {
+        "note": "G#4",
+        "midi_note": 68,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/Gs4_v080.wav"
+      },
+      {
+        "note": "G#4",
+        "midi_note": 68,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/Gs4_v100.wav"
+      },
+      {
+        "note": "A4",
+        "midi_note": 69,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/A4_v020.wav"
+      },
+      {
+        "note": "A4",
+        "midi_note": 69,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/A4_v050.wav"
+      },
+      {
+        "note": "A4",
+        "midi_note": 69,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/A4_v080.wav"
+      },
+      {
+        "note": "A4",
+        "midi_note": 69,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/A4_v100.wav"
+      },
+      {
+        "note": "A#4",
+        "midi_note": 70,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/As4_v020.wav"
+      },
+      {
+        "note": "A#4",
+        "midi_note": 70,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/As4_v050.wav"
+      },
+      {
+        "note": "A#4",
+        "midi_note": 70,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/As4_v080.wav"
+      },
+      {
+        "note": "A#4",
+        "midi_note": 70,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/As4_v100.wav"
+      },
+      {
+        "note": "B4",
+        "midi_note": 71,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/B4_v020.wav"
+      },
+      {
+        "note": "B4",
+        "midi_note": 71,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/B4_v050.wav"
+      },
+      {
+        "note": "B4",
+        "midi_note": 71,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/B4_v080.wav"
+      },
+      {
+        "note": "B4",
+        "midi_note": 71,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/B4_v100.wav"
+      },
+      {
+        "note": "C5",
+        "midi_note": 72,
+        "velocity_norm": 0.2,
+        "reference": "data/references/piano/C5_v020.wav"
+      },
+      {
+        "note": "C5",
+        "midi_note": 72,
+        "velocity_norm": 0.5,
+        "reference": "data/references/piano/C5_v050.wav"
+      },
+      {
+        "note": "C5",
+        "midi_note": 72,
+        "velocity_norm": 0.8,
+        "reference": "data/references/piano/C5_v080.wav"
+      },
+      {
+        "note": "C5",
+        "midi_note": 72,
+        "velocity_norm": 1.0,
+        "reference": "data/references/piano/C5_v100.wav"
+      }
+    ]
+  }
+}

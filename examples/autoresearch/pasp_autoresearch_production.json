@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "name": "pasp_autoresearch_production",
+  "baseline_eval": "workspace/experiments/pasp_baseline_eval",
+  "dataset_manifest": "data/evaluation/datasets/pasp_phrase_eval_v1.json",
+  "base_model_graph": "examples/graphs/pasp_performance_model_base.json",
+  "output_dir": "workspace/experiments/autoresearch",
+  "max_clusters_per_cycle": 1,
+  "selection_policy": {
+    "primary": "highest_severity",
+    "secondary": "largest_regression_or_loss",
+    "prefer_unresolved": true,
+    "avoid_recently_failed": true,
+    "allow_reference_missing_clusters": false
+  },
+  "allowed_subsystems": [
+    "hammer/felt",
+    "damper/release",
+    "sympathetic_resonance",
+    "bridge/body",
+    "voice_manager"
+  ],
+  "calibration": {
+    "max_trials": 40,
+    "time_budget_s": 600,
+    "strict_physical_bounds": true,
+    "allow_arbitrary_eq": false,
+    "allow_output_compression": false,
+    "optimizer": "random_search"
+  },
+  "decision_policy": {
+    "require_target_cluster_improvement": true,
+    "max_allowed_global_regression": 0.02,
+    "max_new_critical_failures": 0,
+    "require_physical_plausibility_non_worse": true,
+    "human_review_on_ambiguous": true
+  },
+  "journal": {
+    "path": "workspace/experiments/autoresearch/research_journal.md",
+    "jsonl_path": "workspace/experiments/autoresearch/research_journal.jsonl",
+    "append": true
+  },
+  "planner": {
+    "enabled": true,
+    "mode": "template",
+    "max_proposals": 3,
+    "require_schema_validation": true,
+    "allow_llm_to_expand_parameter_set": false,
+    "allow_llm_to_change_forbidden_fixes": false,
+    "temperature": 0.2,
+    "include_recent_journal": true,
+    "recent_journal_cycles": 3
+  },
+  "memory": {
+    "enabled": true,
+    "memory_dir": "workspace/experiments/autoresearch/memory",
+    "min_records_for_medium_confidence": 3,
+    "min_records_for_high_confidence": 8,
+    "similar_cycle_limit": 5,
+    "use_for_cluster_selection": true,
+    "use_for_proposal_ranking": true,
+    "use_for_planner_context": true,
+    "allow_memory_to_add_guardrails": true,
+    "allow_memory_to_change_acceptance_thresholds": false
+  },
+  "active_learning": {
+    "enabled": false,
+    "recommendations_dir": "workspace/experiments/autoresearch/active_learning/pasp_design_001",
+    "use_for_planner_context": true
+  },
+  "governance": {
+    "enabled": true,
+    "registry_dir": "workspace/experiments/model_registry",
+    "promotion_policy": "examples/governance/pasp_promotion_policy_v1.json",
+    "auto_register_candidates": true,
+    "auto_promote_if_gates_pass": false,
+    "require_human_review_for_promotion": true
+  }
+}

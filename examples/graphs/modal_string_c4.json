@@ -1,0 +1,95 @@
+{
+  "schema_version": "0.1",
+  "name": "modal_string_c4",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 90
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "hammer",
+      "type": "HammerExcitation",
+      "params": {
+        "brightness": 0.7,
+        "attack_ms": 2.0,
+        "decay_ms": 25.0,
+        "seed": 1
+      }
+    },
+    {
+      "id": "string",
+      "type": "StiffStringModal",
+      "params": {
+        "partials": 32,
+        "inharmonicity_B": 0.0001,
+        "decay_seconds": 1.8,
+        "brightness": 0.75,
+        "seed": 1
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "hammer.velocity"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "string.frequency"
+    },
+    {
+      "from": "hammer.audio",
+      "to": "string.excitation"
+    },
+    {
+      "from": "string.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "hammer.audio",
+    "string.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {
+        "x": 100,
+        "y": 100
+      },
+      "hammer": {
+        "x": 100,
+        "y": 260
+      },
+      "string": {
+        "x": 400,
+        "y": 180
+      },
+      "out": {
+        "x": 700,
+        "y": 180
+      }
+    }
+  }
+}

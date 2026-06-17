@@ -1,0 +1,17 @@
+{
+  "decision": "reject",
+  "reason": "test reject",
+  "evidence": {
+    "target_cluster_delta": {
+      "mean_affected_delta": 0.02,
+      "improved": false
+    },
+    "global_mean_loss_delta": 0.03,
+    "new_failures": [
+      "tiny_single"
+    ],
+    "new_critical_failures": [],
+    "guardrail_worsened": false,
+    "overall_status": "regressed"
+  }
+}

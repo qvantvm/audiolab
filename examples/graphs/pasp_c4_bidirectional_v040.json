@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_c4_bidirectional_v040",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity": 40},
+  "blocks": [
+    {
+      "id": "note",
+      "type": "PASPNoteModel",
+      "params": {"contact_model": "bidirectional", "felt_Q0": 5000000.0, "felt_p": 3.2, "num_modes": 48}
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.hammer_velocity", "note.audio", "out.audio"]
+}

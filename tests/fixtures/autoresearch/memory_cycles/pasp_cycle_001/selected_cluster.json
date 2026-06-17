@@ -1,0 +1,13 @@
+{
+  "cluster_id": "cluster_000_sympathetic_too_strong",
+  "common_tags": [
+    "sympathetic_too_strong"
+  ],
+  "likely_subsystem": "sympathetic resonance",
+  "affected_items": [
+    "tiny_repeated"
+  ],
+  "common_categories": [
+    "repeated_note"
+  ]
+}

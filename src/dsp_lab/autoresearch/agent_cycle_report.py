@@ -1,0 +1,136 @@
+"""Compact agent cycle report generation."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+
+def build_agent_cycle_report(
+    cycle_id: str,
+    cluster: dict[str, Any],
+    hypothesis: dict[str, Any],
+    decision: dict[str, Any],
+    calibration_result: dict[str, Any] | None = None,
+    regression: dict[str, Any] | None = None,
+    artifact_paths: dict[str, str] | None = None,
+    planner_enabled: bool = False,
+    planner_mode: str = "disabled",
+    planner_summary: str = "",
+    num_proposals: int = 0,
+    num_valid_proposals: int = 0,
+    selected_proposal: dict[str, Any] | None = None,
+    rejected_proposals: list[dict[str, Any]] | None = None,
+    fallback_used: bool = False,
+    validation_warnings: list[str] | None = None,
+    memory_consulted: bool = False,
+    similar_past_cycles: list[dict[str, Any]] | None = None,
+    memory_ranking_adjustment: dict[str, Any] | None = None,
+    memory_warnings: list[str] | None = None,
+    active_learning_recommendations: dict[str, Any] | None = None,
+    governance_state: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    governance = governance_state or {}
+    return {
+        "cycle_id": cycle_id,
+        "selected_cluster": {
+            "cluster_id": cluster.get("cluster_id"),
+            "common_tags": cluster.get("common_tags", []),
+            "likely_subsystem": cluster.get("likely_subsystem"),
+            "affected_items": cluster.get("affected_items", []),
+            "selection_reason": cluster.get("selection_reason"),
+        },
+        "hypothesis_summary": hypothesis.get("hypothesis"),
+        "primary_failure_tag": hypothesis.get("primary_failure_tag"),
+        "allowed_parameters": hypothesis.get("allowed_parameters", []),
+        "forbidden_fixes": hypothesis.get("forbidden_fixes", []),
+        "planner_enabled": planner_enabled,
+        "planner_mode": planner_mode,
+        "planner_summary": planner_summary,
+        "num_proposals": num_proposals,
+        "num_valid_proposals": num_valid_proposals,
+        "selected_proposal": selected_proposal,
+        "rejected_proposals": rejected_proposals or [],
+        "fallback_used": fallback_used,
+        "validation_warnings": validation_warnings or [],
+        "memory_consulted": memory_consulted,
+        "similar_past_cycles": similar_past_cycles or [],
+        "memory_ranking_adjustment": memory_ranking_adjustment,
+        "memory_warnings": memory_warnings or [],
+        "active_learning_recommendations": active_learning_recommendations,
+        "registered_model_id": governance.get("registered_model_id"),
+        "candidate_status": governance.get("candidate_status"),
+        "promotion_eligible": governance.get("promotion_eligible"),
+        "promotion_decision": governance.get("promotion_decision"),
+        "failed_gates": governance.get("failed_gates", []),
+        "active_model_before": governance.get("active_model_before"),
+        "active_model_after": governance.get("active_model_after"),
+        "lineage_parent": governance.get("lineage_parent"),
+        "rollback_command": governance.get("rollback_command"),
+        "governance": governance if governance.get("enabled") else None,
+        "calibration_status": (calibration_result or {}).get("status", "not_run"),
+        "regression_status": (regression or {}).get("overall_status", "not_run"),
+        "decision": decision.get("decision"),
+        "decision_reason": decision.get("reason"),
+        "evidence": decision.get("evidence", {}),
+        "recommended_next_action": decision.get("recommended_next_action"),
+        "artifacts": artifact_paths or {},
+    }
+
+
+def write_agent_cycle_report(out_dir: Path, report: dict[str, Any]) -> dict[str, str]:
+    json_path = out_dir / "agent_cycle_report.json"
+    md_path = out_dir / "agent_cycle_report.md"
+    json_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+
+    lines = [
+        "# PASP Autoresearch Cycle Report",
+        "",
+        f"**Cycle:** `{report.get('cycle_id')}`",
+        f"**Decision:** **{report.get('decision')}**",
+        "",
+        "## Planner",
+        f"- Enabled: {report.get('planner_enabled')}",
+        f"- Mode: {report.get('planner_mode')}",
+        f"- Summary: {report.get('planner_summary', '')}",
+        f"- Valid proposals: {report.get('num_valid_proposals')} / {report.get('num_proposals')}",
+        f"- Fallback used: {report.get('fallback_used')}",
+        "",
+        "## Memory",
+        f"- Consulted: {report.get('memory_consulted')}",
+        f"- Similar past cycles: {json.dumps(report.get('similar_past_cycles', []), indent=2)}",
+        f"- Ranking adjustment: {json.dumps(report.get('memory_ranking_adjustment'), indent=2)}",
+        f"- Warnings: {report.get('memory_warnings', [])}",
+        "",
+        "## Active learning",
+        json.dumps(report.get("active_learning_recommendations"), indent=2),
+        "",
+        "## Governance",
+        f"- Registered model: {report.get('registered_model_id')}",
+        f"- Candidate status: {report.get('candidate_status')}",
+        f"- Promotion eligible: {report.get('promotion_eligible')}",
+        f"- Failed gates: {report.get('failed_gates', [])}",
+        f"- Active before/after: {report.get('active_model_before')} / {report.get('active_model_after')}",
+        f"- Rollback: {report.get('rollback_command', '')}",
+        "",
+        "## Cluster",
+        json.dumps(report.get("selected_cluster", {}), indent=2),
+        "",
+        "## Hypothesis",
+        str(report.get("hypothesis_summary", "")),
+        "",
+        "## Calibration",
+        f"Status: {report.get('calibration_status')}",
+        "",
+        "## Regression",
+        f"Status: {report.get('regression_status')}",
+        "",
+        "## Evidence",
+        json.dumps(report.get("evidence", {}), indent=2),
+        "",
+        "## Next action",
+        str(report.get("recommended_next_action", "")),
+    ]
+    md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return {"json": str(json_path), "markdown": str(md_path)}

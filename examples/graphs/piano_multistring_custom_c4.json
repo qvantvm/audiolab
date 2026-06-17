@@ -1,0 +1,264 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_multistring_custom_c4",
+  "sample_rate": 48000,
+  "duration": 4.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 120,
+    "pedal": "on"
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "multistring_custom",
+        "optimizer": "random_search",
+        "max_iters": 16,
+        "seed": 11,
+        "panel": [
+          {
+            "midi_note": 60,
+            "velocity": 120,
+            "pedal": "on",
+            "wav_path": "data/note_060_C4_vel_120_pedal_on.wav"
+          }
+        ],
+        "tunables": [
+          {
+            "path": "blocks.string.params.decay_seconds",
+            "min": 0.8,
+            "max": 6.0
+          },
+          {
+            "path": "blocks.string.params.brightness",
+            "min": 0.25,
+            "max": 0.85
+          },
+          {
+            "path": "blocks.bridge.params.gain_db",
+            "min": -12.0,
+            "max": 0.0
+          },
+          {
+            "path": "blocks.tone_shaper.params.comp_db",
+            "min": -9.0,
+            "max": -2.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "decay_curve",
+      "type": "ParameterCurve",
+      "params": {
+        "mode": "piecewise_linear",
+        "points": [
+          {
+            "x": 21,
+            "y": 5.0
+          },
+          {
+            "x": 60,
+            "y": 2.6
+          },
+          {
+            "x": 108,
+            "y": 1.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "hammer",
+      "type": "HammerExcitation",
+      "params": {
+        "brightness": 0.82,
+        "seed": 4
+      }
+    },
+    {
+      "id": "string",
+      "type": "StiffStringModal",
+      "params": {
+        "partials": 56,
+        "inharmonicity_B": 0.00012,
+        "decay_seconds": 2.6,
+        "brightness": 0.75,
+        "detune_cents": 0.0,
+        "seed": 2
+      }
+    },
+    {
+      "id": "pedal_damping",
+      "type": "SustainPedalDamping",
+      "params": {
+        "off_decay_seconds": 1.0,
+        "on_decay_seconds": 5.5
+      }
+    },
+    {
+      "id": "unison",
+      "type": "MultiStringUnison",
+      "params": {
+        "strings": 3,
+        "detune_cents": 5.0
+      }
+    },
+    {
+      "id": "bridge",
+      "type": "BridgeMixer",
+      "params": {
+        "gain_db": -4.5
+      }
+    },
+    {
+      "id": "body",
+      "type": "ResonanceBank",
+      "params": {}
+    },
+    {
+      "id": "tone_shaper",
+      "type": "PythonCustom",
+      "params": {
+        "gain": 1.0,
+        "comp_db": -4.5,
+        "drive": 1.15,
+        "vel_drive": 0.35,
+        "presence": 0.1,
+        "code": "def process(inputs, n_frames, params, ctx):\n    x = ctx.as_array(inputs.get('in1'), n_frames)\n    vel = ctx.as_scalar(inputs.get('ctrl1'), 96.0)\n    vel_norm = float(np.clip(vel / 127.0, 0.0, 1.0))\n    comp_db = float(params.get('comp_db', -4.5))\n    x = x * (10.0 ** (comp_db / 20.0))\n    drive = float(params.get('drive', 1.15)) + vel_norm * float(params.get('vel_drive', 0.35))\n    denom = float(np.tanh(drive)) if drive > 1e-6 else 1.0\n    y = np.tanh(x * drive) / denom\n    presence = float(params.get('presence', 0.1)) * vel_norm\n    if presence > 0.0 and n_frames > 2:\n        smooth = np.empty(n_frames, dtype=np.float32)\n        smooth[0] = y[0]\n        smooth[-1] = y[-1]\n        for i in range(1, n_frames - 1):\n            smooth[i] = (y[i - 1] + y[i] + y[i + 1]) / 3.0\n        y = y + presence * (y - smooth)\n    return {'audio': y.astype(np.float32), 'value': drive}\n"
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -3.0,
+        "gain_db": 0.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "inputs.midi_note",
+      "to": "decay_curve.x"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "hammer.velocity"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "tone_shaper.ctrl1"
+    },
+    {
+      "from": "inputs.pedal",
+      "to": "pedal_damping.pedal"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "string.frequency"
+    },
+    {
+      "from": "decay_curve.value",
+      "to": "string.decay_seconds"
+    },
+    {
+      "from": "hammer.audio",
+      "to": "string.excitation"
+    },
+    {
+      "from": "string.audio",
+      "to": "pedal_damping.audio"
+    },
+    {
+      "from": "pedal_damping.audio",
+      "to": "unison.audio"
+    },
+    {
+      "from": "unison.audio",
+      "to": "bridge.audio1"
+    },
+    {
+      "from": "bridge.audio",
+      "to": "body.audio"
+    },
+    {
+      "from": "body.audio",
+      "to": "tone_shaper.in1"
+    },
+    {
+      "from": "tone_shaper.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "decay_curve.value",
+    "string.audio",
+    "unison.audio",
+    "tone_shaper.audio",
+    "tone_shaper.value",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "calibration": {
+        "x": 2.0,
+        "y": -54.0
+      },
+      "note_freq": {
+        "x": -20.0,
+        "y": 51.0
+      },
+      "decay_curve": {
+        "x": -54.0,
+        "y": 325.0
+      },
+      "hammer": {
+        "x": 34.0,
+        "y": 182.0
+      },
+      "string": {
+        "x": 347.0,
+        "y": -44.0
+      },
+      "pedal_damping": {
+        "x": 520.0,
+        "y": 280.0
+      },
+      "unison": {
+        "x": 681.0,
+        "y": -16.0
+      },
+      "bridge": {
+        "x": 930.0,
+        "y": 5.0
+      },
+      "body": {
+        "x": 1115.0,
+        "y": 321.0
+      },
+      "tone_shaper": {
+        "x": 1221.0,
+        "y": -48.0
+      },
+      "out": {
+        "x": 1470.0,
+        "y": 280.0
+      }
+    }
+  }
+}

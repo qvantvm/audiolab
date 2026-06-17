@@ -1,0 +1,98 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_c4_bidirectional",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 100
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "pasp_c4_bidirectional",
+        "optimizer": "random_search",
+        "max_iters": 24,
+        "seed": 17,
+        "panel": [
+          {"midi_note": 60, "velocity": 40, "pedal": "off", "wav_path": "data/note_060_C4_vel_040_pedal_off.wav"},
+          {"midi_note": 60, "velocity": 64, "pedal": "off", "wav_path": "data/note_060_C4_vel_064_pedal_off.wav"},
+          {"midi_note": 60, "velocity": 100, "pedal": "off", "wav_path": "data/note_060_C4_vel_100_pedal_off.wav"},
+          {"midi_note": 60, "velocity": 120, "pedal": "off", "wav_path": "data/note_060_C4_vel_120_pedal_off.wav"}
+        ],
+        "tunables": [
+          {"path": "blocks.note.params.felt_Q0", "min": 1e5, "max": 2e8},
+          {"path": "blocks.note.params.felt_p", "min": 2.5, "max": 4.0},
+          {"path": "blocks.note.params.felt_damping_Ns_m", "min": 10.0, "max": 300.0},
+          {"path": "blocks.note.params.hammer_mass_kg", "min": 0.005, "max": 0.012},
+          {"path": "blocks.note.params.velocity_scale", "min": 1.5, "max": 5.0},
+          {"path": "blocks.note.params.velocity_exponent", "min": 1.2, "max": 2.5},
+          {"path": "blocks.note.params.inharmonicity_B", "min": 1e-4, "max": 8e-4},
+          {"path": "blocks.note.params.strike_position_ratio", "min": 0.08, "max": 0.18},
+          {"path": "blocks.note.params.modal_loss_base", "min": 0.05, "max": 0.35},
+          {"path": "blocks.note.params.modal_loss_high", "min": 0.1, "max": 0.6},
+          {"path": "blocks.note.params.bridge_loss", "min": 0.05, "max": 0.45},
+          {"path": "blocks.note.params.soundboard_mix", "min": 0.2, "max": 0.7}
+        ]
+      }
+    },
+    {
+      "id": "note",
+      "type": "PASPNoteModel",
+      "params": {
+        "contact_model": "bidirectional",
+        "hammer_mass_kg": 0.008,
+        "felt_Q0": 5000000.0,
+        "felt_p": 3.2,
+        "felt_damping_Ns_m": 80.0,
+        "felt_gap_m": 0.0,
+        "hammer_rest_position_m": 0.008,
+        "max_contact_force_N": 2000.0,
+        "velocity_scale": 3.0,
+        "velocity_exponent": 1.9,
+        "string_length_m": 0.65,
+        "string_tension_N": 700.0,
+        "linear_density_kg_m": 0.006,
+        "inharmonicity_B": 0.00035,
+        "strike_position_ratio": 0.12,
+        "num_modes": 48,
+        "modal_loss_base": 0.12,
+        "modal_loss_high": 0.4,
+        "modal_gain": 1.0,
+        "bridge_loss": 0.2,
+        "soundboard_mix": 0.5,
+        "oversample": 2,
+        "output_gain": 1.0,
+        "seed": 11
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {"peak_normalize_db": -1.0}
+    }
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "note.force",
+    "note.compression",
+    "note.hammer_velocity",
+    "note.string_displacement",
+    "note.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "calibration": {"x": 40, "y": 40},
+      "note": {"x": 320, "y": 140},
+      "out": {"x": 560, "y": 140}
+    }
+  }
+}

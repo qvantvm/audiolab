@@ -1,0 +1,13 @@
+{
+  "name": "pasp_family_b3_d4_calibration",
+  "graph": "examples/graphs/pasp_family_b3_d4.json",
+  "reference_set": "examples/calibration/pasp_family_b3_d4_reference_set.json",
+  "reference_root": ".",
+  "family_weights": {
+    "audio": 1.0,
+    "smoothness": 0.15,
+    "velocity": 0.2,
+    "physical": 0.1
+  },
+  "notes": "Run: PYTHONPATH=src python examples/run_pasp_family_b3_d4_eval.py --calibrate"
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "planner_summary": "Two proposals: invalid rank 1, valid rank 2.",
+  "proposals": [
+    {
+      "proposal_id": "mock_invalid_first",
+      "rank": 1,
+      "target_cluster_id": "cluster_000_sympathetic_too_strong",
+      "hypothesis": "Invalid param first",
+      "likely_subsystem": "sympathetic resonance",
+      "confidence": "high",
+      "allowed_parameter_changes": [
+        {
+          "parameter": "bogus_param",
+          "direction": "search",
+          "suggested_range": [0.0, 1.0],
+          "reason": "bad"
+        }
+      ],
+      "objective_weight_changes": {},
+      "guardrail_items": ["tiny_single"],
+      "expected_improvements": [],
+      "regression_risks": [],
+      "forbidden_fixes_acknowledged": [],
+      "experiment_plan": {"calibration_budget": {"max_trials": 10, "time_budget_s": 60}}
+    },
+    {
+      "proposal_id": "mock_valid_second",
+      "rank": 2,
+      "target_cluster_id": "cluster_000_sympathetic_too_strong",
+      "hypothesis": "Valid second proposal",
+      "likely_subsystem": "sympathetic resonance",
+      "confidence": "medium",
+      "allowed_parameter_changes": [
+        {
+          "parameter": "sympathetic_mix",
+          "direction": "decrease",
+          "suggested_range": [0.0, 0.04],
+          "reason": "good"
+        }
+      ],
+      "objective_weight_changes": {},
+      "guardrail_items": ["tiny_single"],
+      "expected_improvements": [],
+      "regression_risks": [],
+      "forbidden_fixes_acknowledged": [],
+      "experiment_plan": {"calibration_budget": {"max_trials": 10, "time_budget_s": 60}}
+    }
+  ]
+}

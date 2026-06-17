@@ -1,0 +1,115 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_minimal_c4",
+  "sample_rate": 48000,
+  "duration": 4.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 90,
+    "pedal": "off"
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "hammer",
+      "type": "HammerExcitation",
+      "params": {
+        "brightness": 0.75,
+        "attack_ms": 3.0,
+        "decay_ms": 30.0,
+        "seed": 2
+      }
+    },
+    {
+      "id": "string",
+      "type": "StiffStringModal",
+      "params": {
+        "partials": 64,
+        "inharmonicity_B": 0.00012,
+        "decay_seconds": 2.4,
+        "brightness": 0.8,
+        "detune_cents": 0.0,
+        "seed": 2
+      }
+    },
+    {
+      "id": "body",
+      "type": "BodyEQ",
+      "params": {
+        "low_gain_db": 1.5,
+        "mid_gain_db": 0.0,
+        "high_gain_db": -2.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "hammer.velocity"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "string.frequency"
+    },
+    {
+      "from": "hammer.audio",
+      "to": "string.excitation"
+    },
+    {
+      "from": "string.audio",
+      "to": "body.audio"
+    },
+    {
+      "from": "body.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "hammer.audio",
+    "string.audio",
+    "body.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {
+        "x": -18.0,
+        "y": -47.0
+      },
+      "hammer": {
+        "x": -21.0,
+        "y": 345.0
+      },
+      "string": {
+        "x": 229.0,
+        "y": 142.0
+      },
+      "body": {
+        "x": 475.0,
+        "y": -51.0
+      },
+      "out": {
+        "x": 687.0,
+        "y": 252.0
+      }
+    }
+  }
+}

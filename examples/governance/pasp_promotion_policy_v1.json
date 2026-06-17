@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "promotion_policy": {
+    "required_dataset": "",
+    "max_allowed_mean_loss_regression": 0.02,
+    "max_allowed_failure_rate_regression": 0.02,
+    "max_new_critical_failures": 0,
+    "require_target_cluster_improvement": true,
+    "require_physical_plausibility_pass": true,
+    "require_no_forbidden_fixes": true,
+    "require_candidate_eval": true,
+    "require_regression_vs_active": true,
+    "allow_human_override": true
+  }
+}

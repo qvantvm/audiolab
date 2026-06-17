@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_string_group_a3_c5",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity_norm": 0.5},
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "pasp_string_group_a3_c5",
+        "optimizer": "random_search",
+        "max_iters": 15,
+        "seed": 42,
+        "family_weights": {
+          "audio": 1.0,
+          "smoothness": 0.15,
+          "velocity": 0.2,
+          "physical": 0.1,
+          "register": 0.1,
+          "body": 0.05,
+          "string_group": 0.1,
+          "secondary_resonance": 0.05
+        },
+        "panel": [
+          {"midi_note": 57, "velocity_norm": 0.5},
+          {"midi_note": 60, "velocity_norm": 0.5},
+          {"midi_note": 64, "velocity_norm": 0.5},
+          {"midi_note": 69, "velocity_norm": 0.5},
+          {"midi_note": 72, "velocity_norm": 0.5}
+        ],
+        "tunables": [
+          {"path": "blocks.note.params.parameterization.curves.unison_detune_spread_cents.value", "min": 0.2, "max": 2.5},
+          {"path": "blocks.note.params.parameterization.curves.felt_Q0.anchors.60", "min": 100000.0, "max": 1000000000.0},
+          {"path": "blocks.note.params.parameterization.curves.hammer_mass_kg.anchors.60", "min": 0.005, "max": 0.012},
+          {"path": "blocks.note.params.parameterization.curves.inharmonicity_B.anchors.60", "min": 0.00015, "max": 0.0006},
+          {"path": "blocks.note.params.parameterization.curves.modal_loss_base.anchors.60", "min": 0.05, "max": 0.25},
+          {"path": "blocks.note.params.duplex_mix", "min": 0.0, "max": 0.12},
+          {"path": "blocks.note.params.sympathetic_mix", "min": 0.0, "max": 0.08}
+        ]
+      }
+    },
+    {"id": "note", "type": "PASPStringGroupNoteModel", "params": {"contact_model": "bidirectional", "num_modes": 32}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity_norm"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.audio", "note.bridge_audio", "note.string_1_audio", "note.string_2_audio", "note.string_3_audio"]
+}

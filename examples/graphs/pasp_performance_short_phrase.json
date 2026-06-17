@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_performance_short_phrase",
+  "sample_rate": 48000,
+  "duration": 5.0,
+  "block_size": 64,
+  "inputs": {},
+  "blocks": [
+    {
+      "id": "performance",
+      "type": "PASPPerformanceModel",
+      "params": {
+        "contact_model": "bidirectional",
+        "num_modes": 32,
+        "use_register_defaults": true,
+        "max_polyphony": 32,
+        "shared_body": true,
+        "sympathetic_enabled": true,
+        "sympathetic_mode": "performance_context",
+        "sympathetic_mix": 0.04,
+        "events": [
+          {"time_s": 0.0, "type": "note_on", "note": 57, "velocity_norm": 0.55},
+          {"time_s": 0.3, "type": "note_on", "note": 60, "velocity_norm": 0.58},
+          {"time_s": 0.55, "type": "pedal_down", "pedal": "sustain"},
+          {"time_s": 0.7, "type": "note_on", "note": 64, "velocity_norm": 0.52},
+          {"time_s": 1.0, "type": "note_off", "note": 57},
+          {"time_s": 1.2, "type": "note_on", "note": 60, "velocity_norm": 0.5},
+          {"time_s": 1.8, "type": "note_off", "note": 60},
+          {"time_s": 2.0, "type": "note_off", "note": 64},
+          {"time_s": 2.8, "type": "pedal_up", "pedal": "sustain"}
+        ]
+      }
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "performance.audio", "to": "out.audio"}
+  ],
+  "probes": ["performance.audio"]
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_register_a3_c5_note_sweep",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity_norm": 0.5},
+  "blocks": [
+    {
+      "id": "panel",
+      "type": "PanelMetricsTask",
+      "params": {
+        "panel": [
+          {"midi_note": 57, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 58, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 59, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 60, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 61, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 62, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 63, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 64, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 65, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 66, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 67, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 68, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 69, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 70, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 71, "velocity_norm": 0.5, "velocity": 0.5},
+          {"midi_note": 72, "velocity_norm": 0.5, "velocity": 0.5}
+        ]
+      }
+    },
+    {"id": "note", "type": "PASPNoteFamilyModel", "params": {"contact_model": "bidirectional", "num_modes": 32, "use_register_defaults": true}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity_norm"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.audio", "note.bridge_audio"]
+}

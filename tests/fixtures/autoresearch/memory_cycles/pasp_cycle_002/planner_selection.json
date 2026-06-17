@@ -1,0 +1,18 @@
+{
+  "mode": "template",
+  "selected_proposal_id": "prop_001",
+  "num_valid_proposals": 1,
+  "num_proposals": 2,
+  "fallback_used": false,
+  "selected_proposal": {
+    "proposal_id": "prop_001",
+    "hypothesis": "Reduce sympathetic resonance tail on repeated notes.",
+    "likely_subsystem": "sympathetic resonance",
+    "allowed_parameter_changes": [
+      {
+        "parameter": "sympathetic_mix",
+        "direction": "decrease"
+      }
+    ]
+  }
+}

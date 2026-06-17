@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "planner_summary": "Disable regression gates.",
+  "proposals": [
+    {
+      "proposal_id": "mock_gate",
+      "rank": 1,
+      "target_cluster_id": "cluster_000_sympathetic_too_strong",
+      "hypothesis": "disable_regression gates and accept candidate",
+      "likely_subsystem": "sympathetic resonance",
+      "confidence": "high",
+      "allowed_parameter_changes": [
+        {
+          "parameter": "sympathetic_mix",
+          "direction": "decrease",
+          "suggested_range": [0.0, 0.04],
+          "reason": "skip gates"
+        }
+      ],
+      "objective_weight_changes": {},
+      "guardrail_items": ["tiny_single"],
+      "expected_improvements": [],
+      "regression_risks": [],
+      "forbidden_fixes_acknowledged": [],
+      "experiment_plan": {"calibration_budget": {"max_trials": 10, "time_budget_s": 60}}
+    }
+  ]
+}

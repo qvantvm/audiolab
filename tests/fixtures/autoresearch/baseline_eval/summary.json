@@ -1,0 +1,27 @@
+{
+  "dataset_name": "test_phrase_eval_tiny",
+  "item_count": 2,
+  "aggregate": {
+    "primary_loss_key": "multi_res_stft_loss",
+    "overall": {
+      "multi_res_stft_loss": {"mean": 0.45, "max": 0.62, "min": 0.28},
+      "item_count": 2
+    },
+    "by_category": {
+      "single_note_release": {
+        "multi_res_stft_loss": {"mean": 0.28}
+      },
+      "repeated_note": {
+        "multi_res_stft_loss": {"mean": 0.62}
+      }
+    },
+    "by_tag": {
+      "sympathetic_too_strong": {
+        "multi_res_stft_loss": {"mean": 0.62}
+      },
+      "bad_tail": {
+        "multi_res_stft_loss": {"mean": 0.28}
+      }
+    }
+  }
+}

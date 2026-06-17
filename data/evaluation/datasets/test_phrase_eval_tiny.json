@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "name": "test_phrase_eval_tiny",
+  "description": "Tiny synthetic dataset for fast evaluation tests.",
+  "sample_rate": 48000,
+  "reference_root": ".",
+  "items": [
+    {
+      "id": "tiny_single",
+      "category": "single_note_release",
+      "tags": ["single_note", "test"],
+      "duration_s": 1.0,
+      "events": "events/tiny_single_note.json",
+      "reference_wav": "audio/tiny_single.wav",
+      "notes": [60],
+      "velocities": [0.5],
+      "pedal": "none"
+    },
+    {
+      "id": "tiny_repeated",
+      "category": "repeated_note",
+      "tags": ["repeated_note", "test"],
+      "duration_s": 1.2,
+      "events": "events/tiny_repeated_note.json",
+      "reference_wav": "audio/tiny_repeated.wav",
+      "notes": [60],
+      "velocities": [0.5, 0.45],
+      "pedal": "none"
+    }
+  ]
+}

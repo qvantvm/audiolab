@@ -1,0 +1,114 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_family_b3_d4",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity_norm": 0.5
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "pasp_family_b3_d4",
+        "optimizer": "random_search",
+        "max_iters": 24,
+        "seed": 23,
+        "family_weights": {
+          "audio": 1.0,
+          "smoothness": 0.15,
+          "velocity": 0.2,
+          "physical": 0.1
+        },
+        "panel": [
+          {"midi_note": 59, "velocity_norm": 0.2, "velocity": 0.2, "pedal": "off", "wav_path": "data/references/piano/B3_v020.wav"},
+          {"midi_note": 59, "velocity_norm": 0.5, "velocity": 0.5, "pedal": "off", "wav_path": "data/references/piano/B3_v050.wav"},
+          {"midi_note": 59, "velocity_norm": 0.8, "velocity": 0.8, "pedal": "off", "wav_path": "data/references/piano/B3_v080.wav"},
+          {"midi_note": 59, "velocity_norm": 1.0, "velocity": 1.0, "pedal": "off", "wav_path": "data/references/piano/B3_v100.wav"},
+          {"midi_note": 60, "velocity_norm": 0.2, "velocity": 0.2, "pedal": "off", "wav_path": "data/references/piano/C4_v020.wav"},
+          {"midi_note": 60, "velocity_norm": 0.5, "velocity": 0.5, "pedal": "off", "wav_path": "data/references/piano/C4_v050.wav"},
+          {"midi_note": 60, "velocity_norm": 0.8, "velocity": 0.8, "pedal": "off", "wav_path": "data/references/piano/C4_v080.wav"},
+          {"midi_note": 60, "velocity_norm": 1.0, "velocity": 1.0, "pedal": "off", "wav_path": "data/references/piano/C4_v100.wav"},
+          {"midi_note": 61, "velocity_norm": 0.2, "velocity": 0.2, "pedal": "off", "wav_path": "data/references/piano/Cs4_v020.wav"},
+          {"midi_note": 61, "velocity_norm": 0.5, "velocity": 0.5, "pedal": "off", "wav_path": "data/references/piano/Cs4_v050.wav"},
+          {"midi_note": 61, "velocity_norm": 0.8, "velocity": 0.8, "pedal": "off", "wav_path": "data/references/piano/Cs4_v080.wav"},
+          {"midi_note": 61, "velocity_norm": 1.0, "velocity": 1.0, "pedal": "off", "wav_path": "data/references/piano/Cs4_v100.wav"},
+          {"midi_note": 62, "velocity_norm": 0.2, "velocity": 0.2, "pedal": "off", "wav_path": "data/references/piano/D4_v020.wav"},
+          {"midi_note": 62, "velocity_norm": 0.5, "velocity": 0.5, "pedal": "off", "wav_path": "data/references/piano/D4_v050.wav"},
+          {"midi_note": 62, "velocity_norm": 0.8, "velocity": 0.8, "pedal": "off", "wav_path": "data/references/piano/D4_v080.wav"},
+          {"midi_note": 62, "velocity_norm": 1.0, "velocity": 1.0, "pedal": "off", "wav_path": "data/references/piano/D4_v100.wav"}
+        ],
+        "tunables": [
+          {"path": "blocks.note.params.parameterization.curves.felt_Q0.log_a0", "min": 12.0, "max": 16.0},
+          {"path": "blocks.note.params.parameterization.curves.felt_Q0.log_a1", "min": -0.05, "max": 0.08},
+          {"path": "blocks.note.params.parameterization.curves.hammer_mass_kg.a0", "min": 0.006, "max": 0.011},
+          {"path": "blocks.note.params.parameterization.curves.hammer_mass_kg.a1", "min": -0.001, "max": 0.001},
+          {"path": "blocks.note.params.parameterization.curves.inharmonicity_B.anchors.59", "min": 0.00015, "max": 0.0005},
+          {"path": "blocks.note.params.parameterization.curves.inharmonicity_B.anchors.62", "min": 0.0002, "max": 0.0006},
+          {"path": "blocks.note.params.velocity_scale", "min": 1.5, "max": 5.0},
+          {"path": "blocks.note.params.velocity_exponent", "min": 1.2, "max": 2.5},
+          {"path": "blocks.note.params.parameterization.curves.bridge_loss.a0", "min": 0.1, "max": 0.35},
+          {"path": "blocks.note.params.parameterization.curves.soundboard_mix.value", "min": 0.2, "max": 0.7}
+        ]
+      }
+    },
+    {
+      "id": "note",
+      "type": "PASPNoteFamilyModel",
+      "params": {
+        "contact_model": "bidirectional",
+        "velocity_scale": 3.0,
+        "velocity_exponent": 1.9,
+        "hammer_rest_position_m": 0.008,
+        "max_contact_force_N": 2000.0,
+        "felt_gap_m": 0.0,
+        "num_modes": 32,
+        "oversample": 2,
+        "output_gain": 1.0,
+        "modal_gain": 1.0,
+        "seed": 11,
+        "parameterization": {
+          "type": "note_family",
+          "notes": [59, 60, 61, 62],
+          "curves": {
+            "hammer_mass_kg": {"type": "linear", "center_note": 60, "a0": 0.0082, "a1": -0.00012, "bounds": [0.004, 0.014]},
+            "felt_Q0": {"type": "log_linear", "center_note": 60, "log_a0": 15.424, "log_a1": 0.02, "bounds": [10000.0, 1000000000.0]},
+            "felt_p": {"type": "constant", "value": 3.2, "bounds": [1.5, 4.5]},
+            "felt_damping_Ns_m": {"type": "linear", "center_note": 60, "a0": 80.0, "a1": 1.5, "bounds": [10.0, 300.0]},
+            "string_length_m": {"type": "anchor_interpolated", "anchors": {"59": 0.672, "60": 0.665, "61": 0.658, "62": 0.651}, "bounds": [0.03, 2.5]},
+            "string_tension_N": {"type": "log_linear", "center_note": 60, "log_a0": 6.579, "log_a1": 0.015, "bounds": [50.0, 1500.0]},
+            "linear_density_kg_m": {"type": "log_linear", "center_note": 60, "log_a0": -5.083, "log_a1": -0.002, "bounds": [0.0001, 0.05]},
+            "inharmonicity_B": {"type": "anchor_interpolated", "anchors": {"59": 0.00028, "60": 0.00030, "61": 0.00032, "62": 0.00034}, "bounds": [0.0, 0.01]},
+            "strike_position_ratio": {"type": "constant", "value": 0.12, "bounds": [0.05, 0.25]},
+            "modal_loss_base": {"type": "log_linear", "center_note": 60, "log_a0": -2.121, "log_a1": 0.01, "bounds": [0.01, 1.0]},
+            "modal_loss_high": {"type": "log_linear", "center_note": 60, "log_a0": -0.916, "log_a1": 0.012, "bounds": [0.01, 1.0]},
+            "bridge_loss": {"type": "linear", "center_note": 60, "a0": 0.2, "a1": 0.002, "bounds": [0.05, 0.45]},
+            "soundboard_mix": {"type": "constant", "value": 0.5, "bounds": [0.2, 0.7]}
+          }
+        }
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {"peak_normalize_db": -1.0}
+    }
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity_norm"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "note.force",
+    "note.compression",
+    "note.hammer_velocity",
+    "note.string_displacement",
+    "note.audio",
+    "out.audio"
+  ]
+}

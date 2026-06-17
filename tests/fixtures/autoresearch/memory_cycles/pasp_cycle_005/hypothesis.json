@@ -1,0 +1,7 @@
+{
+  "hypothesis": "Improve release tail.",
+  "likely_subsystem": "damper/release",
+  "allowed_parameters": [
+    "damper_damping_base"
+  ]
+}

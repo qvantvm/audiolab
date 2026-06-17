@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "description": "Approved topology templates for Tier 2 autoresearch cycles.",
+  "templates": [
+    {
+      "template_id": "pasp_performance_monolith",
+      "graph_path": "examples/graphs/pasp_performance_model_base.json",
+      "kind": "base",
+      "description": "Default PASPPerformanceModel monolith for phrase-level eval."
+    },
+    {
+      "template_id": "pasp_string_group_sympathetic",
+      "graph_path": "examples/graphs/pasp_string_group_sympathetic_demo.json",
+      "kind": "topology_swap",
+      "description": "PASPStringGroupNoteModel with sympathetic coupling (single-note demo wiring)."
+    },
+    {
+      "template_id": "pasp_string_group_duplex",
+      "graph_path": "examples/graphs/pasp_string_group_duplex_demo.json",
+      "kind": "topology_swap",
+      "description": "String group model with duplex scale resonance demo topology."
+    },
+    {
+      "template_id": "bell_reverb_post_chain",
+      "graph_path": "examples/graphs/bell_reverb.json",
+      "kind": "post_chain",
+      "description": "Reference post-chain with FeedbackDelay / room blocks (legacy bell demo)."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_lifecycle_chord_release",
+  "sample_rate": 48000,
+  "duration": 3.5,
+  "block_size": 64,
+  "inputs": {},
+  "blocks": [
+    {
+      "id": "piano",
+      "type": "PASPEventPianoModel",
+      "params": {
+        "contact_model": "bidirectional",
+        "num_modes": 32,
+        "use_register_defaults": true,
+        "events": [
+          {"time_s": 0.0, "type": "note_on", "note": 60, "velocity_norm": 0.5},
+          {"time_s": 0.0, "type": "note_on", "note": 64, "velocity_norm": 0.48},
+          {"time_s": 0.0, "type": "note_on", "note": 67, "velocity_norm": 0.46},
+          {"time_s": 1.5, "type": "note_off", "note": 60},
+          {"time_s": 1.7, "type": "note_off", "note": 64},
+          {"time_s": 1.9, "type": "note_off", "note": 67}
+        ]
+      }
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "piano.audio", "to": "out.audio"}
+  ],
+  "probes": ["piano.audio"]
+}

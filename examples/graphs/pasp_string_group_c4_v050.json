@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_string_group_c4_v050",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity_norm": 0.5},
+  "blocks": [
+    {"id": "note", "type": "PASPStringGroupNoteModel", "params": {"contact_model": "bidirectional", "num_modes": 32}},
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity_norm"},
+    {"from": "inputs.velocity_norm", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.audio", "note.bridge_audio", "note.string_1_audio", "note.string_2_audio", "note.string_3_audio", "out.audio"]
+}

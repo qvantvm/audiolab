@@ -1,0 +1,136 @@
+{
+  "schema_version": "0.1",
+  "name": "bell_reverb",
+  "sample_rate": 48000,
+  "duration": 6.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 76
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "strike",
+      "type": "NoiseBurst",
+      "params": {
+        "amplitude": 0.85,
+        "decay_ms": 6.0,
+        "seed": 42
+      }
+    },
+    {
+      "id": "bell",
+      "type": "ModalResonatorBank",
+      "params": {
+        "partials": [
+          {"ratio": 0.56, "amplitude": 0.35, "decay_seconds": 4.0},
+          {"ratio": 1.0, "amplitude": 1.0, "decay_seconds": 3.2},
+          {"ratio": 1.41, "amplitude": 0.55, "decay_seconds": 2.4},
+          {"ratio": 2.0, "amplitude": 0.4, "decay_seconds": 1.8},
+          {"ratio": 2.65, "amplitude": 0.3, "decay_seconds": 1.3},
+          {"ratio": 3.0, "amplitude": 0.22, "decay_seconds": 1.0},
+          {"ratio": 4.1, "amplitude": 0.15, "decay_seconds": 0.7},
+          {"ratio": 5.4, "amplitude": 0.1, "decay_seconds": 0.45}
+        ]
+      }
+    },
+    {
+      "id": "reverb1",
+      "type": "FeedbackDelay",
+      "params": {
+        "delay_ms": 48.0,
+        "feedback": 0.44,
+        "mix": 0.42
+      }
+    },
+    {
+      "id": "reverb_damp",
+      "type": "LoopFilter",
+      "params": {
+        "cutoff_hz": 3200.0
+      }
+    },
+    {
+      "id": "reverb2",
+      "type": "FeedbackDelay",
+      "params": {
+        "delay_ms": 67.0,
+        "feedback": 0.5,
+        "mix": 0.38
+      }
+    },
+    {
+      "id": "room",
+      "type": "SoundboardConvolution",
+      "params": {
+        "decay_seconds": 1.4,
+        "mix": 0.28
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "bell.frequency"
+    },
+    {
+      "from": "strike.audio",
+      "to": "bell.excitation"
+    },
+    {
+      "from": "bell.audio",
+      "to": "reverb1.audio"
+    },
+    {
+      "from": "reverb1.audio",
+      "to": "reverb_damp.audio"
+    },
+    {
+      "from": "reverb_damp.audio",
+      "to": "reverb2.audio"
+    },
+    {
+      "from": "reverb2.audio",
+      "to": "room.audio"
+    },
+    {
+      "from": "room.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "bell.audio",
+    "reverb2.audio",
+    "room.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 60, "y": 80},
+      "strike": {"x": 60, "y": 200},
+      "bell": {"x": 260, "y": 140},
+      "reverb1": {"x": 420, "y": 120},
+      "reverb_damp": {"x": 580, "y": 120},
+      "reverb2": {"x": 740, "y": 120},
+      "room": {"x": 900, "y": 120},
+      "out": {"x": 1060, "y": 120}
+    }
+  }
+}

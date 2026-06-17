@@ -1,0 +1,42 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_c4_bidirectional_velocity_sweep",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {"midi_note": 60, "velocity": 100},
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "pasp_c4_velocity_panel",
+        "optimizer": "random_search",
+        "max_iters": 8,
+        "seed": 3,
+        "panel": [
+          {"midi_note": 60, "velocity": 40, "pedal": "off", "wav_path": "data/note_060_C4_vel_040_pedal_off.wav"},
+          {"midi_note": 60, "velocity": 64, "pedal": "off", "wav_path": "data/note_060_C4_vel_064_pedal_off.wav"},
+          {"midi_note": 60, "velocity": 100, "pedal": "off", "wav_path": "data/note_060_C4_vel_100_pedal_off.wav"},
+          {"midi_note": 60, "velocity": 120, "pedal": "off", "wav_path": "data/note_060_C4_vel_120_pedal_off.wav"}
+        ],
+        "tunables": [
+          {"path": "blocks.note.params.felt_Q0", "min": 1e5, "max": 2e8},
+          {"path": "blocks.note.params.velocity_scale", "min": 1.5, "max": 5.0}
+        ]
+      }
+    },
+    {
+      "id": "note",
+      "type": "PASPNoteModel",
+      "params": {"contact_model": "bidirectional"}
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.compression", "note.audio"]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_performance_model_base",
+  "sample_rate": 48000,
+  "duration": 4.0,
+  "block_size": 64,
+  "inputs": {},
+  "blocks": [
+    {
+      "id": "performance",
+      "type": "PASPPerformanceModel",
+      "params": {
+        "contact_model": "bidirectional",
+        "num_modes": 32,
+        "use_register_defaults": true,
+        "max_polyphony": 32,
+        "shared_body": true,
+        "sympathetic_enabled": true,
+        "sympathetic_mode": "performance_context",
+        "sympathetic_mix": 0.04,
+        "events": []
+      }
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "performance.audio", "to": "out.audio"}
+  ],
+  "probes": ["performance.audio"]
+}

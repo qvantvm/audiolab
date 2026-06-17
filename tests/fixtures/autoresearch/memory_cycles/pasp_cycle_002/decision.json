@@ -1,0 +1,15 @@
+{
+  "decision": "accept",
+  "reason": "test accept",
+  "evidence": {
+    "target_cluster_delta": {
+      "mean_affected_delta": -0.03,
+      "improved": true
+    },
+    "global_mean_loss_delta": 0.005,
+    "new_failures": [],
+    "new_critical_failures": [],
+    "guardrail_worsened": false,
+    "overall_status": "improved"
+  }
+}

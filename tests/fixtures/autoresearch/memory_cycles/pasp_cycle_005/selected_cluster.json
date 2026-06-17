@@ -1,0 +1,13 @@
+{
+  "cluster_id": "cluster_001_bad_tail",
+  "common_tags": [
+    "bad_tail"
+  ],
+  "likely_subsystem": "damper/release",
+  "affected_items": [
+    "tiny_repeated"
+  ],
+  "common_categories": [
+    "repeated_note"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.1",
+  "name": "pasp_note_c4",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 60,
+    "velocity": 100
+  },
+  "blocks": [
+    {
+      "id": "calibration",
+      "type": "CalibrationTask",
+      "params": {
+        "stage": "pasp_note_c4",
+        "optimizer": "random_search",
+        "max_iters": 16,
+        "seed": 11,
+        "panel": [
+          {
+            "midi_note": 60,
+            "velocity": 100,
+            "pedal": "off",
+            "wav_path": "data/note_060_C4_vel_100_pedal_off.wav"
+          }
+        ],
+        "tunables": [
+          {"path": "blocks.note.params.felt_Q0", "min": 40.0, "max": 400.0},
+          {"path": "blocks.note.params.felt_p", "min": 2.0, "max": 4.0},
+          {"path": "blocks.note.params.hammer_mass_kg", "min": 0.004, "max": 0.012},
+          {"path": "blocks.note.params.bridge_loss", "min": 0.05, "max": 0.45}
+        ]
+      }
+    },
+    {
+      "id": "note",
+      "type": "PASPNoteModel",
+      "params": {
+        "hammer_mass_kg": 0.008,
+        "felt_Q0": 120.0,
+        "felt_p": 2.7,
+        "string_length_m": 0.65,
+        "string_tension_N": 700.0,
+        "linear_density_kg_m": 0.006,
+        "inharmonicity_B": 0.00035,
+        "string_loss": 0.15,
+        "bridge_loss": 0.2,
+        "soundboard_mix": 0.5,
+        "partials": 32,
+        "coupled": true,
+        "contact_model": "coupled_approx",
+        "seed": 7
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note.midi_note"},
+    {"from": "inputs.velocity", "to": "note.velocity"},
+    {"from": "note.audio", "to": "out.audio"}
+  ],
+  "probes": ["note.force", "note.audio", "out.audio"],
+  "ui": {
+    "nodes": {
+      "calibration": {"x": 40, "y": 40},
+      "note": {"x": 320, "y": 140},
+      "out": {"x": 560, "y": 140}
+    }
+  }
+}

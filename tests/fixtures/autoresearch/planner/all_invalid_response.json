@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "planner_summary": "All invalid proposals.",
+  "proposals": [
+    {
+      "proposal_id": "mock_all_bad",
+      "rank": 1,
+      "target_cluster_id": "cluster_000_sympathetic_too_strong",
+      "hypothesis": "bad",
+      "likely_subsystem": "sympathetic resonance",
+      "confidence": "low",
+      "allowed_parameter_changes": [
+        {
+          "parameter": "bogus",
+          "direction": "search",
+          "suggested_range": [0.0, 1.0],
+          "reason": "bad"
+        }
+      ],
+      "objective_weight_changes": {},
+      "guardrail_items": ["tiny_single"],
+      "expected_improvements": [],
+      "regression_risks": [],
+      "forbidden_fixes_acknowledged": [],
+      "experiment_plan": {"calibration_budget": {"max_trials": 10, "time_budget_s": 60}}
+    }
+  ]
+}

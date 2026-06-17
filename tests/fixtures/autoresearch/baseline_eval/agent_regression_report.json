@@ -1,0 +1,22 @@
+{
+  "run_id": "baseline_fixture",
+  "top_failure_clusters": [
+    {
+      "cluster_id": "cluster_000_sympathetic_too_strong",
+      "common_tags": ["sympathetic_too_strong"],
+      "likely_subsystem": "sympathetic resonance",
+      "affected_items": ["tiny_repeated"],
+      "confidence": "high"
+    },
+    {
+      "cluster_id": "cluster_001_bad_tail",
+      "common_tags": ["bad_tail"],
+      "likely_subsystem": "damper/release",
+      "affected_items": ["tiny_single"],
+      "confidence": "medium"
+    }
+  ],
+  "summary": {
+    "failure_cluster_count": 2
+  }
+}

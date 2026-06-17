@@ -1,0 +1,15 @@
+{
+  "decision": "incomplete",
+  "reason": "test incomplete",
+  "evidence": {
+    "target_cluster_delta": {
+      "mean_affected_delta": -0.05,
+      "improved": true
+    },
+    "global_mean_loss_delta": 0.01,
+    "new_failures": [],
+    "new_critical_failures": [],
+    "guardrail_worsened": false,
+    "overall_status": "improved"
+  }
+}
