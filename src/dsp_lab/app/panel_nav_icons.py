@@ -7,8 +7,10 @@ from collections.abc import Callable
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 
+from dsp_lab.app.colors import PANEL_FG
 
-_ICON_COLOR = QColor("#c9d1d9")
+
+_ICON_COLOR = QColor(PANEL_FG)
 _ICON_SIZE = 20
 
 

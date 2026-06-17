@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from PyQt6.QtCore import QPointF, QRectF, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPainterPath, QPen, QPainterPathStroker
+from PyQt6.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPainterPath, QPen, QPainterPathStroker
 from PyQt6.QtWidgets import QGraphicsItem, QGraphicsObject, QGraphicsPathItem, QGraphicsScene, QGraphicsView, QMenu
 
 from dsp_lab.app.block_library import BLOCK_MIME_TYPE
+from dsp_lab.app.colors import PANEL_BG_CONTENT
 from dsp_lab.app.graph_document import GraphDocument
 from dsp_lab.blocks.registry import BLOCK_REGISTRY
 from dsp_lab.graph.validator import ValidationResult, split_endpoint
@@ -257,6 +258,7 @@ class GraphView(QGraphicsView):
         self.connection_items: list[ConnectionItem] = []
         self._refreshing = False
         self.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        self.setBackgroundBrush(QBrush(QColor(PANEL_BG_CONTENT)))
         self.setAcceptDrops(True)
         self.viewport().setAcceptDrops(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

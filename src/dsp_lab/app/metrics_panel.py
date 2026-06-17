@@ -8,6 +8,7 @@ from PyQt6.QtCore import QRectF
 from PyQt6.QtWidgets import QLabel, QTabWidget, QVBoxLayout, QWidget
 from scipy import signal
 
+from dsp_lab.app.colors import PANEL_BG_CONTENT, PANEL_FG
 from dsp_lab.app.panel_nav import PanelNav
 from dsp_lab.app.panel_nav_icons import probes_icon, spectrogram_icon, waveform_icon
 
@@ -15,9 +16,12 @@ from dsp_lab.app.panel_nav_icons import probes_icon, spectrogram_icon, waveform_
 class MetricsPanel(QWidget):
     def __init__(self):
         super().__init__()
+        pg.setConfigOptions(foreground=PANEL_FG, background=PANEL_BG_CONTENT)
         self.waveform = pg.PlotWidget(title="Waveform")
+        self.waveform.setBackground(PANEL_BG_CONTENT)
         self.spectrogram_label = QLabel("Render a graph to display a spectrogram.")
         self.spectrogram = pg.PlotWidget(title="Spectrogram")
+        self.spectrogram.setBackground(PANEL_BG_CONTENT)
         self.spectrogram.setLabel("bottom", "Time", units="s")
         self.spectrogram.setLabel("left", "Frequency", units="Hz")
         self.spectrogram_image = pg.ImageItem()
@@ -73,6 +77,7 @@ class MetricsPanel(QWidget):
                 self.probes.addTab(label, name)
                 continue
             plot = pg.PlotWidget(title=name)
+            plot.setBackground(PANEL_BG_CONTENT)
             plot_arr = _display_mono(arr)
             plot.plot(np.arange(plot_arr.size) / sample_rate, plot_arr, pen="c")
             self.probes.addTab(plot, name)

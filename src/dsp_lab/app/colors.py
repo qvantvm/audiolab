@@ -1,0 +1,8 @@
+"""Shared UI color tokens for DSP Lab."""
+
+PANEL_BG = "#161b22"
+PANEL_BG_ELEVATED = "#21262d"
+PANEL_BG_CONTENT = "#0d1117"
+PANEL_BORDER = "#30363d"
+PANEL_FG = "#c9d1d9"
+PANEL_FG_MUTED = "#8b949e"

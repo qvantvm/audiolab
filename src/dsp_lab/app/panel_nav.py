@@ -6,27 +6,6 @@ from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QButtonGroup, QHBoxLayout, QStackedWidget, QToolButton, QVBoxLayout, QWidget
 
-PANEL_NAV_STYLE = """
-#DspLabPanelNav {
-    background: #161b22;
-    border-right: 1px solid #30363d;
-}
-#DspLabPanelNav QToolButton {
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    padding: 3px;
-    margin: 1px 0;
-}
-#DspLabPanelNav QToolButton:hover {
-    background: #21262d;
-}
-#DspLabPanelNav QToolButton:checked {
-    background: #21262d;
-    border: 1px solid #30363d;
-}
-"""
-
 
 class PanelNav(QWidget):
     def __init__(
@@ -38,14 +17,15 @@ class PanelNav(QWidget):
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
+        self.setObjectName("DspLabPanelNavRoot")
 
         self._stack = QStackedWidget()
+        self._stack.setObjectName("DspLabPanelStack")
         self._buttons: list[QToolButton] = []
         self._widgets: list[QWidget] = []
 
         nav = QWidget()
         nav.setObjectName("DspLabPanelNav")
-        nav.setStyleSheet(PANEL_NAV_STYLE)
         nav.setFixedWidth(width)
         nav_layout = QVBoxLayout(nav)
         nav_layout.setContentsMargins(4, 6, 4, 6)

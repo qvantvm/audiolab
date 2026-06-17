@@ -42,6 +42,7 @@ from dsp_lab.app.panel_nav_icons import (
     render_icon,
     validation_icon,
 )
+from dsp_lab.app.theme import ensure_app_theme
 from dsp_lab.app.validation_panel import ValidationPanel
 from dsp_lab.audio.io import save_wav
 from dsp_lab.graph.executor import RenderResult, render_graph
@@ -52,6 +53,7 @@ class MainWindow(QMainWindow):
     def __init__(self, embedded: bool = False):
         super().__init__()
         self._embedded = embedded
+        ensure_app_theme(self, embedded=embedded)
         self.setWindowTitle("DSP Lab")
         self.resize(1400, 900)
         self.document: GraphDocument | None = None
@@ -398,7 +400,6 @@ class MainWindow(QMainWindow):
         font.setPointSize(12)
         toolbar.setFont(font)
         self.menuBar().setFont(font)
-        toolbar.setStyleSheet("QToolButton { font-size: 12pt; padding: 6px 10px; }")
         self.addToolBar(toolbar)
         actions = [
             ("Open Graph", self.open_graph),
