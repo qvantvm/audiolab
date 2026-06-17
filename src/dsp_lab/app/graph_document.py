@@ -10,7 +10,7 @@ import dsp_lab.blocks  # noqa: F401 - bootstrap registry
 from dsp_lab.blocks.registry import get_block_class, list_block_types
 from dsp_lab.graph.schema import BlockSpec, ConnectionSpec, GraphSpec, NodeLayout, UISpec
 from dsp_lab.graph.serialization import graph_to_dict, load_graph, save_graph
-from dsp_lab.graph.validator import ValidationResult, split_endpoint, validate_graph
+from dsp_lab.graph.validator import ValidationResult, split_endpoint, validate_connection_addition, validate_graph
 
 
 class GraphDocument:
@@ -79,12 +79,11 @@ class GraphDocument:
         self.dirty = True
 
     def add_connection(self, from_endpoint: str, to_endpoint: str) -> None:
-        self.graph.connections.append(ConnectionSpec.model_validate({"from": from_endpoint, "to": to_endpoint}))
-        result = self.validate()
+        result = validate_connection_addition(self.graph, from_endpoint, to_endpoint)
         if not result.valid:
-            self.graph.connections.pop()
             errors = "; ".join(message.message for message in result.messages if message.level == "error")
             raise ValueError(errors)
+        self.graph.connections.append(ConnectionSpec.model_validate({"from": from_endpoint, "to": to_endpoint}))
         self.dirty = True
 
     def delete_connection(self, index: int) -> None:

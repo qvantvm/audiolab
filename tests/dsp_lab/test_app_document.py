@@ -2,6 +2,7 @@ from pathlib import Path
 
 from dsp_lab.app.graph_document import GraphDocument
 from dsp_lab.graph.executor import render_graph
+from dsp_lab.graph.schema import GraphSpec
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -49,4 +50,23 @@ def test_connection_add_delete_roundtrip():
     doc.delete_connection(0)
     assert not doc.validate().valid
     doc.add_connection("osc.audio", "out.audio")
+    assert doc.validate().valid
+
+
+def test_add_connection_allows_incomplete_graph():
+    doc = GraphDocument(
+        GraphSpec(
+            name="wip",
+            blocks=[
+                {"id": "osc", "type": "SineOscillator", "params": {}},
+                {"id": "gain", "type": "Gain", "params": {}},
+                {"id": "out", "type": "Output", "params": {}},
+            ],
+            connections=[],
+        )
+    )
+    doc.add_connection("osc.audio", "gain.audio")
+    assert len(doc.graph.connections) == 1
+    assert not doc.validate().valid
+    doc.add_connection("gain.audio", "out.audio")
     assert doc.validate().valid

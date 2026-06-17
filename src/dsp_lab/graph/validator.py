@@ -130,6 +130,63 @@ def validate_graph(graph: GraphSpec) -> ValidationResult:
     return ValidationResult(valid, messages)
 
 
+def validate_connection_addition(
+    graph: GraphSpec,
+    from_endpoint: str,
+    to_endpoint: str,
+) -> ValidationResult:
+    """Validate one proposed connection without requiring a complete graph."""
+    messages: list[ValidationMessage] = []
+    blocks_by_id = {block.id: block for block in graph.blocks}
+
+    _validate_source(graph, blocks_by_id, from_endpoint, messages)
+    _validate_destination(blocks_by_id, to_endpoint, messages)
+
+    src_kind = _endpoint_kind(graph, blocks_by_id, from_endpoint, is_source=True)
+    dst_kind = _endpoint_kind(graph, blocks_by_id, to_endpoint, is_source=False)
+    dst = split_endpoint(to_endpoint)
+    src = split_endpoint(from_endpoint)
+    if src_kind and dst_kind and src_kind != dst_kind:
+        messages.append(
+            ValidationMessage(
+                "error",
+                "PORT_KIND_MISMATCH",
+                f"Cannot connect {src_kind} source '{from_endpoint}' to {dst_kind} destination '{to_endpoint}'",
+                dst[0] if dst else None,
+                dst[1] if dst else None,
+            )
+        )
+    if dst and dst[0] != "inputs":
+        key = (dst[0], dst[1])
+        for connection in graph.connections:
+            other_dst = split_endpoint(connection.to)
+            if other_dst and (other_dst[0], other_dst[1]) == key:
+                messages.append(
+                    ValidationMessage(
+                        "error",
+                        "MULTIPLE_INPUT_WRITERS",
+                        f"Input '{connection.to}' has multiple incoming connections",
+                        other_dst[0],
+                        other_dst[1],
+                    )
+                )
+                break
+    if src and dst and src[0] != "inputs" and dst[0] != "inputs":
+        block_ids = {block.id for block in graph.blocks}
+        edges: list[tuple[str, str]] = []
+        for connection in graph.connections:
+            edge_src = split_endpoint(connection.from_)
+            edge_dst = split_endpoint(connection.to)
+            if edge_src and edge_dst and edge_src[0] != "inputs" and edge_dst[0] != "inputs":
+                edges.append((edge_src[0], edge_dst[0]))
+        edges.append((src[0], dst[0]))
+        if _has_cycle(block_ids, edges):
+            messages.append(ValidationMessage("error", "GRAPH_CYCLE", "Graph contains a cycle; cycles are not supported yet"))
+
+    valid = not any(message.level == "error" for message in messages)
+    return ValidationResult(valid, messages)
+
+
 def _validate_source(
     graph: GraphSpec,
     blocks_by_id: dict[str, object],
