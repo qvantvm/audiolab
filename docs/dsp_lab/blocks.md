@@ -5,10 +5,16 @@ Port kinds: **audio** (per-block buffer), **control** (scalar), **event** (note/
 
 Calibration workflow (`CalibrationTask`, tunables, GUI **Calibrate** button): [calibration.md](calibration.md).
 
-Source of truth: `src/dsp_lab/blocks/` and `BLOCK_REGISTRY`. Regenerate:
+Source of truth: `src/dsp_lab/blocks/` and `BLOCK_REGISTRY`. Regenerate port/param tables:
 
 ```bash
 PYTHONPATH=src python scripts/generate_block_docs.py
+```
+
+Regenerate **Formula** sections (after editing `scripts/block_formulas.json`):
+
+```bash
+python scripts/apply_block_formulas.py
 ```
 
 ## Summary
@@ -159,6 +165,10 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 
 Outputs a smoothed amplitude envelope summary.
 
+**Formula**
+
+Window $W = f_s/200$; smoothed envelope $e = |x| * \mathrm{boxcar}(W)$; downsampled summary in `value`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -175,6 +185,10 @@ Outputs a smoothed amplitude envelope summary.
 #### `PartialTrackerProbe`
 
 Placeholder partial tracker based on spectrum peaks.
+
+**Formula**
+
+Same computation as `SpectrumProbe`. Placeholder peak-based partial tracker summary.
 
 **Inputs**
 
@@ -193,6 +207,10 @@ Placeholder partial tracker based on spectrum peaks.
 
 Outputs peak level while passing audio through.
 
+**Formula**
+
+Pass-through; $\text{value} = \max|x|$.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -209,6 +227,10 @@ Outputs peak level while passing audio through.
 #### `Probe`
 
 Pass-through probe with peak/rms summary.
+
+**Formula**
+
+Pass-through audio; `value` = $\{\text{peak}: \max|x|,\; \text{rms}: \sqrt{\mathrm{mean}(x^2)}\}$.
 
 **Inputs**
 
@@ -227,6 +249,10 @@ Pass-through probe with peak/rms summary.
 
 Outputs RMS level while passing audio through.
 
+**Formula**
+
+Pass-through; $\text{value} = \sqrt{\mathrm{mean}(x^2)}$.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -244,6 +270,10 @@ Outputs RMS level while passing audio through.
 
 Compact spectrogram-like probe summary.
 
+**Formula**
+
+Same computation as `SpectrumProbe`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -260,6 +290,10 @@ Compact spectrogram-like probe summary.
 #### `SpectrumProbe`
 
 Outputs a compact magnitude spectrum summary.
+
+**Formula**
+
+Pass-through; `value.bins` = first 128 magnitudes of $|\text{RFFT}(x)|$.
 
 **Inputs**
 
@@ -279,6 +313,14 @@ Outputs a compact magnitude spectrum summary.
 #### `BodyEQ`
 
 Stable three-band body tone shaping.
+
+**Formula**
+
+Split $x$ with Butterworth LP@350 Hz and HP@2500 Hz; mid = $x - low - high$:
+
+$$y = G_L low + G_M mid + G_H high$$
+
+$G$ from `low_gain_db`, `mid_gain_db`, `high_gain_db` as $10^{dB/20}$.
 
 **Inputs**
 
@@ -302,6 +344,12 @@ Stable three-band body tone shaping.
 
 Gentle cabinet radiation tone shaping.
 
+**Formula**
+
+2nd-order bandpass 90–9000 Hz:
+
+$$y = \text{sosfilt}(H_{BP}, x)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -317,6 +365,10 @@ Gentle cabinet radiation tone shaping.
 #### `DuplexScaleResonance`
 
 High-frequency duplex scale resonance approximation.
+
+**Formula**
+
+Same computation as `ResonanceBank`. Different default frequency/gain tables.
 
 **Inputs**
 
@@ -339,6 +391,12 @@ High-frequency duplex scale resonance approximation.
 
 Simple distance/brightness microphone position filter.
 
+**Formula**
+
+$d = \mathrm{clip}(\texttt{distance}, 0, 1)$, cutoff $f_c = 12000 - 7000d$:
+
+$$y = \text{sosfilt}(H_{LP}(f_c), x)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -358,6 +416,12 @@ Simple distance/brightness microphone position filter.
 #### `ResonanceBank`
 
 Adds a small bank of body resonances.
+
+**Formula**
+
+For each $(f_k, g_k)$ in `frequencies` / `gains`:
+
+$$y = x + \sum_k g_k \cdot \text{iirpeak}(x, f_k, Q=8)$$
 
 **Inputs**
 
@@ -380,6 +444,12 @@ Adds a small bank of body resonances.
 
 Convolves audio with a simple synthetic body impulse.
 
+**Formula**
+
+Synthetic IR $h[n] = e^{-t_n/\tau}\sin(2\pi \cdot 180 \cdot t_n)$, $\tau$ = `decay_seconds`; convolve and mix:
+
+$$y = (1-m)x + m \cdot \mathrm{norm}(x * h), \quad m = \texttt{mix}$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -400,6 +470,10 @@ Convolves audio with a simple synthetic body impulse.
 #### `SoundboardModalBank`
 
 Soundboard modal resonance approximation.
+
+**Formula**
+
+Same computation as `ResonanceBank`. Different default frequency/gain tables.
 
 **Inputs**
 
@@ -422,6 +496,12 @@ Soundboard modal resonance approximation.
 
 Mono-compatible widening placeholder; outputs shaped mono audio.
 
+**Formula**
+
+Delay tap $D = \lfloor 0.003 f_s \cdot \texttt{width} \rfloor$:
+
+$$y[n] = x[n] + 0.25 \cdot x[n-D]$$ (mono-compatible widening placeholder).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -441,6 +521,10 @@ Mono-compatible widening placeholder; outputs shaped mono audio.
 #### `SympatheticResonanceBank`
 
 Light sympathetic resonance layer.
+
+**Formula**
+
+Same computation as `ResonanceBank`. Different default frequency/gain tables.
 
 **Inputs**
 
@@ -465,6 +549,12 @@ Light sympathetic resonance layer.
 
 Metadata for batch panel renders; runner sweeps inputs over panel rows.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{BatchRenderTask},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -483,6 +573,12 @@ Metadata for batch panel renders; runner sweeps inputs over panel rows.
 #### `CalibrationTask`
 
 Metadata for calibration runner: stage, panel, tunables, optimizer.
+
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{CalibrationTask},\; \text{params}: \text{block params}\,\}$$
 
 **Inputs:** none
 
@@ -504,6 +600,12 @@ Metadata for calibration runner: stage, panel, tunables, optimizer.
 
 Describes grid-search calibration settings.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{GridSearch},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -515,6 +617,12 @@ Describes grid-search calibration settings.
 #### `LossAggregator`
 
 Weighted sum of up to four scalar loss values.
+
+**Formula**
+
+Weighted mean of connected scalar losses $\ell_i$ with weights $w_i$:
+
+$$\text{loss} = \frac{\sum_i w_i \ell_i}{\sum_i w_i}$$
 
 **Inputs**
 
@@ -539,6 +647,12 @@ Weighted sum of up to four scalar loss values.
 
 Describes Optuna optimizer calibration settings.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{OptunaOptimizer},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -550,6 +664,12 @@ Describes Optuna optimizer calibration settings.
 #### `ParameterBinding`
 
 Metadata block mapping a tunable value to a target graph param path.
+
+**Formula**
+
+Pass-through with metadata:
+
+$$\text{value} = \text{input}, \quad \text{bind\_path} = \texttt{target\_path}$$
 
 **Inputs**
 
@@ -573,6 +693,12 @@ Metadata block mapping a tunable value to a target graph param path.
 
 Describes a parameter sweep for research graphs.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{ParameterSweep},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -584,6 +710,14 @@ Describes a parameter sweep for research graphs.
 #### `PerNoteTable`
 
 Interpolates per-note parameter bundles from sparse MIDI entries.
+
+**Formula**
+
+For MIDI note $m$, linearly interpolate each field across sorted `entries`:
+
+$$B(m) = \text{interp}(m, \{m_i\}, \{B_i\}), \quad \tau(m), \; \beta(m) \text{ similarly}$$
+
+Outputs: `inharmonicity_B`, `decay_seconds`, `brightness`.
 
 **Inputs**
 
@@ -607,6 +741,12 @@ Interpolates per-note parameter bundles from sparse MIDI entries.
 
 Describes random-search calibration settings.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{RandomSearch},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -619,6 +759,12 @@ Describes random-search calibration settings.
 
 Describes scipy optimizer calibration settings.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{ScipyOptimizer},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -630,6 +776,14 @@ Describes scipy optimizer calibration settings.
 #### `TrainableParameter`
 
 Named scalar tunable parameter for calibration graphs.
+
+**Formula**
+
+Scalar tunable exposed for calibration:
+
+$$\text{value} = \mathrm{clip}(\texttt{value}, \texttt{min}, \texttt{max})$$
+
+Bounds optional; used by external calibration runner via `bind_path`.
 
 **Inputs:** none
 
@@ -654,6 +808,12 @@ Named scalar tunable parameter for calibration graphs.
 
 Describes train/validation split settings.
 
+**Formula**
+
+Calibration metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{ValidationSplit},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -667,6 +827,10 @@ Describes train/validation split settings.
 #### `Constant`
 
 Outputs a constant control value.
+
+**Formula**
+
+$\text{value} = \texttt{value}$ (scalar param, constant for whole render).
 
 **Inputs:** none
 
@@ -685,6 +849,12 @@ Outputs a constant control value.
 #### `LookupTable`
 
 Interpolates a normalized control input over a value table.
+
+**Formula**
+
+Map `index` $\in [\texttt{min\_index}, \texttt{max\_index}]$ across `values` table:
+
+$$\text{value} = \text{interp}(\texttt{index}, \text{linspace}(lo, hi, |\texttt{values}|), \texttt{values})$$
 
 **Inputs**
 
@@ -708,6 +878,12 @@ Interpolates a normalized control input over a value table.
 
 Converts MIDI note number to frequency.
 
+**Formula**
+
+MIDI note $m$, reference `a4` = $A_4$:
+
+$$f = A_4 \cdot 2^{(m - 69)/12}$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -727,6 +903,12 @@ Converts MIDI note number to frequency.
 #### `ParameterCurve`
 
 Maps a control input through a piecewise-linear parameter curve.
+
+**Formula**
+
+Piecewise-linear map on sorted `points` $\{(x_i, y_i)\}$:
+
+$$\text{value} = \text{interp}(\texttt{x}, \{x_i\}, \{y_i\})$$
 
 **Inputs**
 
@@ -750,6 +932,12 @@ Maps a control input through a piecewise-linear parameter curve.
 #### `VelocityCurve`
 
 Maps MIDI velocity to a normalized control value.
+
+**Formula**
+
+$v = \mathrm{clip}(\texttt{velocity}/127, 0, 1)$, $\gamma$ = `gamma`:
+
+$$u = v^\gamma, \quad \text{value} = \texttt{min} + u(\texttt{max} - \texttt{min})$$
 
 **Inputs**
 
@@ -775,6 +963,10 @@ Maps MIDI velocity to a normalized control value.
 
 Fails if audio contains NaN or Inf.
 
+**Formula**
+
+Pass-through $y = x$ if $\forall n\, \mathrm{finite}(x[n])$; otherwise raise `ValueError`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -790,6 +982,10 @@ Fails if audio contains NaN or Inf.
 #### `AssertNoClipping`
 
 Fails if audio exceeds max peak.
+
+**Formula**
+
+Pass-through if $\max|x| \le \texttt{max\_peak}$; otherwise raise.
 
 **Inputs**
 
@@ -811,6 +1007,10 @@ Fails if audio exceeds max peak.
 
 Fails if audio RMS is below threshold.
 
+**Formula**
+
+Pass-through if $\text{RMS}(x) = \sqrt{\mathrm{mean}(x^2)} \ge \texttt{min\_rms}$; otherwise raise.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -831,6 +1031,10 @@ Fails if audio RMS is below threshold.
 
 Passes through a control value and exposes it for debugging.
 
+**Formula**
+
+$\text{value}_{out} = \text{value}_{in}$ (debug pass-through).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -847,6 +1051,10 @@ Passes through a control value and exposes it for debugging.
 
 Outputs block state placeholder for debugging.
 
+**Formula**
+
+$\text{state} = \text{block internal state dict}$ (debug snapshot).
+
 **Inputs:** none
 
 **Outputs**
@@ -860,6 +1068,12 @@ Outputs block state placeholder for debugging.
 #### `Delay`
 
 Static sample/millisecond delay.
+
+**Formula**
+
+$d = \texttt{delay\_ms} \cdot f_s / 1000$ samples; linear interpolation:
+
+$$y[n] = \text{interp}(n - d, n, x[n])$$
 
 **Inputs**
 
@@ -881,6 +1095,10 @@ Static sample/millisecond delay.
 
 First-order allpass dispersion approximation.
 
+**Formula**
+
+Same computation as `Allpass`. `coefficient` from param (default 0.4).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -900,6 +1118,12 @@ First-order allpass dispersion approximation.
 #### `FeedbackDelay`
 
 Simple feedback delay line.
+
+**Formula**
+
+Integer delay $D$ from `delay_ms`, feedback $g$ = `feedback`, mix $m$ = `mix`:
+
+$$w[n] = x[n] + g \cdot w[n-D], \quad y[n] = (1-m)x[n] + m w[n]$$
 
 **Inputs**
 
@@ -923,6 +1147,10 @@ Simple feedback delay line.
 
 Linear-interpolated fractional delay.
 
+**Formula**
+
+Same computation as `Delay`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -943,6 +1171,12 @@ Linear-interpolated fractional delay.
 
 Lowpass loop filter used in waveguides.
 
+**Formula**
+
+1st-order Butterworth lowpass at `cutoff_hz`:
+
+$$y = \text{sosfilt}(H_{LP}, x)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -962,6 +1196,14 @@ Lowpass loop filter used in waveguides.
 #### `WaveguideString`
 
 Karplus-Strong style waveguide string approximation.
+
+**Formula**
+
+Karplus–Strong loop length $L = \max(2, \lfloor f_s / f_0 \rfloor)$, decay $d$ = `decay`, brightness $b$ = `brightness`:
+
+$$y[n] = \text{buffer}[n \bmod L], \quad \text{buffer} \leftarrow d \cdot (b\,\text{avg} + (1-b)\,\text{neighbor})$$
+
+Initialized from `excitation` first $L$ samples.
 
 **Inputs**
 
@@ -987,6 +1229,17 @@ Karplus-Strong style waveguide string approximation.
 
 Whole-buffer ADSR envelope generator.
 
+**Formula**
+
+Piecewise-linear ADSR over buffer length $N$, with segment sample counts from `attack_ms`, `decay_ms`, `release_ms`, `gate_seconds`, and `sustain` $\in [0,1]$:
+
+1. Attack: $0 \to 1$ over `attack_ms`
+2. Decay: $1 \to \texttt{sustain}$ over `decay_ms` (within gate)
+3. Sustain: hold at $\texttt{sustain}$ until gate ends
+4. Release: last gate value $\to 0$ over `release_ms`
+
+$$e[n] = \text{piecewise linear segments as above}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1007,6 +1260,14 @@ Whole-buffer ADSR envelope generator.
 
 Generates an exponential decay envelope.
 
+**Formula**
+
+Let $t_n = n / f_s$, $\tau = \max(\texttt{decay\_seconds}, 0.001)$, $A = \texttt{amplitude}$:
+
+$$e[n] = A \exp(-t_n / \tau)$$
+
+`control` = $e[0]$; `audio` = full envelope buffer.
+
 **Inputs:** none
 
 **Outputs**
@@ -1024,6 +1285,12 @@ Generates an exponential decay envelope.
 #### `MultiSegmentEnvelope`
 
 Piecewise-linear whole-buffer envelope.
+
+**Formula**
+
+Sort `points` $\{(t_i, v_i)\}$ by time; let $t_n = n/f_s$:
+
+$$e[n] = \text{interp}(t_n, \{t_i\}, \{v_i\})$$
 
 **Inputs:** none
 
@@ -1043,6 +1310,12 @@ Piecewise-linear whole-buffer envelope.
 
 CompareTask placeholder for research graphs.
 
+**Formula**
+
+Research placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{CompareTask},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1054,6 +1327,10 @@ CompareTask placeholder for research graphs.
 #### `EventPassThrough`
 
 Passes event-shaped values through for event-port validation.
+
+**Formula**
+
+$$\text{event}_{out} = \text{event}_{in}$$
 
 **Inputs**
 
@@ -1070,6 +1347,10 @@ Passes event-shaped values through for event-port validation.
 #### `EventSource`
 
 Emits an event-shaped value for schema and GUI experiments.
+
+**Formula**
+
+$$\text{event} = \{\texttt{type}, \texttt{time}, \texttt{payload}, \ldots\}$$ from block params.
 
 **Inputs:** none
 
@@ -1089,6 +1370,12 @@ Emits an event-shaped value for schema and GUI experiments.
 
 GitCommitTask placeholder for research graphs.
 
+**Formula**
+
+Research placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{GitCommitTask},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1101,6 +1388,12 @@ GitCommitTask placeholder for research graphs.
 
 HumanReviewTask placeholder for research graphs.
 
+**Formula**
+
+Research placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{HumanReviewTask},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1112,6 +1405,14 @@ HumanReviewTask placeholder for research graphs.
 #### `PythonCustom`
 
 Runs sandboxed Python on connected inputs. Define process(inputs, n_frames, params, ctx) returning a dict of outputs, or assign to outputs in a short script body. np, math, and ctx helpers are available; imports and filesystem access are blocked.
+
+**Formula**
+
+User-defined sandboxed `process(inputs, n_frames, params, ctx)` returning output dict. Default example:
+
+$$y[n] = x[n] \cdot \texttt{gain}$$
+
+No fixed formula — behavior is entirely defined by `code` param.
 
 **Inputs**
 
@@ -1151,6 +1452,12 @@ Runs sandboxed Python on connected inputs. Define process(inputs, n_frames, para
 
 RenderTask placeholder for research graphs.
 
+**Formula**
+
+Research placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{RenderTask},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1162,6 +1469,12 @@ RenderTask placeholder for research graphs.
 #### `ReportTask`
 
 ReportTask placeholder for research graphs.
+
+**Formula**
+
+Research placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{ReportTask},\; \text{params}: \text{block params}\,\}$$
 
 **Inputs:** none
 
@@ -1176,6 +1489,12 @@ ReportTask placeholder for research graphs.
 #### `Allpass`
 
 First-order allpass phase shaper.
+
+**Formula**
+
+$a = \mathrm{clip}(\texttt{coefficient}, -0.99, 0.99)$:
+
+$$H(z) = \frac{a + z^{-1}}{1 + a z^{-1}}$$
 
 **Inputs**
 
@@ -1197,6 +1516,10 @@ First-order allpass phase shaper.
 
 Bandpass filter.
 
+**Formula**
+
+Same computation as `BiquadFilter`. Fixed `mode` for bandpass.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1217,6 +1540,15 @@ Bandpass filter.
 #### `BiquadFilter`
 
 Generic second-order filter.
+
+**Formula**
+
+2nd-order IIR per `mode` (`lowpass`, `highpass`, `bandpass`, `notch`) at `frequency_hz` with `q`:
+
+- Butterworth SOS for LP/HP/BP
+- `iirnotch` for notch
+
+$$y = \text{sosfilt}(H, x) \quad \text{or} \quad \text{lfilter}(b,a,x)$$
 
 **Inputs**
 
@@ -1240,6 +1572,10 @@ Generic second-order filter.
 
 Simple three-band EQ.
 
+**Formula**
+
+Same computation as `BodyEQ`. Three-band EQ alias using same crossover split.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1262,6 +1598,10 @@ Simple three-band EQ.
 
 Butterworth highpass filter.
 
+**Formula**
+
+Same computation as `BiquadFilter`. Fixed `mode` for highpass.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1282,6 +1622,10 @@ Butterworth highpass filter.
 
 Butterworth lowpass filter.
 
+**Formula**
+
+Same computation as `BiquadFilter`. Fixed `mode` for lowpass.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1301,6 +1645,10 @@ Butterworth lowpass filter.
 #### `Notch`
 
 Notch filter.
+
+**Formula**
+
+Same computation as `BiquadFilter`. Fixed `mode` for notch.
 
 **Inputs**
 
@@ -1323,6 +1671,10 @@ Notch filter.
 
 One-pole highpass filter.
 
+**Formula**
+
+$$y[n] = x[n] - \text{OnePoleLowpass}(x)[n]$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1342,6 +1694,12 @@ One-pole highpass filter.
 #### `OnePoleLowpass`
 
 One-pole lowpass filter.
+
+**Formula**
+
+$f_c$ = `cutoff_hz`, $\alpha = 1 - e^{-2\pi f_c / f_s}$:
+
+$$H(z) = \frac{\alpha}{1 - (1-\alpha) z^{-1}}$$
 
 **Inputs**
 
@@ -1365,6 +1723,10 @@ One-pole lowpass filter.
 
 Clamps audio to a min/max range.
 
+**Formula**
+
+$$y[n] = \mathrm{clip}(x[n], \texttt{min}, \texttt{max})$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1385,6 +1747,12 @@ Clamps audio to a min/max range.
 #### `Multiply`
 
 Multiplies an audio input by a control or audio factor.
+
+**Formula**
+
+$$y[n] = x[n] \cdot g[n]$$
+
+where $g$ is `factor` input or param (scalar broadcast).
 
 **Inputs**
 
@@ -1407,6 +1775,12 @@ Multiplies an audio input by a control or audio factor.
 
 Peak-normalizes an audio signal.
 
+**Formula**
+
+$$y[n] = \begin{cases} x[n] \cdot P / \max|x| & \max|x| > 0 \\ x[n] & \text{otherwise} \end{cases}$$
+
+$P$ = `peak` (default $\approx -1$ dBFS).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1427,6 +1801,12 @@ Peak-normalizes an audio signal.
 
 Applies tanh soft clipping.
 
+**Formula**
+
+$d = \max(\texttt{drive}, 0.001)$:
+
+$$y[n] = \tanh(d \cdot x[n])$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1446,6 +1826,12 @@ Applies tanh soft clipping.
 #### `Sum`
 
 Sums up to four audio/control inputs.
+
+**Formula**
+
+Sum all connected inputs (scalars broadcast to buffer length $N$):
+
+$$y[n] = \sum_i x_i[n]$$
 
 **Inputs**
 
@@ -1468,6 +1854,10 @@ Sums up to four audio/control inputs.
 
 Aligns reference audio onset to synthetic audio.
 
+**Formula**
+
+Onset-align reference to synthetic via `align_audio_pair`; truncate/pad to $N$ frames.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1484,6 +1874,14 @@ Aligns reference audio onset to synthetic audio.
 #### `AttackMetric`
 
 AttackMetric legacy compare metric.
+
+**Formula**
+
+Aligns reference and synthetic (`align_audio_pair`, optional onset alignment), then:
+
+$$\text{value} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s)[\texttt{peak_difference}]$$
+
+Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`).
 
 **Inputs**
 
@@ -1502,6 +1900,10 @@ AttackMetric legacy compare metric.
 #### `AudioHealthMetric`
 
 §5.1 basic audio health metric family.
+
+**Formula**
+
+After alignment: $\text{details} = \text{compute\_audio\_health\_metrics}$; $\text{value} = \text{duration\_error} + \text{peak\_dbfs\_error}$.
 
 **Inputs**
 
@@ -1522,6 +1924,14 @@ AttackMetric legacy compare metric.
 
 DecayMetric legacy compare metric.
 
+**Formula**
+
+Aligns reference and synthetic (`align_audio_pair`, optional onset alignment), then:
+
+$$\text{value} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s)[\texttt{envelope_decay.T30_error}]$$
+
+Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1540,6 +1950,10 @@ DecayMetric legacy compare metric.
 
 Subtracts reference audio from synthetic audio.
 
+**Formula**
+
+$$y[n] = x_{syn}[n] - x_{ref}[n]$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1556,6 +1970,10 @@ Subtracts reference audio from synthetic audio.
 #### `EnvelopeDecayMetric`
 
 §5.3 envelope and decay metrics.
+
+**Formula**
+
+After alignment: $\text{details} = \text{compute\_envelope\_decay\_metrics}$; $\text{value} = \text{T30\_error}$ or tail energy error.
 
 **Inputs**
 
@@ -1576,6 +1994,14 @@ Subtracts reference audio from synthetic audio.
 
 EnvelopeMetric legacy compare metric.
 
+**Formula**
+
+Aligns reference and synthetic (`align_audio_pair`, optional onset alignment), then:
+
+$$\text{value} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s)[\texttt{rms_difference}]$$
+
+Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1593,6 +2019,14 @@ EnvelopeMetric legacy compare metric.
 #### `F0Metric`
 
 F0Metric legacy compare metric.
+
+**Formula**
+
+Aligns reference and synthetic (`align_audio_pair`, optional onset alignment), then:
+
+$$\text{value} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s)[\texttt{estimated_f0_difference}]$$
+
+Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`).
 
 **Inputs**
 
@@ -1612,6 +2046,14 @@ F0Metric legacy compare metric.
 
 LogSTFTMetric legacy compare metric.
 
+**Formula**
+
+Aligns reference and synthetic (`align_audio_pair`, optional onset alignment), then:
+
+$$\text{value} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s)[\texttt{log_stft_distance}]$$
+
+Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1630,6 +2072,10 @@ LogSTFTMetric legacy compare metric.
 
 Maps metric family dict to normalized subscores.
 
+**Formula**
+
+$$\text{scores} = \text{compute\_metric\_family\_scores}(\text{metrics dict})$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1645,6 +2091,10 @@ Maps metric family dict to normalized subscores.
 #### `MultiResSTFTMetric`
 
 §5.5 multi-resolution STFT distance metrics.
+
+**Formula**
+
+After alignment: $\text{value} = \text{multi\_resolution\_stft\_distance}$ (or `log_stft_distance`) from `compute_time_frequency_metrics`.
 
 **Inputs**
 
@@ -1664,6 +2114,12 @@ Maps metric family dict to normalized subscores.
 #### `OverallScore`
 
 Weighted global score from metric family subscores.
+
+**Formula**
+
+$$\text{score} = \text{compute\_global\_score}(\{\text{family scores}\}, \texttt{stage})$$
+
+Weighted by `weights` when family inputs not wired.
 
 **Inputs**
 
@@ -1691,6 +2147,12 @@ Weighted global score from metric family subscores.
 
 Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_render runner.
 
+**Formula**
+
+Batch panel evaluation metadata placeholder — no audio DSP in-graph. Returns:
+
+$$\text{result} = \{\,\text{block}: \texttt{PanelMetricsTask},\; \text{params}: \text{block params}\,\}$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1708,6 +2170,10 @@ Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_rend
 #### `PedalPanelMetric`
 
 §5.7 pedal and resonance metrics across pedal on/off panel rows.
+
+**Formula**
+
+$$\text{details} = \text{compute\_pedal\_panel\_metrics}(\texttt{panel\_rows}), \quad \text{value} = \mathrm{mean}(\text{*_error terms})$$
 
 **Inputs**
 
@@ -1730,6 +2196,10 @@ Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_rend
 
 §5.2 pitch and partial structure metrics.
 
+**Formula**
+
+After alignment: $\text{details} = \text{compute\_pitch\_partial\_metrics}$; $\text{value} = \text{f0\_error\_cents}$ (or 100 if missing).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1748,6 +2218,10 @@ Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_rend
 #### `ReferenceCompare`
 
 Compares reference and synthetic audio; outputs metrics dict and scalar loss.
+
+**Formula**
+
+$$\text{metrics} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s), \quad \text{loss} = 1 - \text{metrics}[\text{global\_score}]$$
 
 **Inputs**
 
@@ -1768,6 +2242,12 @@ Compares reference and synthetic audio; outputs metrics dict and scalar loss.
 
 Loads reference audio from WAV path for metric graphs.
 
+**Formula**
+
+Load WAV from `path`; resample to $f_s$; zero-pad/truncate to buffer:
+
+$$x[n] = \text{load\_wav}(\texttt{path})[n]$$
+
 **Inputs:** none
 
 **Outputs**
@@ -1784,6 +2264,10 @@ Loads reference audio from WAV path for metric graphs.
 #### `ResidualAnalyzer`
 
 Analyzes residual audio with peak/rms summary.
+
+**Formula**
+
+Same computation as `Probe`. Same peak/RMS summary on residual audio.
 
 **Inputs**
 
@@ -1802,6 +2286,14 @@ Analyzes residual audio with peak/rms summary.
 
 SpectralCentroidMetric legacy compare metric.
 
+**Formula**
+
+Aligns reference and synthetic (`align_audio_pair`, optional onset alignment), then:
+
+$$\text{value} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s)[\texttt{spectral_centroid_difference}]$$
+
+Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1819,6 +2311,10 @@ SpectralCentroidMetric legacy compare metric.
 #### `SpectralShapeMetric`
 
 §5.4 spectral shape metrics.
+
+**Formula**
+
+After alignment: $\text{value} = \text{spectral\_centroid\_error}$ from `compute_spectral_shape_metrics`.
 
 **Inputs**
 
@@ -1839,6 +2335,10 @@ SpectralCentroidMetric legacy compare metric.
 
 Hard validity gate for render quality (task.md §4).
 
+**Formula**
+
+$$\{\text{valid}, \text{reasons}\} = \text{check\_validity\_gate}(x_{ref}, x_{syn}, f_s)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1857,6 +2357,10 @@ Hard validity gate for render quality (task.md §4).
 #### `VelocityPanelMetric`
 
 §5.6 velocity behavior metrics across a panel of renders.
+
+**Formula**
+
+$$\text{details} = \text{compute\_velocity\_panel\_metrics}(\texttt{panel\_rows}), \quad \text{value} = \mathrm{mean}(\text{*_error terms})$$
 
 **Inputs**
 
@@ -1881,6 +2385,10 @@ Hard validity gate for render quality (task.md §4).
 
 Applies gain in decibels to an audio input.
 
+**Formula**
+
+$$y[n] = 10^{\texttt{gain\_db}/20} \cdot x[n]$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1902,6 +2410,12 @@ Applies gain in decibels to an audio input.
 #### `Mixer`
 
 Mixes up to four optional audio inputs.
+
+**Formula**
+
+$$y[n] = 10^{\texttt{gain\_db}/20} \sum_i x_i[n]$$
+
+Sums all connected `audio*` ports.
 
 **Inputs**
 
@@ -1925,6 +2439,14 @@ Mixes up to four optional audio inputs.
 #### `Output`
 
 Final graph output with optional peak normalization.
+
+**Formula**
+
+Apply `gain_db`, then optional peak normalize to `peak_normalize_db` dBFS:
+
+$$y \leftarrow 10^{\texttt{gain\_db}/20} x, \quad y \leftarrow y \cdot \frac{10^{\texttt{peak\_normalize\_db}/20}}{\max|y|}$$
+
+Skip normalization when `peak_normalize_db` is null.
 
 **Inputs**
 
@@ -1951,6 +2473,14 @@ Final graph output with optional peak normalization.
 
 Single damped sinusoidal resonator excited by audio energy.
 
+**Formula**
+
+$f$ = `frequency`, $s = \sqrt{\mathrm{mean}(x_{exc}^2)}$ from `excitation`, $\tau = \max(\texttt{decay\_seconds}, 0.001)$:
+
+$$y[n] = A s \exp(-t_n/\tau) \sin(2\pi f t_n + \phi)$$
+
+$A$ = `amplitude`, $\phi$ = `phase`, $t_n = n/f_s$.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1974,6 +2504,18 @@ Single damped sinusoidal resonator excited by audio energy.
 
 Bank of damped sinusoidal resonators.
 
+**Formula**
+
+Each partial $k$ in `partials` has ratio $r_k$, amplitude $a_k$, decay $\tau_k$. $f_0$ = `frequency`:
+
+$$f_k = r_k f_0, \quad y_{raw}[n] = \sum_k a_k e^{-t_n/\tau_k} \sin(2\pi f_k t_n)$$
+
+Skip modes with $f_k \ge 0.48 f_s$. Excitation RMS $s = \max(\sqrt{\mathrm{mean}(x^2)}, 0.001)$ scales output only:
+
+$$y[n] = \frac{y_{raw}[n]}{\max|y_{raw}|} \cdot \min(0.9,\, 6s)$$
+
+No stiff-string $B$ term — use `StiffStringModal` for $f_n = n f_0 \sqrt{1 + B n^2}$.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -1996,6 +2538,10 @@ Bank of damped sinusoidal resonators.
 #### `PASPBidirectionalHammerString`
 
 Bidirectional PASP hammer-string contact note model.
+
+**Formula**
+
+Same computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way hammer–string force exchange.
 
 **Inputs**
 
@@ -2085,6 +2631,10 @@ Bidirectional PASP hammer-string contact note model.
 
 Unified bridge impedance, soundboard modal bank, and radiation filter.
 
+**Formula**
+
+Couples bridge motion to soundboard excitation via `PASPBridgeSoundboardModel`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2167,6 +2717,10 @@ Unified bridge impedance, soundboard modal bank, and radiation filter.
 
 Bridge termination with frequency-dependent loss.
 
+**Formula**
+
+Frequency-dependent bridge loss applied via `PASPBridgeModel` (bridge impedance / loss params).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2188,6 +2742,10 @@ Bridge termination with frequency-dependent loss.
 #### `PASPEventPianoModel`
 
 Event-driven PASP piano with note lifecycle, damper, and sustain pedal.
+
+**Formula**
+
+Offline event list render via `EventPianoRenderer` (phrase-level note scheduling).
 
 **Inputs**
 
@@ -2274,6 +2832,14 @@ Event-driven PASP piano with note lifecycle, damper, and sustain pedal.
 
 Nonlinear hammer felt force envelope from velocity and felt parameters.
 
+**Formula**
+
+Nonlinear felt contact from velocity (see [pasp_block_io_reference.md](pasp_block_io_reference.md)):
+
+$$F = \min(Q_0 c^p + d_{felt} \max(v_{rel}, 0), F_{max})$$
+
+Rendered as force/compression buffers via `PASPHammerFeltModel.render`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2302,6 +2868,10 @@ Nonlinear hammer felt force envelope from velocity and felt parameters.
 
 Quasi-static hammer-string contact excitation shaping (phase-1 approximation).
 
+**Formula**
+
+Maps contact force to string excitation via `PASPJunctionModel.shape_excitation` (quasi-static stiffness shaping from $F$ and optional compression).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2326,6 +2896,10 @@ Quasi-static hammer-string contact excitation shaping (phase-1 approximation).
 #### `PASPNoteFamilyModel`
 
 Bidirectional PASP note with note-family parameter curves (B3–D4 local family).
+
+**Formula**
+
+Register/family parameterization + per-note PASP render via `NoteFamilyParameterSet` and note-family core.
 
 **Inputs**
 
@@ -2418,6 +2992,10 @@ Bidirectional PASP note with note-family parameter curves (B3–D4 local family)
 
 Coupled PASP hammer-string-bridge-soundboard note model.
 
+**Formula**
+
+Single-note PASP chain: hammer felt $\to$ string modal line $\to$ bridge $\to$ soundboard, integrated in `PASPNoteModelCore.render` per `contact_model`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2506,6 +3084,10 @@ Coupled PASP hammer-string-bridge-soundboard note model.
 
 Phrase-level PASP piano with multi-voice scheduling and shared body.
 
+**Formula**
+
+Full performance render via `PASPPerformanceRenderer` (multi-note phrase with governance params).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2589,6 +3171,10 @@ Phrase-level PASP piano with multi-voice scheduling and shared body.
 
 Soundboard modal radiation mix.
 
+**Formula**
+
+Soundboard modal bank synthesis via `PASPSoundboardModel` (modal frequencies, decays, mix from params).
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2610,6 +3196,10 @@ Soundboard modal radiation mix.
 #### `PASPStringGroupNoteModel`
 
 Bidirectional PASP note with multi-string unison string groups (A3–C5 register).
+
+**Formula**
+
+Same computation as `PASPNoteFamilyModel`. Adds per-string group outputs.
 
 **Inputs**
 
@@ -2705,6 +3295,14 @@ Bidirectional PASP note with multi-string unison string groups (A3–C5 register
 
 Stiff string modal propagation driven by contact excitation.
 
+**Formula**
+
+Stiff-string modal propagation: partial frequencies
+
+$$f_n = n f_0 \sqrt{1 + B n^2}$$
+
+driven by excitation through `PASPStringLineModel.render`.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2739,6 +3337,12 @@ Stiff string modal propagation driven by contact excitation.
 
 Mixes string signals before body coupling.
 
+**Formula**
+
+Mean of connected inputs, times gain:
+
+$$y = 10^{\texttt{gain\_db}/20} \cdot \mathrm{mean}(x_i)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2762,6 +3366,10 @@ Mixes string signals before body coupling.
 
 Simple damper release envelope.
 
+**Formula**
+
+$$e[n] = \exp(-t_n / \tau), \quad \tau = \texttt{release\_ms}/1000$$
+
 **Inputs:** none
 
 **Outputs**
@@ -2777,6 +3385,10 @@ Simple damper release envelope.
 #### `FractionalStringDelay`
 
 Fractional delay tuned for string experiments.
+
+**Formula**
+
+$$y[n] = \text{interp}(n - d, n, x[n]), \quad d = \texttt{delay\_samples}$$
 
 **Inputs**
 
@@ -2797,6 +3409,12 @@ Fractional delay tuned for string experiments.
 #### `HammerExcitation`
 
 Deterministic short hammer-like excitation burst.
+
+**Formula**
+
+$v = \texttt{velocity}/127$; filtered noise with LP cutoff $500 + 9000b$ Hz ($b$ = brightness); envelope = attack ramp $\times$ exponential decay:
+
+$$x[n] = v \cdot e[n] \cdot \text{LP}(\mathcal{N}(0,1)), \quad \text{peak-normalized to } 0.75v$$
 
 **Inputs**
 
@@ -2822,6 +3440,12 @@ Deterministic short hammer-like excitation burst.
 
 Lowpass felt softness filter for hammer excitation.
 
+**Formula**
+
+Softness $s$ = `softness`; LP cutoff $f_c = 12000 - 10000s$:
+
+$$y = \text{ButterworthLP}(x, f_c)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2841,6 +3465,10 @@ Lowpass felt softness filter for hammer excitation.
 #### `HammerNoise`
 
 Short deterministic hammer noise component.
+
+**Formula**
+
+$$x[n] = A v \mathcal{N}(0,1)_n \exp(-t_n/\tau), \quad \tau = \texttt{decay\_ms}/1000$$
 
 **Inputs**
 
@@ -2864,6 +3492,12 @@ Short deterministic hammer noise component.
 
 Maps velocity to hammer force and brightness controls.
 
+**Formula**
+
+$v = \mathrm{clip}(\texttt{velocity}/127, 0, 1)$:
+
+$$\text{force} = v^{\texttt{force\_gamma}}, \quad \text{brightness} = v^{\texttt{brightness\_gamma}}$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2885,6 +3519,10 @@ Maps velocity to hammer force and brightness controls.
 #### `ModelHammerExcitation`
 
 Hammer excitation ported from model/piano_model.py.
+
+**Formula**
+
+Impulse + velocity-scaled bright noise, attack envelope, one-pole smoothing with note/velocity-dependent cutoff (ported from `piano_model.py`). See `HammerExcitation` for the simplified variant.
 
 **Inputs**
 
@@ -2912,6 +3550,12 @@ Hammer excitation ported from model/piano_model.py.
 
 Stereo spread and normalization from model/piano_model.py.
 
+**Formula**
+
+Mono $m$ with delayed right channel ($\texttt{stereo\_spread\_ms}$), optional peak normalize:
+
+$$L = m, \quad R = 0.97\, m[n-D] + 0.03\, m[n]$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2934,6 +3578,12 @@ Stereo spread and normalization from model/piano_model.py.
 
 Creates a unison-like blend with small deterministic detunes.
 
+**Formula**
+
+For $S$ = `strings`, detune spread in samples from `detune_cents`:
+
+$$y[n] = \frac{1}{S}\sum_{i=0}^{S-1} \mathrm{roll}(x, \Delta_i)$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2955,6 +3605,12 @@ Creates a unison-like blend with small deterministic detunes.
 
 Simple nonlinear hammer contact shaping.
 
+**Formula**
+
+$$y[n] = F \cdot \mathrm{sign}(x[n]) |x[n]|^{\texttt{stiffness}}$$
+
+$F$ = `force` input.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -2975,6 +3631,10 @@ Simple nonlinear hammer contact shaping.
 #### `PianoStringBank`
 
 Piano string bank ported from model/piano_model.py.
+
+**Formula**
+
+Sum of detuned `_pluck_loop` voices with register-dependent unison (2 strings low, bichord mid/high); optional secondary loop mix. Outputs `brightness` control from `_piano_brightness`.
 
 **Inputs**
 
@@ -3019,6 +3679,10 @@ Piano string bank ported from model/piano_model.py.
 
 Single piano waveguide loop ported from model/piano_model.py.
 
+**Formula**
+
+Delay-line pluck loop (`_pluck_loop`) with note-position-dependent $T_{60}$, brightness smoothing, optional dispersion, and treble shimmer. Delay $L \approx f_s/f_0 + \texttt{delay\_offset}$.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -3058,6 +3722,16 @@ Single piano waveguide loop ported from model/piano_model.py.
 
 Simple stiff-string modal synthesis approximation.
 
+**Formula**
+
+For partial $n = 1\ldots N$, $f_0$ = `frequency`, $B$ = `inharmonicity_B`, detune $= 2^{\texttt{detune\_cents}/1200}$:
+
+$$f_n = n f_0 \sqrt{1 + B n^2} \cdot \text{detune}$$
+
+$$y[n] = \sum_n \frac{\beta^{n-1}}{n} e^{-t_n / (\tau/\sqrt{n})} \sin(2\pi f_n t_n + \phi_n)$$
+
+$\beta$ = `brightness`, $\tau$ = `decay_seconds`, $\phi_n$ random from `seed`. Scaled by excitation RMS; peak-normalized to $\min(0.8, 8s)$.
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -3088,6 +3762,12 @@ Simple stiff-string modal synthesis approximation.
 
 Lightweight energy coupling for up to three string signals.
 
+**Formula**
+
+With signals $x_i$, mean $\bar{x}$, coupling $c$ = `coupling`:
+
+$$y = (1-c) x_0 + c \bar{x}$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -3110,6 +3790,10 @@ Lightweight energy coupling for up to three string signals.
 
 Applies detune in cents to a frequency control.
 
+**Formula**
+
+$$f_{out} = f_{in} \cdot 2^{\texttt{cents}/1200}$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -3129,6 +3813,10 @@ Applies detune in cents to a frequency control.
 #### `StringDispersion`
 
 Applies allpass-like dispersion to a string signal.
+
+**Formula**
+
+Same computation as `Allpass`. String dispersion via allpass coefficient.
 
 **Inputs**
 
@@ -3150,6 +3838,10 @@ Applies allpass-like dispersion to a string signal.
 
 Frequency-dependent string loss lowpass.
 
+**Formula**
+
+$$y = \text{ButterworthLP}(x, \texttt{cutoff\_hz})$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -3169,6 +3861,10 @@ Frequency-dependent string loss lowpass.
 #### `StringModeBank`
 
 Alias-style string modal bank for piano string experiments.
+
+**Formula**
+
+Same computation as `StiffStringModal`.
 
 **Inputs**
 
@@ -3200,6 +3896,10 @@ Alias-style string modal bank for piano string experiments.
 
 Applies terminal reflection gain to a string signal.
 
+**Formula**
+
+$$y[n] = \texttt{reflection} \cdot x[n]$$
+
 **Inputs**
 
 | Port | Kind | Required |
@@ -3219,6 +3919,12 @@ Applies terminal reflection gain to a string signal.
 #### `SustainPedalDamping`
 
 Pedal-controlled sustain decay approximation.
+
+**Formula**
+
+Pedal on/off selects $\tau$ = `on_decay_seconds` or `off_decay_seconds`:
+
+$$y[n] = x[n] \exp(-t_n/\tau)$$
 
 **Inputs**
 
@@ -3244,6 +3950,14 @@ Pedal-controlled sustain decay approximation.
 
 Single-sample impulse excitation.
 
+**Formula**
+
+Single-sample impulse at index $k = \mathrm{round}(\texttt{delay\_ms} \cdot f_s / 1000)$:
+
+$$x[n] = \begin{cases} A & n = k \\ 0 & \text{otherwise} \end{cases}$$
+
+$A$ = `amplitude`.
+
 **Inputs:** none
 
 **Outputs**
@@ -3260,6 +3974,14 @@ Single-sample impulse excitation.
 #### `NoiseBurst`
 
 Deterministic decaying noise burst.
+
+**Formula**
+
+$v = \texttt{velocity}/127$, deterministic Gaussian noise with `seed`, $t_n = n/f_s$, $\tau = \max(\texttt{decay\_ms}, 0.1)/1000$:
+
+$$x_{raw}[n] = \mathcal{N}(0,1)_n \cdot e^{-t_n/\tau}$$
+
+Peak-normalized: $x = A v \cdot x_{raw} / \max|x_{raw}|$, $A$ = `amplitude`.
 
 **Inputs**
 
@@ -3283,6 +4005,14 @@ Deterministic decaying noise burst.
 
 Offline mono sample player for references or excitation.
 
+**Formula**
+
+Load mono WAV from `path`; resample to $f_s$ if needed; truncate or tile when `loop`; apply gain:
+
+$$x[n] = 10^{\texttt{gain\_db}/20} \cdot \text{sample}[n]$$
+
+Empty path → zeros.
+
 **Inputs:** none
 
 **Outputs**
@@ -3300,6 +4030,12 @@ Offline mono sample player for references or excitation.
 #### `SineOscillator`
 
 Whole-buffer sine oscillator.
+
+**Formula**
+
+$t_n = n/f_s$, $f$ from `frequency` input or param, $A$ = `amplitude`, $\phi$ = `phase`:
+
+$$x[n] = A \sin(2\pi f t_n + \phi)$$
 
 **Inputs**
 
