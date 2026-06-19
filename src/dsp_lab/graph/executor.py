@@ -19,6 +19,7 @@ class RenderResult:
     probes: dict[str, Any]
     block_outputs: dict[str, dict[str, Any]]
     block_states: dict[str, dict[str, Any]] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -31,6 +32,7 @@ class RenderResult:
             "duration": float(frames / self.sample_rate),
             "peak": float(np.max(np.abs(self.audio))) if self.audio.size else 0.0,
             "rms": float(np.sqrt(np.mean(self.audio**2))) if self.audio.size else 0.0,
+            "warnings": list(self.warnings),
         }
 
 
@@ -42,17 +44,17 @@ def render_graph(
     compiled = compile_graph(graph) if isinstance(graph, GraphSpec) else graph
     spec = compiled.spec
     n_frames = int(round(spec.sample_rate * spec.duration))
+
+    compiled.initialize_block_states()
+
     values: dict[str, Any] = {f"inputs.{name}": value for name, value in spec.inputs.items()}
     block_outputs: dict[str, dict[str, Any]] = {}
     block_states: dict[str, dict[str, Any]] = {}
 
-    for block_id in compiled.order:
+    schedule = _render_schedule(compiled)
+    for block_id in schedule:
         block = compiled.blocks[block_id]
-        inputs: dict[str, Any] = {}
-        for port_name in block.input_ports:
-            connection = compiled.input_connections.get((block_id, port_name))
-            if connection is not None:
-                inputs[port_name] = values[connection.from_]
+        inputs = _gather_block_inputs(compiled, block_id, values)
         outputs = block.process(inputs, n_frames)
         block_outputs[block_id] = outputs
         if collect_block_states:
@@ -86,4 +88,34 @@ def render_graph(
         probes=probes,
         block_outputs=block_outputs,
         block_states=block_states,
+        warnings=list(compiled.warnings),
     )
+
+
+def _render_schedule(compiled: CompiledGraph) -> list[str]:
+    event_ids = [instance.block_id for instance in compiled.event_schedule]
+    signal_ids = [instance.block_id for instance in compiled.signal_schedule]
+    if event_ids or signal_ids:
+        seen: set[str] = set()
+        schedule: list[str] = []
+        for block_id in event_ids + signal_ids:
+            if block_id in seen:
+                continue
+            seen.add(block_id)
+            schedule.append(block_id)
+        return schedule
+    return compiled.order
+
+
+def _gather_block_inputs(
+    compiled: CompiledGraph,
+    block_id: str,
+    values: dict[str, Any],
+) -> dict[str, Any]:
+    block = compiled.blocks[block_id]
+    inputs: dict[str, Any] = {}
+    for port_name in block.input_ports:
+        connection = compiled.input_connections.get((block_id, port_name))
+        if connection is not None:
+            inputs[port_name] = values[connection.from_]
+    return inputs

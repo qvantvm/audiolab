@@ -181,6 +181,21 @@ WAVEGUIDE_BLOCKS: set[str] = {
     "StringTermination",
 }
 
+STATEFUL_BLOCK_TYPES: set[str] = (
+    PASP_CORE_BLOCKS
+    | WAVEGUIDE_BLOCKS
+    | PHYSICAL_ACOUSTIC_BLOCKS
+    | {
+        "HammerExcitation",
+        "StiffStringModal",
+        "PianoStringBank",
+        "ModalResonator",
+        "EnvelopeFollower",
+        "SineOscillator",
+        "NoiseBurst",
+    }
+)
+
 NONLINEAR_BLOCKS: set[str] = {
     "PASPHammerFelt",
     "PASPHammerStringJunction",
