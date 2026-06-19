@@ -107,7 +107,25 @@ class WaveguideString(DSPBlock):
 
     @classmethod
     def default_params(cls) -> dict[str, float]:
-        return {"decay": 0.996, "brightness": 0.5}
+        return {
+            "decay": 0.996,
+            "decay_seconds": 4.0,
+            "brightness": 0.5,
+            "gain": 1.0,
+            "frequency_hz": 440.0,
+            "inharmonicity_B": 0.0,
+        }
+
+    @classmethod
+    def param_schema(cls) -> dict[str, dict[str, object]]:
+        return {
+            "decay": {"type": "float", "min": 0.0, "max": 0.9999},
+            "decay_seconds": {"type": "float", "min": 0.01, "max": 60.0},
+            "brightness": {"type": "float", "min": 0.0, "max": 1.0},
+            "gain": {"type": "float", "min": 0.0, "max": 10.0},
+            "frequency_hz": {"type": "float", "min": 20.0, "max": 20000.0},
+            "inharmonicity_B": {"type": "float", "min": 0.0, "max": 0.01},
+        }
 
     def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
         freq = max(float(inputs["frequency"]), 1.0)

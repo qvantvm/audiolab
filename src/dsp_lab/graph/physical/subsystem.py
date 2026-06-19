@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from dsp_lab.blocks.metadata import PHYSICAL_SOLVER_TARGET_BLOCKS
 from dsp_lab.graph.connections import ClassifiedConnection, ConnectionEdgeKind
 from dsp_lab.graph.schema import GraphSpec
 from dsp_lab.graph.validator import split_endpoint
 
 BoundaryKind = Literal["signal", "control", "event"]
 BoundaryDirection = Literal["input", "output"]
-PhysicalSubsystemKind = Literal["bidirectional_physical", "wave_scattering"]
+PhysicalSubsystemKind = Literal["bidirectional_physical", "wave_scattering", "excited_waveguide"]
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,7 @@ class PhysicalSubsystem:
     internal_connections: tuple[ClassifiedConnection, ...]
     boundary_inputs: tuple[BoundaryPort, ...]
     boundary_outputs: tuple[BoundaryPort, ...]
+    block_params: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 def extract_physical_subsystems(
@@ -78,13 +80,84 @@ def extract_physical_subsystems(
                 internal_connections=internal,
                 boundary_inputs=boundary_inputs,
                 boundary_outputs=boundary_outputs,
+                block_params={},
             )
         )
     return tuple(subsystems)
 
 
-def subsystem_trigger_block(subsystem: PhysicalSubsystem, order: list[str]) -> str:
+def extract_excited_waveguide_subsystems(
+    graph: GraphSpec,
+    blocks_by_id: dict[str, Any],
+    classified: list[ClassifiedConnection],
+    block_types: dict[str, str],
+    *,
+    existing_subsystems: tuple[PhysicalSubsystem, ...],
+) -> tuple[PhysicalSubsystem, ...]:
+    """Extract single-block WaveguideString subsystems targeted by physical solvers."""
+    blocks_in_physical_edges: set[str] = set()
+    for edge in classified:
+        if edge.edge_kind not in {ConnectionEdgeKind.PHYSICAL_BIDIRECTIONAL, ConnectionEdgeKind.WAVE_SCATTERING}:
+            continue
+        src = split_endpoint(edge.connection.from_)
+        dst = split_endpoint(edge.connection.to)
+        if src and src[0] != "inputs":
+            blocks_in_physical_edges.add(src[0])
+        if dst and dst[0] != "inputs":
+            blocks_in_physical_edges.add(dst[0])
+
+    already_hosted = {block_id for subsystem in existing_subsystems for block_id in subsystem.block_ids}
+    subsystems: list[PhysicalSubsystem] = []
+    index = len(existing_subsystems)
+    for block_spec in graph.blocks:
+        solver_kind = PHYSICAL_SOLVER_TARGET_BLOCKS.get(block_spec.type)
+        if solver_kind != "excited_waveguide":
+            continue
+        if block_spec.id in blocks_in_physical_edges or block_spec.id in already_hosted:
+            continue
+        block_id_set = {block_spec.id}
+        boundary_inputs, boundary_outputs = _extract_boundaries(
+            graph,
+            blocks_by_id,
+            classified,
+            block_id_set,
+            block_types,
+            subsystem_index=index,
+        )
+        subsystems.append(
+            PhysicalSubsystem(
+                subsystem_id=f"excited_waveguide_{block_spec.id}",
+                kind="excited_waveguide",
+                block_ids=(block_spec.id,),
+                block_types={block_spec.id: block_spec.type},
+                internal_connections=(),
+                boundary_inputs=boundary_inputs,
+                boundary_outputs=boundary_outputs,
+                block_params={block_spec.id: dict(block_spec.params)},
+            )
+        )
+        index += 1
+    return tuple(subsystems)
+
+
+def subsystem_trigger_block(
+    subsystem: PhysicalSubsystem,
+    order: list[str],
+    input_connections: dict[tuple[str, str], object] | None = None,
+) -> str:
     """Return the schedule block after which the subsystem solver should run."""
+    if subsystem.kind == "excited_waveguide" and input_connections is not None:
+        upstream: set[str] = set()
+        for port in subsystem.boundary_inputs:
+            connection = input_connections.get((port.block_id, port.port_name))
+            if connection is None:
+                continue
+            src = split_endpoint(connection.from_)
+            if src and src[0] != "inputs":
+                upstream.add(src[0])
+        if upstream:
+            return max(upstream, key=lambda block_id: order.index(block_id))
+
     internal_blocks = set(subsystem.block_ids)
     candidates = {port.block_id for port in subsystem.boundary_inputs} & internal_blocks
     if not candidates:

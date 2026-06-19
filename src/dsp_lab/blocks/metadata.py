@@ -181,6 +181,12 @@ WAVEGUIDE_BLOCKS: set[str] = {
     "StringTermination",
 }
 
+PHYSICAL_SOLVER_TARGET_BLOCKS: dict[str, str] = {
+    "WaveguideString": "excited_waveguide",
+}
+
+WAVEGUIDE_SOLVER_BLOCKS: set[str] = set(PHYSICAL_SOLVER_TARGET_BLOCKS)
+
 STATEFUL_BLOCK_TYPES: set[str] = (
     PASP_CORE_BLOCKS
     | WAVEGUIDE_BLOCKS

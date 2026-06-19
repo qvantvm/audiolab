@@ -65,18 +65,19 @@ def render_graph(
 
     schedule = _render_schedule(compiled)
     for block_id in schedule:
-        block = compiled.blocks[block_id]
-        inputs = _gather_block_inputs(compiled, block_id, values)
-        outputs = block.process(inputs, n_frames)
-        block_outputs[block_id] = outputs
-        if collect_block_states:
-            state = block.get_state()
-            if state:
-                block_states[block_id] = state
-        for name, value in outputs.items():
-            endpoint = f"{block_id}.{name}"
-            if endpoint not in compiled.solver_owned_endpoints:
-                values[endpoint] = value
+        if block_id not in compiled.solver_hosted_blocks:
+            block = compiled.blocks[block_id]
+            inputs = _gather_block_inputs(compiled, block_id, values)
+            outputs = block.process(inputs, n_frames)
+            block_outputs[block_id] = outputs
+            if collect_block_states:
+                state = block.get_state()
+                if state:
+                    block_states[block_id] = state
+            for name, value in outputs.items():
+                endpoint = f"{block_id}.{name}"
+                if endpoint not in compiled.solver_owned_endpoints:
+                    values[endpoint] = value
 
         for subsystem in compiled.physical_subsystem_triggers.get(block_id, ()):
             _process_physical_subsystem(
