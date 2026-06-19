@@ -7,12 +7,9 @@ from pathlib import Path
 import pytest
 
 from dsp_lab.graph.compiler import CompiledGraph, compile_graph
-from dsp_lab.graph.execution_plan import (
-    ConnectionEdgeKind,
-    GraphCompilationError,
-    build_execution_plan,
-    classify_connection,
-)
+from dsp_lab.graph.connections import ConnectionEdgeKind, classify_connection
+from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
+from dsp_lab.graph.physical.registry import SolverRegistry
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 from dsp_lab.graph.serialization import load_graph
 from dsp_lab.graph.validator import validate_graph
@@ -44,7 +41,7 @@ def test_compile_minimal_piano_graph_preserves_signal_flow():
     assert all(edge.edge_kind == ConnectionEdgeKind.SIGNAL for edge in compiled.execution_plan.signal_edges)
 
 
-def test_compile_rejects_bidirectional_physical_connection():
+def test_compile_rejects_bidirectional_physical_connection_on_pasp_graph():
     graph = load_graph(ROOT / "examples/piano/minimal_A4_note.json")
     graph.connections.append(
         ConnectionSpec(**{"from": "string.bridge", "to": "soundboard.bridge_input"})
@@ -67,26 +64,32 @@ def test_classify_bidirectional_physical_edge():
     edge = classify_connection(graph, blocks_by_id, graph.connections[-1])
 
     assert edge.edge_kind == ConnectionEdgeKind.PHYSICAL_BIDIRECTIONAL
-    assert not edge.supported
+    assert edge.requires_solver
     assert edge.src_block_type == "PASPStringLine"
     assert edge.dst_block_type == "PASPSoundboardModal"
 
 
-def test_build_execution_plan_error_message_is_actionable():
-    graph = load_graph(ROOT / "examples/piano/minimal_A4_note.json")
-    graph.connections.append(
-        ConnectionSpec(**{"from": "string.bridge", "to": "soundboard.bridge_input"})
+def test_compile_unsupported_physical_graph_has_structured_error():
+    graph = GraphSpec(
+        name="physical_without_solver",
+        sample_rate=48000,
+        duration=0.1,
+        blocks=[
+            {"id": "stub_a", "type": "PhysicalCouplingStub", "params": {}},
+            {"id": "stub_b", "type": "PhysicalCouplingStub", "params": {}},
+            {"id": "out", "type": "Output", "params": {}},
+        ],
+        connections=[
+            {"from": "stub_a.coupling", "to": "stub_b.coupling"},
+            {"from": "stub_b.audio", "to": "out.audio"},
+        ],
     )
-    blocks_by_id = {block.id: block for block in graph.blocks}
-    block_types = {block.id: block.type for block in graph.blocks}
+    with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
+        compile_graph(graph, solver_registry=SolverRegistry())
 
-    with pytest.raises(GraphCompilationError) as exc_info:
-        build_execution_plan(graph, blocks_by_id, block_types, signal_order=[block.id for block in graph.blocks])
-
-    message = str(exc_info.value)
-    assert "PASPStringLine.bridge" in message
-    assert "PASPSoundboardModal.bridge_input" in message
-    assert "solver/adaptor" in message
+    error = exc_info.value
+    assert error.subsystem_kind == "bidirectional_physical"
+    assert "stub_a" in error.block_ids
 
 
 def test_event_graph_has_event_schedule():
@@ -98,10 +101,7 @@ def test_event_graph_has_event_schedule():
             {"id": "osc", "type": "SineOscillator", "params": {}},
             {"id": "out", "type": "Output", "params": {}},
         ],
-        connections=[
-            {"from": "inputs.note_on", "to": "event.event"},
-            {"from": "osc.audio", "to": "out.audio"},
-        ],
+        connections=[{"from": "inputs.note_on", "to": "event.event"}, {"from": "osc.audio", "to": "out.audio"}],
     )
     compiled = compile_graph(graph)
 

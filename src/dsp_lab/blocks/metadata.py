@@ -313,6 +313,26 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
     "EventSource": {
         "output:event": {"kind": "event", "rate": "event"},
     },
+    "PhysicalCouplingStub": {
+        "input:coupling": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+            "proposed": False,
+        },
+        "output:coupling": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+            "proposed": False,
+        },
+    },
 }
 
 

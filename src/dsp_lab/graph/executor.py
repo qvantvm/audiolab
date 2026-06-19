@@ -8,6 +8,9 @@ from typing import Any
 import numpy as np
 
 from dsp_lab.graph.compiler import CompiledGraph, compile_graph
+from dsp_lab.graph.physical.registry import SolverRegistry
+from dsp_lab.graph.physical.events import collect_timed_events, events_for_block
+from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem
 from dsp_lab.graph.schema import GraphSpec
 from dsp_lab.graph.validator import split_endpoint
 
@@ -20,6 +23,7 @@ class RenderResult:
     block_outputs: dict[str, dict[str, Any]]
     block_states: dict[str, dict[str, Any]] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    physical_subsystem_states: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -33,6 +37,7 @@ class RenderResult:
             "peak": float(np.max(np.abs(self.audio))) if self.audio.size else 0.0,
             "rms": float(np.sqrt(np.mean(self.audio**2))) if self.audio.size else 0.0,
             "warnings": list(self.warnings),
+            "physical_subsystem_states": dict(self.physical_subsystem_states),
         }
 
 
@@ -40,16 +45,23 @@ def render_graph(
     graph: GraphSpec | CompiledGraph,
     *,
     collect_block_states: bool = False,
+    solver_registry: SolverRegistry | None = None,
 ) -> RenderResult:
-    compiled = compile_graph(graph) if isinstance(graph, GraphSpec) else graph
+    compiled = (
+        compile_graph(graph, solver_registry=solver_registry)
+        if isinstance(graph, GraphSpec)
+        else graph
+    )
     spec = compiled.spec
     n_frames = int(round(spec.sample_rate * spec.duration))
 
     compiled.initialize_block_states()
+    timed_events = collect_timed_events(spec, spec.sample_rate)
 
     values: dict[str, Any] = {f"inputs.{name}": value for name, value in spec.inputs.items()}
     block_outputs: dict[str, dict[str, Any]] = {}
     block_states: dict[str, dict[str, Any]] = {}
+    physical_subsystem_states: dict[str, dict[str, Any]] = {}
 
     schedule = _render_schedule(compiled)
     for block_id in schedule:
@@ -62,7 +74,21 @@ def render_graph(
             if state:
                 block_states[block_id] = state
         for name, value in outputs.items():
-            values[f"{block_id}.{name}"] = value
+            endpoint = f"{block_id}.{name}"
+            if endpoint not in compiled.solver_owned_endpoints:
+                values[endpoint] = value
+
+        for subsystem in compiled.physical_subsystem_triggers.get(block_id, ()):
+            _process_physical_subsystem(
+                compiled=compiled,
+                subsystem=subsystem,
+                n_frames=n_frames,
+                timed_events=timed_events,
+                values=values,
+                block_outputs=block_outputs,
+                physical_subsystem_states=physical_subsystem_states,
+                collect_block_states=collect_block_states,
+            )
 
     output_endpoint = f"{compiled.output_blocks[-1]}.audio"
     audio = np.asarray(values[output_endpoint], dtype=np.float32)
@@ -89,7 +115,62 @@ def render_graph(
         block_outputs=block_outputs,
         block_states=block_states,
         warnings=list(compiled.warnings),
+        physical_subsystem_states=physical_subsystem_states,
     )
+
+
+def _process_physical_subsystem(
+    *,
+    compiled: CompiledGraph,
+    subsystem: CompiledPhysicalSubsystem,
+    n_frames: int,
+    timed_events: list,
+    values: dict[str, Any],
+    block_outputs: dict[str, dict[str, Any]],
+    physical_subsystem_states: dict[str, dict[str, Any]],
+    collect_block_states: bool,
+) -> None:
+    control_inputs: dict[str, Any] = {}
+    signal_inputs: dict[str, np.ndarray] = {}
+    for port in subsystem.subsystem.boundary_inputs:
+        value = _boundary_source_value(compiled, port.endpoint, values)
+        if port.kind == "control":
+            control_inputs[port.name] = value
+        elif port.kind == "signal":
+            signal_inputs[port.name] = np.asarray(value, dtype=np.float32)
+
+    block_events = events_for_block(timed_events, block_start=0, num_frames=n_frames)
+
+    outputs = subsystem.process_block(
+        n_frames,
+        block_events,
+        control_inputs,
+        signal_inputs,
+    )
+
+    for port in subsystem.subsystem.boundary_outputs:
+        if port.name not in outputs:
+            continue
+        values[port.endpoint] = outputs[port.name]
+        owner_port = split_endpoint(port.endpoint)
+        if owner_port:
+            block_outputs.setdefault(owner_port[0], {})[owner_port[1]] = outputs[port.name]
+
+    if collect_block_states:
+        physical_subsystem_states[subsystem.subsystem.subsystem_id] = subsystem.get_state_snapshot()
+
+
+def _boundary_source_value(compiled: CompiledGraph, endpoint: str, values: dict[str, Any]) -> Any:
+    if endpoint in values:
+        return values[endpoint]
+    parsed = split_endpoint(endpoint)
+    if parsed is None:
+        raise ValueError(f"Missing boundary value for physical subsystem endpoint '{endpoint}'")
+    block_id, port_name = parsed
+    connection = compiled.input_connections.get((block_id, port_name))
+    if connection is not None and connection.from_ in values:
+        return values[connection.from_]
+    raise ValueError(f"Missing boundary value for physical subsystem endpoint '{endpoint}'")
 
 
 def _render_schedule(compiled: CompiledGraph) -> list[str]:
@@ -115,6 +196,8 @@ def _gather_block_inputs(
     block = compiled.blocks[block_id]
     inputs: dict[str, Any] = {}
     for port_name in block.input_ports:
+        if (block_id, port_name) in compiled.solver_managed_ports:
+            continue
         connection = compiled.input_connections.get((block_id, port_name))
         if connection is not None:
             inputs[port_name] = values[connection.from_]

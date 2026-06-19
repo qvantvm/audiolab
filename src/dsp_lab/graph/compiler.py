@@ -7,15 +7,17 @@ from dataclasses import dataclass, field
 import dsp_lab.blocks  # noqa: F401 - bootstrap built-in registry
 from dsp_lab.blocks.base import DSPBlock
 from dsp_lab.blocks.registry import get_block_class
+from dsp_lab.graph.connections import classify_connection, scheduling_edges
 from dsp_lab.graph.execution_plan import (
     BlockInstance,
     ExecutionPlan,
     GraphCompilationError,
-    PhysicalSubsystem,
     build_execution_plan,
-    classify_connection,
-    scheduling_edges,
 )
+from dsp_lab.graph.physical.errors import unsupported_subsystem_error
+from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
+from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem
+from dsp_lab.graph.physical.subsystem import PhysicalSubsystem, subsystem_trigger_block
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 from dsp_lab.graph.validator import split_endpoint, validate_graph
 
@@ -32,24 +34,34 @@ class CompiledGraph:
     signal_schedule: list[BlockInstance] = field(default_factory=list)
     event_schedule: list[BlockInstance] = field(default_factory=list)
     physical_subsystems: list[PhysicalSubsystem] = field(default_factory=list)
+    compiled_physical_subsystems: list[CompiledPhysicalSubsystem] = field(default_factory=list)
+    physical_subsystem_triggers: dict[str, list[CompiledPhysicalSubsystem]] = field(default_factory=dict)
+    solver_owned_endpoints: set[str] = field(default_factory=set)
+    solver_managed_ports: set[tuple[str, str]] = field(default_factory=set)
     sample_rate: int = 48000
     warnings: list[str] = field(default_factory=list)
 
     def initialize_block_states(self) -> None:
         for block in self.blocks.values():
             block.reset()
+        for subsystem in self.compiled_physical_subsystems:
+            subsystem.reset()
 
 
-def compile_graph(graph: GraphSpec) -> CompiledGraph:
+def compile_graph(
+    graph: GraphSpec,
+    *,
+    solver_registry: SolverRegistry | None = None,
+) -> CompiledGraph:
     result = validate_graph(graph)
     if not result.valid:
         details = "; ".join(message.message for message in result.messages if message.level == "error")
         raise ValueError(f"Graph validation failed: {details}")
 
-    return _compile_validated_graph(graph)
+    return _compile_validated_graph(graph, solver_registry=solver_registry or get_default_solver_registry())
 
 
-def _compile_validated_graph(graph: GraphSpec) -> CompiledGraph:
+def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistry) -> CompiledGraph:
     blocks: dict[str, DSPBlock] = {}
     block_types: dict[str, str] = {}
     for block_spec in graph.blocks:
@@ -79,7 +91,19 @@ def _compile_validated_graph(graph: GraphSpec) -> CompiledGraph:
     except GraphCompilationError as exc:
         raise ValueError(str(exc)) from exc
 
+    compiled_physical_subsystems, triggers, solver_owned_endpoints, solver_managed_ports, compile_warnings = _compile_physical_subsystems(
+        execution_plan.physical_subsystems,
+        sample_rate=graph.sample_rate,
+        order=order,
+        solver_registry=solver_registry,
+    )
+
     output_blocks = [block.id for block in graph.blocks if block.type == "Output"]
+    warnings = list(execution_plan.warnings)
+    if compiled_physical_subsystems:
+        warnings = [warning for warning in warnings if "require a registered PhysicalSolver" not in warning]
+        warnings.extend(compile_warnings)
+
     return CompiledGraph(
         spec=graph,
         blocks=blocks,
@@ -91,9 +115,64 @@ def _compile_validated_graph(graph: GraphSpec) -> CompiledGraph:
         signal_schedule=list(execution_plan.signal_schedule),
         event_schedule=list(execution_plan.event_schedule),
         physical_subsystems=list(execution_plan.physical_subsystems),
+        compiled_physical_subsystems=compiled_physical_subsystems,
+        physical_subsystem_triggers=triggers,
+        solver_owned_endpoints=solver_owned_endpoints,
+        solver_managed_ports=solver_managed_ports,
         sample_rate=graph.sample_rate,
-        warnings=list(execution_plan.warnings),
+        warnings=warnings,
     )
+
+
+def _compile_physical_subsystems(
+    subsystems: tuple[PhysicalSubsystem, ...],
+    *,
+    sample_rate: int,
+    order: list[str],
+    solver_registry: SolverRegistry,
+) -> tuple[
+    list[CompiledPhysicalSubsystem],
+    dict[str, list[CompiledPhysicalSubsystem]],
+    set[str],
+    set[tuple[str, str]],
+    list[str],
+]:
+    compiled: list[CompiledPhysicalSubsystem] = []
+    triggers: dict[str, list[CompiledPhysicalSubsystem]] = {}
+    solver_owned_endpoints: set[str] = set()
+    solver_managed_ports: set[tuple[str, str]] = set()
+    warnings: list[str] = []
+
+    available = tuple(solver_registry.list_solvers())
+    for subsystem in subsystems:
+        solver = solver_registry.find_solver(subsystem)
+        if solver is None:
+            raise unsupported_subsystem_error(
+                subsystem,
+                reason="No registered PhysicalSolver can execute this subsystem",
+                available_solvers=available,
+            )
+        compiled_subsystem = solver.compile(subsystem, sample_rate)
+        compiled.append(compiled_subsystem)
+        trigger_block = subsystem_trigger_block(subsystem, order)
+        triggers.setdefault(trigger_block, []).append(compiled_subsystem)
+        for boundary in subsystem.boundary_outputs:
+            solver_owned_endpoints.add(boundary.endpoint)
+        for edge in subsystem.internal_connections:
+            src = split_endpoint(edge.connection.from_)
+            dst = split_endpoint(edge.connection.to)
+            if src is not None:
+                solver_managed_ports.add((src[0], src[1]))
+            if dst is not None:
+                solver_managed_ports.add((dst[0], dst[1]))
+        warnings.append(
+            f"Physical subsystem '{subsystem.subsystem_id}' compiled with solver '{solver.name}' "
+            f"(latency={compiled_subsystem.declarations.latency_samples} samples, "
+            f"causality={compiled_subsystem.declarations.causality}, "
+            f"deterministic={compiled_subsystem.declarations.deterministic})."
+        )
+
+    return compiled, triggers, solver_owned_endpoints, solver_managed_ports, warnings
 
 
 def _topological_order(nodes: set[str], edges: list[tuple[str, str]]) -> list[str]:
