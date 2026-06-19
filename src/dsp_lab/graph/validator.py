@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 
 import dsp_lab.blocks  # noqa: F401 - imports register built-in blocks
-from dsp_lab.blocks.registry import BLOCK_REGISTRY
+from dsp_lab.blocks.metadata import get_port_spec, ports_compatible
+from dsp_lab.blocks.registry import BLOCK_REGISTRY, validate_node
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 
 
@@ -28,6 +29,9 @@ class ValidationResult:
 
     def to_dict(self) -> dict[str, object]:
         return {"valid": self.valid, "messages": [message.to_dict() for message in self.messages]}
+
+
+GraphValidationResult = ValidationResult
 
 
 def split_endpoint(endpoint: str) -> tuple[str, str] | None:
@@ -53,12 +57,34 @@ def validate_graph(graph: GraphSpec) -> ValidationResult:
         blocks_by_id[block.id] = block
         if block.type not in BLOCK_REGISTRY:
             messages.append(ValidationMessage("error", "UNKNOWN_BLOCK_TYPE", f"Unknown block type '{block.type}'", block.id))
+        for node_error in validate_node(block.model_dump()):
+            if node_error.level == "error":
+                messages.append(
+                    ValidationMessage(
+                        node_error.level,
+                        node_error.code,
+                        node_error.message,
+                        node_error.block_id,
+                        node_error.parameter,
+                    )
+                )
+            elif node_error.level == "warning":
+                messages.append(
+                    ValidationMessage(
+                        node_error.level,
+                        node_error.code,
+                        node_error.message,
+                        node_error.block_id,
+                        node_error.parameter,
+                    )
+                )
 
     if not any(block.type == "Output" for block in graph.blocks):
         messages.append(ValidationMessage("error", "MISSING_OUTPUT", "Graph must contain at least one Output block"))
 
     incoming: dict[tuple[str, str], ConnectionSpec] = {}
     graph_edges: list[tuple[str, str]] = []
+    physical_edges: list[tuple[str, str]] = []
 
     for connection in graph.connections:
         _validate_source(graph, blocks_by_id, connection.from_, messages)
@@ -77,6 +103,7 @@ def validate_graph(graph: GraphSpec) -> ValidationResult:
                     dst[1] if dst else None,
                 )
             )
+        _validate_port_metadata(graph, blocks_by_id, connection, messages)
         if dst and dst[0] != "inputs":
             key = (dst[0], dst[1])
             if key in incoming:
@@ -91,7 +118,10 @@ def validate_graph(graph: GraphSpec) -> ValidationResult:
                 )
             incoming[key] = connection
         if src and dst and src[0] != "inputs" and dst[0] != "inputs":
-            graph_edges.append((src[0], dst[0]))
+            edge = (src[0], dst[0])
+            graph_edges.append(edge)
+            if _connection_is_physical(graph, blocks_by_id, connection):
+                physical_edges.append(edge)
 
     for block in graph.blocks:
         cls = BLOCK_REGISTRY.get(block.type)
@@ -123,8 +153,15 @@ def validate_graph(graph: GraphSpec) -> ValidationResult:
                 )
             )
 
-    if _has_cycle(block_ids - duplicate_ids, graph_edges):
-        messages.append(ValidationMessage("error", "GRAPH_CYCLE", "Graph contains a cycle; cycles are not supported yet"))
+    signal_edges = [edge for edge in graph_edges if edge not in set(physical_edges)]
+    if _has_cycle(block_ids - duplicate_ids, signal_edges):
+        messages.append(
+            ValidationMessage(
+                "error",
+                "GRAPH_CYCLE",
+                "Graph contains a one-way signal cycle; cycles are not supported unless explicitly modeled as physical interconnections",
+            )
+        )
 
     valid = not any(message.level == "error" for message in messages)
     return ValidationResult(valid, messages)
@@ -187,6 +224,72 @@ def validate_connection_addition(
     return ValidationResult(valid, messages)
 
 
+def _validate_port_metadata(
+    graph: GraphSpec,
+    blocks_by_id: dict[str, object],
+    connection: ConnectionSpec,
+    messages: list[ValidationMessage],
+) -> None:
+    src = split_endpoint(connection.from_)
+    dst = split_endpoint(connection.to)
+    if src is None or dst is None or dst[0] == "inputs":
+        return
+    src_block = blocks_by_id.get(src[0])
+    dst_block = blocks_by_id.get(dst[0])
+    if src_block is None or dst_block is None:
+        return
+    src_spec = get_port_spec(src_block.type, src[1], is_output=True)
+    dst_spec = get_port_spec(dst_block.type, dst[1], is_output=False)
+    if src_spec is None or dst_spec is None:
+        return
+    if src_spec.proposed or dst_spec.proposed:
+        messages.append(
+            ValidationMessage(
+                "error",
+                "PHYSICAL_SOLVER_MISSING",
+                (
+                    f"Connection {connection.from_} -> {connection.to} is physically meaningful, "
+                    "but no runtime port/solver exists yet for this bidirectional connection type. "
+                    "Use the decomposed audio signal chain or a composite PASP block instead."
+                ),
+                dst[0],
+                dst[1],
+            )
+        )
+        return
+    compatible, reason = ports_compatible(src_spec, dst_spec)
+    if not compatible and reason:
+        messages.append(
+            ValidationMessage(
+                "error",
+                "PHYSICAL_PORT_INCOMPATIBLE",
+                f"{reason} on connection {connection.from_} -> {connection.to}",
+                dst[0],
+                dst[1],
+            )
+        )
+
+
+def _connection_is_physical(
+    graph: GraphSpec,
+    blocks_by_id: dict[str, object],
+    connection: ConnectionSpec,
+) -> bool:
+    src = split_endpoint(connection.from_)
+    dst = split_endpoint(connection.to)
+    if src is None or dst is None or dst[0] == "inputs":
+        return False
+    src_block = blocks_by_id.get(src[0])
+    dst_block = blocks_by_id.get(dst[0])
+    if src_block is None or dst_block is None:
+        return False
+    src_spec = get_port_spec(src_block.type, src[1], is_output=True)
+    dst_spec = get_port_spec(dst_block.type, dst[1], is_output=False)
+    if src_spec is None or dst_spec is None:
+        return False
+    return src_spec.kind == "physical" or dst_spec.kind == "physical"
+
+
 def _validate_source(
     graph: GraphSpec,
     blocks_by_id: dict[str, object],
@@ -204,7 +307,25 @@ def _validate_source(
         return
     block = blocks_by_id.get(owner)
     cls = BLOCK_REGISTRY.get(block.type) if block else None
-    if block is None or cls is None or port not in cls.output_ports:
+    if block is None or cls is None:
+        messages.append(ValidationMessage("error", "UNKNOWN_CONNECTION_SOURCE", f"Unknown connection source '{endpoint}'", owner, port))
+        return
+    if port not in cls.output_ports:
+        meta = get_port_spec(block.type, port, is_output=True)
+        if meta is not None and meta.proposed:
+            messages.append(
+                ValidationMessage(
+                    "error",
+                    "PHYSICAL_SOLVER_MISSING",
+                    (
+                        f"Connection source '{endpoint}' uses proposed physical port '{port}', "
+                        "but no runtime port/solver exists yet. Use the audio signal chain or a composite PASP block."
+                    ),
+                    owner,
+                    port,
+                )
+            )
+            return
         messages.append(ValidationMessage("error", "UNKNOWN_CONNECTION_SOURCE", f"Unknown connection source '{endpoint}'", owner, port))
 
 
@@ -223,7 +344,25 @@ def _validate_destination(
         return
     block = blocks_by_id.get(owner)
     cls = BLOCK_REGISTRY.get(block.type) if block else None
-    if block is None or cls is None or port not in cls.input_ports:
+    if block is None or cls is None:
+        messages.append(ValidationMessage("error", "UNKNOWN_CONNECTION_DESTINATION", f"Unknown connection destination '{endpoint}'", owner, port))
+        return
+    if port not in cls.input_ports:
+        meta = get_port_spec(block.type, port, is_output=False)
+        if meta is not None and meta.proposed:
+            messages.append(
+                ValidationMessage(
+                    "error",
+                    "PHYSICAL_SOLVER_MISSING",
+                    (
+                        f"Connection destination '{endpoint}' uses proposed physical port '{port}', "
+                        "but no runtime port/solver exists yet. Use the audio signal chain or a composite PASP block."
+                    ),
+                    owner,
+                    port,
+                )
+            )
+            return
         messages.append(ValidationMessage("error", "UNKNOWN_CONNECTION_DESTINATION", f"Unknown connection destination '{endpoint}'", owner, port))
 
 

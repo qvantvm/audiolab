@@ -1,0 +1,95 @@
+{
+  "schema_version": "0.1",
+  "name": "minimal_A4_note",
+  "description": "Minimal validated decomposed PASP piano note graph for A4 (MIDI 69). Hammer -> junction -> string -> bridge -> soundboard -> output.",
+  "sample_rate": 48000,
+  "duration": 3.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 69,
+    "velocity": 80
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {"a4": 440.0}
+    },
+    {
+      "id": "hammer",
+      "type": "PASPHammerFelt",
+      "params": {
+        "hammer_mass_kg": 0.008,
+        "felt_Q0": 120.0,
+        "felt_p": 2.7,
+        "contact_base_ms": 6.0
+      }
+    },
+    {
+      "id": "junction",
+      "type": "PASPHammerStringJunction",
+      "params": {
+        "felt_Q0": 120.0,
+        "felt_p": 2.7
+      }
+    },
+    {
+      "id": "string",
+      "type": "PASPStringLine",
+      "params": {
+        "string_length_m": 0.65,
+        "string_tension_N": 700.0,
+        "linear_density_kg_m": 0.006,
+        "inharmonicity_B": 0.00035,
+        "string_loss": 0.15,
+        "bridge_loss": 0.2,
+        "partials": 32,
+        "seed": 9
+      }
+    },
+    {
+      "id": "bridge",
+      "type": "PASPBridgeTermination",
+      "params": {"bridge_loss": 0.2}
+    },
+    {
+      "id": "soundboard",
+      "type": "PASPSoundboardModal",
+      "params": {"soundboard_mix": 0.5}
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {"peak_normalize_db": -1.0}
+    }
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "inputs.midi_note", "to": "string.midi_note"},
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "hammer.force", "to": "junction.force"},
+    {"from": "hammer.compression", "to": "junction.compression"},
+    {"from": "junction.excitation", "to": "string.excitation"},
+    {"from": "string.audio", "to": "bridge.audio"},
+    {"from": "bridge.audio", "to": "soundboard.audio"},
+    {"from": "soundboard.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "hammer.force",
+    "string.audio",
+    "soundboard.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 80, "y": 120},
+      "hammer": {"x": 80, "y": 240},
+      "junction": {"x": 280, "y": 240},
+      "string": {"x": 480, "y": 160},
+      "bridge": {"x": 680, "y": 160},
+      "soundboard": {"x": 880, "y": 160},
+      "out": {"x": 1080, "y": 160}
+    }
+  }
+}
