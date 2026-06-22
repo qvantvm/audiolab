@@ -46,6 +46,7 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
                 latency_samples=0,
                 causality="strictly_causal",
                 deterministic=True,
+                hosts_internal_blocks=True,
             ),
             sample_rate=sample_rate,
         )
@@ -124,12 +125,15 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
 
 class ExcitedWaveguideStringSolver(PhysicalSolver):
     name = "excited_waveguide_string"
+    supported_families = frozenset({"excited_waveguide_string"})
 
     def can_solve(self, subsystem: PhysicalSubsystem) -> bool:
-        if subsystem.kind != "excited_waveguide" or len(subsystem.block_ids) != 1:
-            return False
-        block_id = subsystem.block_ids[0]
-        return subsystem.block_types.get(block_id) == "WaveguideString"
+        return (
+            subsystem.solver_family == "excited_waveguide_string"
+            and subsystem.topology == "isolated_host"
+            and len(subsystem.block_ids) == 1
+            and _waveguide_boundary_signature(subsystem)
+        )
 
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
         block_id = subsystem.block_ids[0]
@@ -169,6 +173,16 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
             warnings=tuple(warnings),
         )
         return CompiledExcitedWaveguideString(subsystem, sample_rate, config)
+
+
+def _waveguide_boundary_signature(subsystem: PhysicalSubsystem) -> bool:
+    input_ports = {port.port_name: port.kind for port in subsystem.boundary_inputs}
+    output_ports = {port.port_name: port.kind for port in subsystem.boundary_outputs}
+    return (
+        input_ports.get("excitation") == "signal"
+        and input_ports.get("frequency") == "control"
+        and output_ports.get("audio") == "signal"
+    )
 
 
 def _boundary_name(

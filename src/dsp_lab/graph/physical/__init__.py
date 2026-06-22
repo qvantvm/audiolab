@@ -8,7 +8,13 @@ from dsp_lab.graph.physical.solver import (
     PhysicalSolver,
     SolverDeclarations,
 )
-from dsp_lab.graph.physical.subsystem import BoundaryPort, PhysicalSubsystem, extract_physical_subsystems
+from dsp_lab.graph.physical.subsystem import (
+    BoundaryPort,
+    PhysicalSubsystem,
+    extract_all_physical_subsystems,
+    extract_physical_subsystems,
+    infer_solver_family,
+)
 
 __all__ = [
     "BoundaryPort",
@@ -20,6 +26,8 @@ __all__ = [
     "TimedEvent",
     "UnsupportedPhysicalGraphError",
     "collect_timed_events",
+    "extract_all_physical_subsystems",
     "extract_physical_subsystems",
     "get_default_solver_registry",
+    "infer_solver_family",
 ]

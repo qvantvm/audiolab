@@ -30,6 +30,8 @@ def test_excited_waveguide_solver_is_registered():
 def test_can_solve_minimal_waveguide_subsystem():
     solver = ExcitedWaveguideStringSolver()
     subsystem = _waveguide_subsystem()
+    assert subsystem.solver_family == "excited_waveguide_string"
+    assert subsystem.topology == "isolated_host"
     assert solver.can_solve(subsystem)
 
 
@@ -38,7 +40,10 @@ def test_graph_compiler_selects_excited_waveguide_solver():
     compiled = compile_graph(graph)
 
     assert compiled.physical_subsystems
-    assert compiled.physical_subsystems[0].kind == "excited_waveguide"
+    subsystem = compiled.physical_subsystems[0]
+    assert subsystem.topology == "isolated_host"
+    assert subsystem.solver_family == "excited_waveguide_string"
+    assert subsystem.kind == "excited_waveguide"
     assert compiled.compiled_physical_subsystems
     assert compiled.compiled_physical_subsystems[0].solver_name == "excited_waveguide_string"
     assert "string" in compiled.solver_hosted_blocks
@@ -54,7 +59,7 @@ def test_render_loop_executes_compiled_subsystem(tmp_path: Path):
     assert np.all(np.isfinite(result.audio))
     assert result.metadata["rms"] > 0.0
     assert any("excited_waveguide_string" in warning for warning in result.warnings)
-    state = result.physical_subsystem_states["excited_waveguide_string"]
+    state = result.physical_subsystem_states["isolated_host_string"]
     assert state["delay"] == int(round(48000 / 440.0))
     assert state["config"]["frequency_hz"] == 440.0
 
@@ -85,6 +90,8 @@ def test_isolated_registry_rejects_waveguide_without_solver():
     with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
         compile_graph(graph, solver_registry=SolverRegistry())
     assert exc_info.value.subsystem_kind == "excited_waveguide"
+    assert exc_info.value.topology == "isolated_host"
+    assert exc_info.value.solver_family == "excited_waveguide_string"
 
 
 def _waveguide_subsystem():

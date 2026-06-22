@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
-from dsp_lab.blocks.metadata import PHYSICAL_SOLVER_TARGET_BLOCKS
+from dsp_lab.blocks.metadata import block_solver_family, physical_subsystem_host
 from dsp_lab.graph.connections import ClassifiedConnection, ConnectionEdgeKind
 from dsp_lab.graph.schema import GraphSpec
 from dsp_lab.graph.validator import split_endpoint
@@ -13,6 +13,8 @@ from dsp_lab.graph.validator import split_endpoint
 BoundaryKind = Literal["signal", "control", "event"]
 BoundaryDirection = Literal["input", "output"]
 PhysicalSubsystemKind = Literal["bidirectional_physical", "wave_scattering", "excited_waveguide"]
+PhysicalSubsystemTopology = Literal["connected_component", "isolated_host"]
+PhysicalEdgeKind = Literal["bidirectional_physical", "wave_scattering"]
 
 
 @dataclass(frozen=True)
@@ -30,16 +32,103 @@ class BoundaryPort:
 @dataclass(frozen=True)
 class PhysicalSubsystem:
     subsystem_id: str
+    topology: PhysicalSubsystemTopology
     kind: PhysicalSubsystemKind
     block_ids: tuple[str, ...]
     block_types: dict[str, str]
     internal_connections: tuple[ClassifiedConnection, ...]
     boundary_inputs: tuple[BoundaryPort, ...]
     boundary_outputs: tuple[BoundaryPort, ...]
+    edge_kind: PhysicalEdgeKind | None = None
+    solver_family: str | None = None
     block_params: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
+def extract_all_physical_subsystems(
+    graph: GraphSpec,
+    blocks_by_id: dict[str, Any],
+    classified: list[ClassifiedConnection],
+    block_types: dict[str, str],
+) -> tuple[PhysicalSubsystem, ...]:
+    """Extract physical subsystems from connected components and isolated solver hosts."""
+    connected = _extract_connected_component_subsystems(graph, blocks_by_id, classified, block_types)
+    hosted = _extract_isolated_host_subsystems(
+        graph,
+        blocks_by_id,
+        classified,
+        block_types,
+        existing_subsystems=connected,
+    )
+    return tuple(_with_inferred_solver_family(subsystem) for subsystem in (*connected, *hosted))
+
+
 def extract_physical_subsystems(
+    graph: GraphSpec,
+    blocks_by_id: dict[str, Any],
+    classified: list[ClassifiedConnection],
+    block_types: dict[str, str],
+) -> tuple[PhysicalSubsystem, ...]:
+    """Backward-compatible alias for connected-component extraction only."""
+    return _extract_connected_component_subsystems(graph, blocks_by_id, classified, block_types)
+
+
+def infer_solver_family(subsystem: PhysicalSubsystem) -> str | None:
+    """Infer the solver family required for a physical subsystem."""
+    if subsystem.solver_family is not None:
+        return subsystem.solver_family
+
+    if subsystem.topology == "isolated_host":
+        if len(subsystem.block_ids) != 1:
+            return None
+        block_type = subsystem.block_types.get(subsystem.block_ids[0], "")
+        return block_solver_family(block_type)
+
+    if subsystem.edge_kind == "wave_scattering":
+        return "wave_scattering"
+
+    if subsystem.edge_kind == "bidirectional_physical":
+        declared = {block_solver_family(block_type) for block_type in subsystem.block_types.values()}
+        declared.discard(None)
+        if declared == {"bidirectional_mechanical_stub"}:
+            return "bidirectional_mechanical_stub"
+        return "bidirectional_mechanical"
+
+    return None
+
+
+def subsystem_trigger_block(
+    subsystem: PhysicalSubsystem,
+    order: list[str],
+    input_connections: dict[tuple[str, str], object] | None = None,
+) -> str:
+    """Return the schedule block after which the subsystem solver should run."""
+    if subsystem.topology == "isolated_host" and input_connections is not None:
+        upstream: set[str] = set()
+        for port in subsystem.boundary_inputs:
+            connection = input_connections.get((port.block_id, port.port_name))
+            if connection is None:
+                continue
+            src = split_endpoint(connection.from_)
+            if src and src[0] != "inputs":
+                upstream.add(src[0])
+        if upstream:
+            return max(upstream, key=lambda block_id: order.index(block_id))
+
+    internal_blocks = set(subsystem.block_ids)
+    candidates = {port.block_id for port in subsystem.boundary_inputs} & internal_blocks
+    if not candidates:
+        candidates = internal_blocks
+    return max(candidates, key=lambda block_id: order.index(block_id))
+
+
+def _with_inferred_solver_family(subsystem: PhysicalSubsystem) -> PhysicalSubsystem:
+    family = infer_solver_family(subsystem)
+    if family == subsystem.solver_family:
+        return subsystem
+    return replace(subsystem, solver_family=family)
+
+
+def _extract_connected_component_subsystems(
     graph: GraphSpec,
     blocks_by_id: dict[str, Any],
     classified: list[ClassifiedConnection],
@@ -58,7 +147,7 @@ def extract_physical_subsystems(
     for index, block_ids in enumerate(sorted(components, key=lambda ids: sorted(ids)[0])):
         block_id_set = set(block_ids)
         internal = tuple(edge for edge in physical_edges if _edge_in_blocks(edge, block_id_set))
-        kind: PhysicalSubsystemKind = (
+        edge_kind: PhysicalEdgeKind = (
             "wave_scattering"
             if any(edge.edge_kind == ConnectionEdgeKind.WAVE_SCATTERING for edge in internal)
             else "bidirectional_physical"
@@ -73,8 +162,10 @@ def extract_physical_subsystems(
         )
         subsystems.append(
             PhysicalSubsystem(
-                subsystem_id=f"{kind}_{index}",
-                kind=kind,
+                subsystem_id=f"{edge_kind}_{index}",
+                topology="connected_component",
+                kind=edge_kind,
+                edge_kind=edge_kind,
                 block_ids=tuple(sorted(block_ids)),
                 block_types={block_id: block_types[block_id] for block_id in sorted(block_ids)},
                 internal_connections=internal,
@@ -86,7 +177,7 @@ def extract_physical_subsystems(
     return tuple(subsystems)
 
 
-def extract_excited_waveguide_subsystems(
+def _extract_isolated_host_subsystems(
     graph: GraphSpec,
     blocks_by_id: dict[str, Any],
     classified: list[ClassifiedConnection],
@@ -94,24 +185,14 @@ def extract_excited_waveguide_subsystems(
     *,
     existing_subsystems: tuple[PhysicalSubsystem, ...],
 ) -> tuple[PhysicalSubsystem, ...]:
-    """Extract single-block WaveguideString subsystems targeted by physical solvers."""
-    blocks_in_physical_edges: set[str] = set()
-    for edge in classified:
-        if edge.edge_kind not in {ConnectionEdgeKind.PHYSICAL_BIDIRECTIONAL, ConnectionEdgeKind.WAVE_SCATTERING}:
-            continue
-        src = split_endpoint(edge.connection.from_)
-        dst = split_endpoint(edge.connection.to)
-        if src and src[0] != "inputs":
-            blocks_in_physical_edges.add(src[0])
-        if dst and dst[0] != "inputs":
-            blocks_in_physical_edges.add(dst[0])
-
+    """Extract single-block subsystems for blocks declared as physical solver hosts."""
+    blocks_in_physical_edges = _blocks_on_physical_or_wave_edges(classified)
     already_hosted = {block_id for subsystem in existing_subsystems for block_id in subsystem.block_ids}
+
     subsystems: list[PhysicalSubsystem] = []
     index = len(existing_subsystems)
     for block_spec in graph.blocks:
-        solver_kind = PHYSICAL_SOLVER_TARGET_BLOCKS.get(block_spec.type)
-        if solver_kind != "excited_waveguide":
+        if not physical_subsystem_host(block_spec.type):
             continue
         if block_spec.id in blocks_in_physical_edges or block_spec.id in already_hosted:
             continue
@@ -126,7 +207,8 @@ def extract_excited_waveguide_subsystems(
         )
         subsystems.append(
             PhysicalSubsystem(
-                subsystem_id=f"excited_waveguide_{block_spec.id}",
+                subsystem_id=f"isolated_host_{block_spec.id}",
+                topology="isolated_host",
                 kind="excited_waveguide",
                 block_ids=(block_spec.id,),
                 block_types={block_spec.id: block_spec.type},
@@ -140,29 +222,18 @@ def extract_excited_waveguide_subsystems(
     return tuple(subsystems)
 
 
-def subsystem_trigger_block(
-    subsystem: PhysicalSubsystem,
-    order: list[str],
-    input_connections: dict[tuple[str, str], object] | None = None,
-) -> str:
-    """Return the schedule block after which the subsystem solver should run."""
-    if subsystem.kind == "excited_waveguide" and input_connections is not None:
-        upstream: set[str] = set()
-        for port in subsystem.boundary_inputs:
-            connection = input_connections.get((port.block_id, port.port_name))
-            if connection is None:
-                continue
-            src = split_endpoint(connection.from_)
-            if src and src[0] != "inputs":
-                upstream.add(src[0])
-        if upstream:
-            return max(upstream, key=lambda block_id: order.index(block_id))
-
-    internal_blocks = set(subsystem.block_ids)
-    candidates = {port.block_id for port in subsystem.boundary_inputs} & internal_blocks
-    if not candidates:
-        candidates = internal_blocks
-    return max(candidates, key=lambda block_id: order.index(block_id))
+def _blocks_on_physical_or_wave_edges(classified: list[ClassifiedConnection]) -> set[str]:
+    block_ids: set[str] = set()
+    for edge in classified:
+        if edge.edge_kind not in {ConnectionEdgeKind.PHYSICAL_BIDIRECTIONAL, ConnectionEdgeKind.WAVE_SCATTERING}:
+            continue
+        src = split_endpoint(edge.connection.from_)
+        dst = split_endpoint(edge.connection.to)
+        if src and src[0] != "inputs":
+            block_ids.add(src[0])
+        if dst and dst[0] != "inputs":
+            block_ids.add(dst[0])
+    return block_ids
 
 
 def _connected_components(edges: list[ClassifiedConnection]) -> list[set[str]]:
@@ -210,6 +281,7 @@ def _extract_boundaries(
     *,
     subsystem_index: int,
 ) -> tuple[tuple[BoundaryPort, ...], tuple[BoundaryPort, ...]]:
+    del graph
     boundary_inputs: list[BoundaryPort] = []
     boundary_outputs: list[BoundaryPort] = []
     seen_inputs: set[str] = set()

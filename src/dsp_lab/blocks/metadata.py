@@ -181,11 +181,20 @@ WAVEGUIDE_BLOCKS: set[str] = {
     "StringTermination",
 }
 
-PHYSICAL_SOLVER_TARGET_BLOCKS: dict[str, str] = {
-    "WaveguideString": "excited_waveguide",
+BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
+    "WaveguideString": {
+        "solver_family": "excited_waveguide_string",
+        "physical_subsystem_host": True,
+    },
+    "PianoWaveguideString": {
+        "solver_family": "excited_waveguide_string",
+        "physical_subsystem_host": True,
+    },
+    "PhysicalCouplingStub": {
+        "solver_family": "bidirectional_mechanical_stub",
+        "physical_subsystem_host": False,
+    },
 }
-
-WAVEGUIDE_SOLVER_BLOCKS: set[str] = set(PHYSICAL_SOLVER_TARGET_BLOCKS)
 
 STATEFUL_BLOCK_TYPES: set[str] = (
     PASP_CORE_BLOCKS
@@ -402,6 +411,8 @@ class BlockTypeSpec:
     reuse_as_is: bool = True
     needs_metadata: bool = False
     needs_refactor: bool = False
+    solver_family: str | None = None
+    physical_subsystem_host: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -420,6 +431,8 @@ class BlockTypeSpec:
             "reuse_as_is": self.reuse_as_is,
             "needs_metadata": self.needs_metadata,
             "needs_refactor": self.needs_refactor,
+            "solver_family": self.solver_family,
+            "physical_subsystem_host": self.physical_subsystem_host,
         }
 
 
@@ -603,6 +616,10 @@ def build_block_type_spec(cls: type[DSPBlock]) -> BlockTypeSpec:
         "WaveguideString",
     }
 
+    subsystem_metadata = BLOCK_PHYSICAL_SUBSYSTEM_METADATA.get(block_type, {})
+    solver_family = subsystem_metadata.get("solver_family")
+    physical_subsystem_host_flag = bool(subsystem_metadata.get("physical_subsystem_host", False))
+
     return BlockTypeSpec(
         block_type=block_type,
         category=category,
@@ -619,7 +636,22 @@ def build_block_type_spec(cls: type[DSPBlock]) -> BlockTypeSpec:
         reuse_as_is=not needs_refactor,
         needs_metadata=needs_metadata,
         needs_refactor=needs_refactor,
+        solver_family=str(solver_family) if solver_family else None,
+        physical_subsystem_host=physical_subsystem_host_flag,
     )
+
+
+def get_block_physical_subsystem_metadata(block_type: str) -> dict[str, Any]:
+    return dict(BLOCK_PHYSICAL_SUBSYSTEM_METADATA.get(block_type, {}))
+
+
+def physical_subsystem_host(block_type: str) -> bool:
+    return bool(get_block_physical_subsystem_metadata(block_type).get("physical_subsystem_host", False))
+
+
+def block_solver_family(block_type: str) -> str | None:
+    family = get_block_physical_subsystem_metadata(block_type).get("solver_family")
+    return str(family) if family else None
 
 
 def get_port_spec(block_type: str, port_name: str, *, is_output: bool) -> PortSpec | None:

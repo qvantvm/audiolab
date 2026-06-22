@@ -163,7 +163,7 @@ def _compile_physical_subsystems(
         compiled.append(compiled_subsystem)
         trigger_block = subsystem_trigger_block(subsystem, order, input_connections)
         triggers.setdefault(trigger_block, []).append(compiled_subsystem)
-        if subsystem.kind == "excited_waveguide":
+        if compiled_subsystem.declarations.hosts_internal_blocks:
             solver_hosted_blocks.update(subsystem.block_ids)
         for boundary in subsystem.boundary_outputs:
             solver_owned_endpoints.add(boundary.endpoint)

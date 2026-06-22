@@ -19,6 +19,7 @@ class SolverDeclarations:
     latency_samples: int = 0
     causality: CausalityKind = "strictly_causal"
     deterministic: bool = True
+    hosts_internal_blocks: bool = False
 
 
 class PhysicalSolver(ABC):

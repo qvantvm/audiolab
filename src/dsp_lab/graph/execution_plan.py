@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from dsp_lab.blocks.metadata import PHYSICAL_SOLVER_TARGET_BLOCKS, STATEFUL_BLOCK_TYPES, get_port_spec
+from dsp_lab.blocks.metadata import STATEFUL_BLOCK_TYPES, get_port_spec
 from dsp_lab.graph.connections import (
     ClassifiedConnection,
     ConnectionEdgeKind,
@@ -13,8 +13,7 @@ from dsp_lab.graph.connections import (
 )
 from dsp_lab.graph.physical.subsystem import (
     PhysicalSubsystem,
-    extract_excited_waveguide_subsystems,
-    extract_physical_subsystems,
+    extract_all_physical_subsystems,
 )
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 from dsp_lab.graph.validator import split_endpoint
@@ -79,14 +78,7 @@ def build_execution_plan(
         for block_id in signal_order
     )
 
-    physical_subsystems = extract_physical_subsystems(graph, blocks_by_id, classified, block_types)
-    physical_subsystems += extract_excited_waveguide_subsystems(
-        graph,
-        blocks_by_id,
-        classified,
-        block_types,
-        existing_subsystems=physical_subsystems,
-    )
+    physical_subsystems = extract_all_physical_subsystems(graph, blocks_by_id, classified, block_types)
     warnings = _build_warnings(classified, physical_subsystems)
 
     return ExecutionPlan(

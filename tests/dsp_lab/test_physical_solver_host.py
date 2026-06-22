@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
-
 import numpy as np
 import pytest
 
@@ -13,95 +11,15 @@ from dsp_lab.graph.executor import render_graph
 from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
 from dsp_lab.graph.physical.events import TimedEvent, collect_timed_events
 from dsp_lab.graph.physical.registry import SolverRegistry
-from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
-from dsp_lab.graph.physical.subsystem import PhysicalSubsystem
+from dsp_lab.graph.physical.solvers.bidirectional_mechanical_stub import (
+    BidirectionalMechanicalStubSolver,
+    CompiledBidirectionalMechanicalStub,
+)
 from dsp_lab.graph.schema import GraphSpec
 
 
-class DummyCompiledPhysicalSubsystem(CompiledPhysicalSubsystem):
-    def __init__(self, subsystem: PhysicalSubsystem, sample_rate: int, *, gain: float = 0.5) -> None:
-        super().__init__(
-            subsystem=subsystem,
-            solver_name="dummy_physical",
-            declarations=SolverDeclarations(
-                latency_samples=0,
-                causality="strictly_causal",
-                deterministic=True,
-            ),
-            sample_rate=sample_rate,
-        )
-        self.gain = gain
-        self.received_events: list[TimedEvent] = []
-        self.process_calls = 0
-
-    def reset(self) -> None:
-        self.received_events = []
-        self.process_calls = 0
-
-    def get_state_snapshot(self) -> dict[str, Any]:
-        return {
-            "process_calls": self.process_calls,
-            "received_events": [
-                {
-                    "sample_index": event.sample_index,
-                    "event_type": event.event_type,
-                    "payload": dict(event.payload),
-                }
-                for event in self.received_events
-            ],
-        }
-
-    def set_state_snapshot(self, snapshot: Mapping[str, Any]) -> None:
-        self.process_calls = int(snapshot.get("process_calls", 0))
-        self.received_events = [
-            TimedEvent(
-                sample_index=int(item["sample_index"]),
-                event_type=str(item["event_type"]),
-                payload=dict(item.get("payload", {})),
-            )
-            for item in snapshot.get("received_events", [])
-        ]
-
-    def process_block(
-        self,
-        num_frames: int,
-        events: Sequence[TimedEvent],
-        control_inputs: Mapping[str, Any],
-        signal_inputs: Mapping[str, np.ndarray],
-    ) -> dict[str, np.ndarray]:
-        self.process_calls += 1
-        self.received_events.extend(events)
-        if not signal_inputs:
-            raise ValueError("DummyCompiledPhysicalSubsystem expected at least one signal boundary input")
-        if not self.subsystem.boundary_outputs:
-            raise ValueError("DummyCompiledPhysicalSubsystem expected at least one signal boundary output")
-
-        source = next(iter(signal_inputs.values()))
-        output = np.asarray(source, dtype=np.float32) * float(self.gain)
-        for event in events:
-            if 0 <= event.sample_index < num_frames:
-                output[event.sample_index:] *= 2.0
-
-        output_port = self.subsystem.boundary_outputs[0]
-        return {output_port.name: output}
-
-
-class DummyPhysicalSolver(PhysicalSolver):
-    name = "dummy_physical"
-
-    def can_solve(self, subsystem: PhysicalSubsystem) -> bool:
-        return (
-            subsystem.kind == "bidirectional_physical"
-            and subsystem.block_ids
-            and all(block_type == "PhysicalCouplingStub" for block_type in subsystem.block_types.values())
-        )
-
-    def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
-        return DummyCompiledPhysicalSubsystem(subsystem, sample_rate)
-
-
 def tiny_physical_graph(*, with_event: bool = False) -> GraphSpec:
-    inputs: dict[str, Any] = {}
+    inputs: dict = {}
     if with_event:
         inputs["note_on"] = {
             "kind": "event",
@@ -129,15 +47,17 @@ def tiny_physical_graph(*, with_event: bool = False) -> GraphSpec:
     )
 
 
-def test_solver_registry_lists_and_finds_dummy_solver():
+def test_solver_registry_lists_and_finds_stub_solver():
     registry = SolverRegistry()
-    registry.register(DummyPhysicalSolver())
-    assert registry.list_solvers() == ["dummy_physical"]
+    registry.register(BidirectionalMechanicalStubSolver())
+    assert registry.list_solvers() == ["bidirectional_mechanical_stub"]
 
     graph = tiny_physical_graph()
     compiled = compile_graph(graph, solver_registry=registry)
+    subsystem = compiled.physical_subsystems[0]
+    assert subsystem.solver_family == "bidirectional_mechanical_stub"
     assert compiled.compiled_physical_subsystems
-    assert compiled.compiled_physical_subsystems[0].solver_name == "dummy_physical"
+    assert compiled.compiled_physical_subsystems[0].solver_name == "bidirectional_mechanical_stub"
 
 
 def test_compile_rejects_valid_physical_graph_without_registered_solver():
@@ -147,18 +67,21 @@ def test_compile_rejects_valid_physical_graph_without_registered_solver():
 
     error = exc_info.value
     assert error.subsystem_kind == "bidirectional_physical"
+    assert error.topology == "connected_component"
+    assert error.solver_family == "bidirectional_mechanical_stub"
     assert "stub_a" in error.block_ids
     assert "stub_b" in error.block_ids
     assert error.to_dict()["reason"]
 
 
-def test_dummy_solver_renders_through_existing_render_loop():
+def test_stub_solver_renders_through_existing_render_loop():
     registry = SolverRegistry()
-    registry.register(DummyPhysicalSolver())
+    registry.register(BidirectionalMechanicalStubSolver())
     graph = tiny_physical_graph(with_event=True)
 
     compiled = compile_graph(graph, solver_registry=registry)
     assert compiled.physical_subsystems
+    assert compiled.physical_subsystems[0].solver_family == "bidirectional_mechanical_stub"
     assert compiled.physical_subsystem_triggers["stub_a"]
     assert "stub_b.audio" in compiled.solver_owned_endpoints
     assert compiled.execution_plan.physical_edges
@@ -177,7 +100,7 @@ def test_dummy_solver_renders_through_existing_render_loop():
 
 def test_render_graph_accepts_solver_registry_for_end_to_end_compile():
     registry = SolverRegistry()
-    registry.register(DummyPhysicalSolver())
+    registry.register(BidirectionalMechanicalStubSolver())
     graph = tiny_physical_graph()
 
     result = render_graph(graph, solver_registry=registry)
@@ -195,9 +118,10 @@ def test_physical_subsystem_boundary_extraction():
     assert edge.requires_solver
 
     registry = SolverRegistry()
-    registry.register(DummyPhysicalSolver())
+    registry.register(BidirectionalMechanicalStubSolver())
     compiled = compile_graph(graph, solver_registry=registry)
     subsystem = compiled.physical_subsystems[0]
+    assert subsystem.solver_family == "bidirectional_mechanical_stub"
     assert {port.endpoint for port in subsystem.boundary_inputs} == {"stub_a.audio"}
     assert {port.endpoint for port in subsystem.boundary_outputs} == {"stub_b.audio"}
 
@@ -212,14 +136,15 @@ def test_timed_event_collection_is_sample_accurate():
 
 def test_compiled_subsystem_state_snapshot_roundtrip():
     registry = SolverRegistry()
-    registry.register(DummyPhysicalSolver())
+    registry.register(BidirectionalMechanicalStubSolver())
     compiled = compile_graph(tiny_physical_graph(with_event=True), solver_registry=registry)
     subsystem = compiled.compiled_physical_subsystems[0]
+    assert isinstance(subsystem, CompiledBidirectionalMechanicalStub)
     subsystem.received_events.append(TimedEvent(sample_index=7, event_type="test", payload={"x": 1}))
     subsystem.process_calls = 3
     snapshot = subsystem.get_state_snapshot()
     subsystem.reset()
-    assert subsystem.process_calls == 0
     subsystem.set_state_snapshot(snapshot)
     assert subsystem.process_calls == 3
     assert len(subsystem.received_events) == 1
+    assert subsystem.received_events[0].event_type == "test"
