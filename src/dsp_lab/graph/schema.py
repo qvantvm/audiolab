@@ -47,6 +47,7 @@ class GraphSpec(BaseModel):
     connections: list[ConnectionSpec] = Field(default_factory=list)
     probes: list[str] = Field(default_factory=list)
     ui: UISpec | None = None
+    solver_hint: str | None = None
 
     @field_validator("sample_rate", "block_size")
     @classmethod

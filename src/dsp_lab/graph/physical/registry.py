@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from dsp_lab.graph.physical.capabilities import (
     derive_subsystem_requirements,
-    score_solver_specificity,
+    rank_physical_solvers,
     solver_matches_requirements,
+)
+from dsp_lab.graph.physical.errors import (
+    UnsupportedPhysicalGraphError,
+    ambiguous_solver_error,
+    invalid_solver_hint_error,
+    unsupported_subsystem_error,
 )
 from dsp_lab.graph.physical.solver import PhysicalSolver
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem
@@ -34,16 +40,65 @@ class SolverRegistry:
             if solver_matches_requirements(solver.capabilities, requirements)
         ]
 
-    def find_solver(self, subsystem: PhysicalSubsystem) -> PhysicalSolver | None:
-        requirements = derive_subsystem_requirements(subsystem)
-        matches = [
-            solver
-            for solver in self._solvers
-            if solver_matches_requirements(solver.capabilities, requirements)
-        ]
-        if not matches:
+    def find_solver(
+        self,
+        subsystem: PhysicalSubsystem,
+        *,
+        solver_hint: str | None = None,
+    ) -> PhysicalSolver | None:
+        try:
+            return self.select_solver(subsystem, solver_hint=solver_hint)
+        except UnsupportedPhysicalGraphError:
             return None
-        return max(matches, key=lambda solver: score_solver_specificity(solver.capabilities, requirements))
+
+    def select_solver(
+        self,
+        subsystem: PhysicalSubsystem,
+        *,
+        solver_hint: str | None = None,
+    ) -> PhysicalSolver:
+        available = tuple(self.list_solvers())
+        requirements = derive_subsystem_requirements(subsystem)
+
+        if solver_hint is not None:
+            hinted = [solver for solver in self._solvers if solver.name == solver_hint]
+            if not hinted:
+                raise invalid_solver_hint_error(
+                    subsystem,
+                    solver_hint=solver_hint,
+                    available_solvers=available,
+                    reason=f"solver_hint '{solver_hint}' is not registered",
+                )
+            solver = hinted[0]
+            if not solver_matches_requirements(solver.capabilities, requirements):
+                raise invalid_solver_hint_error(
+                    subsystem,
+                    solver_hint=solver_hint,
+                    available_solvers=available,
+                    reason=f"solver_hint '{solver_hint}' does not match subsystem requirements",
+                )
+            return solver
+
+        matches = self.find_matching_solvers(subsystem)
+        if not matches:
+            partial = tuple(s.name for s in matches)
+            raise unsupported_subsystem_error(
+                subsystem,
+                reason="No registered PhysicalSolver can execute this subsystem",
+                available_solvers=available,
+                candidate_solvers=partial,
+            )
+
+        warning_counts = {solver.name: len(solver.estimate_warnings(subsystem)) for solver in matches}
+        winner, ambiguous = rank_physical_solvers(matches, requirements, warning_counts=warning_counts)
+        if ambiguous:
+            raise ambiguous_solver_error(
+                subsystem,
+                solver_names=tuple(solver.name for solver in ambiguous),
+                available_solvers=available,
+            )
+        assert winner is not None
+        return winner
 
 
 _DEFAULT_REGISTRY = SolverRegistry()

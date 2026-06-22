@@ -14,7 +14,10 @@ from dsp_lab.graph.physical.capabilities import (
     derive_subsystem_requirements,
     score_solver_specificity,
     solver_matches_requirements,
+    solver_selection_rank,
+    topology_exact_match,
 )
+from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
 from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
 from dsp_lab.graph.physical.solver import PhysicalSolver
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem, extract_all_physical_subsystems
@@ -80,6 +83,57 @@ class BroadWaveguideTestSolver(PhysicalSolver):
     def compile(self, subsystem, sample_rate):
         del subsystem, sample_rate
         raise NotImplementedError
+
+
+class DuplicateWaveguideTestSolver(PhysicalSolver):
+    name = "duplicate_waveguide_test"
+    capabilities = SimpleWaveguideTestSolver.capabilities
+
+    def compile(self, subsystem, sample_rate):
+        del subsystem, sample_rate
+        raise NotImplementedError
+
+
+class MultiTopologyWaveguideTestSolver(PhysicalSolver):
+    name = "multi_topology_waveguide_test"
+    capabilities = SolverCapabilities(
+        allowed_node_types=frozenset({"WaveguideString"}),
+        max_nodes=1,
+        min_nodes=1,
+        allowed_topologies=frozenset({"isolated_host", "connected_component"}),
+        input_boundary_kinds=frozenset({"signal", "control"}),
+        output_boundary_kinds=frozenset({"signal"}),
+        required_input_ports=frozenset({"excitation", "frequency"}),
+        required_output_ports=frozenset({"audio"}),
+        supported_families=frozenset({"excited_waveguide_string"}),
+        priority=10,
+    )
+
+    def compile(self, subsystem, sample_rate):
+        del subsystem, sample_rate
+        raise NotImplementedError
+
+
+class WarnfulWaveguideTestSolver(PhysicalSolver):
+    name = "warnful_waveguide_test"
+    capabilities = SimpleWaveguideTestSolver.capabilities
+
+    def estimate_warnings(self, subsystem):
+        return ("extra unsupported feature warning",)
+
+    def compile(self, subsystem, sample_rate):
+        del subsystem, sample_rate
+        raise NotImplementedError
+
+
+def _register_ambiguous_pair(registry: SolverRegistry) -> None:
+    registry.register(DuplicateWaveguideTestSolver())
+    registry.register(SimpleWaveguideTestSolver())
+
+
+def _register_ambiguous_pair_reversed(registry: SolverRegistry) -> None:
+    registry.register(SimpleWaveguideTestSolver())
+    registry.register(DuplicateWaveguideTestSolver())
 
 
 def _waveguide_subsystem() -> PhysicalSubsystem:
@@ -242,3 +296,67 @@ def _tiny_physical_graph_for_compile_error() -> GraphSpec:
 def test_regression_waveguide_graph_compiles_with_default_registry():
     compiled = compile_graph(load_graph(WAVEGUIDE_GRAPH))
     assert compiled.compiled_physical_subsystems[0].solver_name == "excited_waveguide_string"
+
+
+def test_topology_exact_match_prefers_specialized_solver():
+    registry = SolverRegistry()
+    registry.register(MultiTopologyWaveguideTestSolver())
+    registry.register(SimpleWaveguideTestSolver())
+
+    selected = registry.select_solver(_waveguide_subsystem())
+    assert selected.name == "simple_waveguide_test"
+    req = derive_subsystem_requirements(_waveguide_subsystem())
+    assert topology_exact_match(SimpleWaveguideTestSolver.capabilities, req) is True
+    assert topology_exact_match(MultiTopologyWaveguideTestSolver.capabilities, req) is False
+
+
+def test_warning_count_prefers_cleaner_solver():
+    registry = SolverRegistry()
+    registry.register(WarnfulWaveguideTestSolver())
+    registry.register(SimpleWaveguideTestSolver())
+
+    selected = registry.select_solver(_waveguide_subsystem())
+    assert selected.name == "simple_waveguide_test"
+
+
+def test_ambiguous_selection_fails_deterministically():
+    subsystem = _waveguide_subsystem()
+    for register in (_register_ambiguous_pair, _register_ambiguous_pair_reversed):
+        registry = SolverRegistry()
+        register(registry)
+        with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
+            registry.select_solver(subsystem)
+        error = exc_info.value
+        assert set(error.candidate_solvers) == {"simple_waveguide_test", "duplicate_waveguide_test"}
+        assert "solver_hint" in error.reason
+
+
+def test_solver_hint_resolves_ambiguity():
+    registry = SolverRegistry()
+    _register_ambiguous_pair(registry)
+    subsystem = _waveguide_subsystem()
+
+    selected = registry.select_solver(subsystem, solver_hint="duplicate_waveguide_test")
+    assert selected.name == "duplicate_waveguide_test"
+
+
+def test_invalid_solver_hint_raises():
+    registry = SolverRegistry()
+    registry.register(SimpleWaveguideTestSolver())
+    with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
+        registry.select_solver(_waveguide_subsystem(), solver_hint="missing_solver")
+    assert exc_info.value.requested_solver_hint == "missing_solver"
+    assert "not registered" in exc_info.value.reason
+
+
+def test_graph_solver_hint_compiles():
+    graph = load_graph(WAVEGUIDE_GRAPH).model_copy(update={"solver_hint": "excited_waveguide_string"})
+    compiled = compile_graph(graph)
+    assert compiled.compiled_physical_subsystems[0].solver_name == "excited_waveguide_string"
+
+
+def test_selection_rank_tuple_is_lexicographic():
+    req = derive_subsystem_requirements(_waveguide_subsystem())
+    exact_rank = solver_selection_rank(SimpleWaveguideTestSolver.capabilities, req, warning_count=0)
+    generic_rank = solver_selection_rank(MultiTopologyWaveguideTestSolver.capabilities, req, warning_count=0)
+    assert exact_rank > generic_rank

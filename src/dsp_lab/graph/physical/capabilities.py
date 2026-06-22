@@ -166,12 +166,56 @@ def solver_matches_requirements(caps: SolverCapabilities, req: SubsystemRequirem
     return all(not required or supported for required, supported in feature_pairs)
 
 
-def score_solver_specificity(caps: SolverCapabilities, req: SubsystemRequirements) -> int:
+def score_solver_specificity(caps: SolverCapabilities, req: SubsystemRequirements, *, include_priority: bool = True) -> int:
     score = 0
     score += 1000 * len(caps.required_node_types & req.node_types)
     if caps.max_nodes == req.node_count:
         score += 500
     score += max(0, 100 - caps.max_nodes)
     score += max(0, 1000 - len(caps.allowed_node_types))
-    score -= caps.priority * 10
+    if include_priority:
+        score -= caps.priority * 10
     return score
+
+
+def topology_exact_match(caps: SolverCapabilities, req: SubsystemRequirements) -> bool:
+    return caps.allowed_topologies == frozenset({req.topology})
+
+
+def solver_selection_rank(
+    caps: SolverCapabilities,
+    req: SubsystemRequirements,
+    *,
+    warning_count: int,
+) -> tuple[int, int, int, int]:
+    return (
+        int(topology_exact_match(caps, req)),
+        score_solver_specificity(caps, req, include_priority=False),
+        -warning_count,
+        -caps.priority,
+    )
+
+
+def rank_physical_solvers(
+    matches: list[Any],
+    req: SubsystemRequirements,
+    *,
+    warning_counts: dict[str, int],
+) -> tuple[Any | None, tuple[Any, ...]]:
+    """Return the uniquely best solver, or an empty winner with ambiguous matches."""
+    if not matches:
+        return None, ()
+
+    ranks = {
+        solver.name: solver_selection_rank(
+            solver.capabilities,
+            req,
+            warning_count=warning_counts.get(solver.name, 0),
+        )
+        for solver in matches
+    }
+    max_rank = max(ranks.values())
+    top = tuple(solver for solver in matches if ranks[solver.name] == max_rank)
+    if len(top) == 1:
+        return top[0], ()
+    return None, top

@@ -124,6 +124,33 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
         return {self.config.audio_output_port: out}
 
 
+def _estimate_excited_waveguide_warnings(
+    subsystem: PhysicalSubsystem,
+    *,
+    sample_rate: int = 48000,
+) -> tuple[str, ...]:
+    if len(subsystem.block_ids) != 1:
+        return ()
+    params = dict(subsystem.block_params.get(subsystem.block_ids[0], {}))
+    warnings: list[str] = []
+
+    inharmonicity_B = float(params.get("inharmonicity_B", 0.0))
+    if inharmonicity_B != 0.0:
+        warnings.append(
+            f"inharmonicity_B={inharmonicity_B} is not yet applied by ExcitedWaveguideStringSolver; "
+            "using pure Karplus-Strong delay length."
+        )
+
+    if "decay" in params and "decay_seconds" not in params and "decay_t60" not in params:
+        legacy_decay = float(params["decay"])
+        if 0.0 < legacy_decay < 1.0:
+            warnings.append(
+                "Mapped legacy WaveguideString 'decay' parameter to decay_seconds for solver execution."
+            )
+
+    return tuple(warnings)
+
+
 class ExcitedWaveguideStringSolver(PhysicalSolver):
     name = "excited_waveguide_string"
     capabilities = SolverCapabilities(
@@ -146,26 +173,21 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
         priority=10,
     )
 
+    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[str, ...]:
+        return _estimate_excited_waveguide_warnings(subsystem)
+
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
         block_id = subsystem.block_ids[0]
         params = dict(subsystem.block_params.get(block_id, {}))
-        warnings: list[str] = []
+        warnings = list(_estimate_excited_waveguide_warnings(subsystem, sample_rate=sample_rate))
 
         inharmonicity_B = float(params.get("inharmonicity_B", 0.0))
-        if inharmonicity_B != 0.0:
-            warnings.append(
-                f"inharmonicity_B={inharmonicity_B} is not yet applied by ExcitedWaveguideStringSolver; "
-                "using pure Karplus-Strong delay length."
-            )
 
         decay_seconds = float(params.get("decay_seconds", params.get("decay_t60", 4.0)))
         if "decay" in params and "decay_seconds" not in params and "decay_t60" not in params:
             legacy_decay = float(params["decay"])
             if legacy_decay > 0.0 and legacy_decay < 1.0:
                 decay_seconds = max(-3.0 / (math.log10(legacy_decay) * sample_rate), 0.01)
-                warnings.append(
-                    "Mapped legacy WaveguideString 'decay' parameter to decay_seconds for solver execution."
-                )
 
         excitation_port = _boundary_name(subsystem.boundary_inputs, "excitation", kind="signal")
         frequency_port = _boundary_name(subsystem.boundary_inputs, "frequency", kind="control")

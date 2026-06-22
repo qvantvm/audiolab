@@ -4,8 +4,11 @@ from dsp_lab.graph.physical.capabilities import (
     SolverCapabilities,
     SubsystemRequirements,
     derive_subsystem_requirements,
+    rank_physical_solvers,
     score_solver_specificity,
     solver_matches_requirements,
+    solver_selection_rank,
+    topology_exact_match,
 )
 from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
 from dsp_lab.graph.physical.events import TimedEvent, collect_timed_events
@@ -40,6 +43,9 @@ __all__ = [
     "extract_physical_subsystems",
     "get_default_solver_registry",
     "infer_solver_family",
+    "rank_physical_solvers",
     "score_solver_specificity",
     "solver_matches_requirements",
+    "solver_selection_rank",
+    "topology_exact_match",
 ]

@@ -15,7 +15,6 @@ from dsp_lab.graph.execution_plan import (
     build_execution_plan,
 )
 import dsp_lab.graph.physical.solvers  # noqa: F401 - register built-in physical solvers
-from dsp_lab.graph.physical.errors import unsupported_subsystem_error
 from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem, subsystem_trigger_block
@@ -99,6 +98,7 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
         order=order,
         input_connections=input_connections,
         solver_registry=solver_registry,
+        solver_hint=graph.solver_hint,
     )
 
     output_blocks = [block.id for block in graph.blocks if block.type == "Output"]
@@ -135,6 +135,7 @@ def _compile_physical_subsystems(
     order: list[str],
     input_connections: dict[tuple[str, str], ConnectionSpec],
     solver_registry: SolverRegistry,
+    solver_hint: str | None = None,
 ) -> tuple[
     list[CompiledPhysicalSubsystem],
     dict[str, list[CompiledPhysicalSubsystem]],
@@ -150,22 +151,8 @@ def _compile_physical_subsystems(
     solver_hosted_blocks: set[str] = set()
     warnings: list[str] = []
 
-    available = tuple(solver_registry.list_solvers())
     for subsystem in subsystems:
-        solver = solver_registry.find_solver(subsystem)
-        if solver is None:
-            partial = tuple(s.name for s in solver_registry.find_matching_solvers(subsystem))
-            reason = (
-                "No registered PhysicalSolver can execute this subsystem"
-                if not partial
-                else f"No solver matches requirements; partial capability matches: {', '.join(partial)}"
-            )
-            raise unsupported_subsystem_error(
-                subsystem,
-                reason=reason,
-                available_solvers=available,
-                candidate_solvers=partial,
-            )
+        solver = solver_registry.select_solver(subsystem, solver_hint=solver_hint)
         compiled_subsystem = solver.compile(subsystem, sample_rate)
         compiled.append(compiled_subsystem)
         trigger_block = subsystem_trigger_block(subsystem, order, input_connections)

@@ -39,6 +39,9 @@ class PhysicalSolver(ABC):
             derive_subsystem_requirements(subsystem),
         )
 
+    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[str, ...]:
+        return ()
+
     @abstractmethod
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem: ...
 

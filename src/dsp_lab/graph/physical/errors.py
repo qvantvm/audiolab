@@ -22,6 +22,7 @@ class UnsupportedPhysicalGraphError(Exception):
     available_solvers: tuple[str, ...] = ()
     candidate_solvers: tuple[str, ...] = ()
     requirements: dict[str, Any] = field(default_factory=dict)
+    requested_solver_hint: str | None = None
 
     def __str__(self) -> str:
         blocks = ", ".join(
@@ -29,6 +30,7 @@ class UnsupportedPhysicalGraphError(Exception):
         )
         connections = ", ".join(self.connection_endpoints)
         family_hint = f" solver_family={self.solver_family}" if self.solver_family else ""
+        hint_hint = f" requested_solver_hint={self.requested_solver_hint}" if self.requested_solver_hint else ""
         candidate_hint = (
             f" Partial matches: {', '.join(self.candidate_solvers)}."
             if self.candidate_solvers
@@ -40,7 +42,7 @@ class UnsupportedPhysicalGraphError(Exception):
             else " No physical solvers are registered."
         )
         return (
-            f"Physical subsystem '{self.subsystem_id}' ({self.subsystem_kind}, topology={self.topology}{family_hint}) "
+            f"Physical subsystem '{self.subsystem_id}' ({self.subsystem_kind}, topology={self.topology}{family_hint}{hint_hint}) "
             f"with blocks [{blocks}] and connections [{connections}] cannot be executed: {self.reason}."
             f"{candidate_hint}{solver_hint}"
         )
@@ -55,6 +57,7 @@ def unsupported_subsystem_error(
     reason: str,
     available_solvers: tuple[str, ...] = (),
     candidate_solvers: tuple[str, ...] = (),
+    requested_solver_hint: str | None = None,
 ) -> UnsupportedPhysicalGraphError:
     block_types = tuple(subsystem.block_types[block_id] for block_id in subsystem.block_ids)
     connection_endpoints = tuple(
@@ -73,6 +76,7 @@ def unsupported_subsystem_error(
         available_solvers=available_solvers,
         candidate_solvers=candidate_solvers,
         requirements=requirements.to_dict(),
+        requested_solver_hint=requested_solver_hint,
     )
 
 
@@ -82,9 +86,28 @@ def ambiguous_solver_error(
     solver_names: tuple[str, ...],
     available_solvers: tuple[str, ...] = (),
 ) -> UnsupportedPhysicalGraphError:
+    names = ", ".join(solver_names)
     return unsupported_subsystem_error(
         subsystem,
-        reason=f"Multiple physical solvers matched with equal specificity: {', '.join(solver_names)}",
+        reason=(
+            f"Multiple physical solvers matched with equal priority: {names}. "
+            f'Set "solver_hint" on the graph to one of: {names}'
+        ),
         available_solvers=available_solvers,
         candidate_solvers=solver_names,
+    )
+
+
+def invalid_solver_hint_error(
+    subsystem: PhysicalSubsystem,
+    *,
+    solver_hint: str,
+    available_solvers: tuple[str, ...] = (),
+    reason: str,
+) -> UnsupportedPhysicalGraphError:
+    return unsupported_subsystem_error(
+        subsystem,
+        reason=reason,
+        available_solvers=available_solvers,
+        requested_solver_hint=solver_hint,
     )
