@@ -8,6 +8,11 @@ from typing import Any, Literal, Mapping, Sequence
 
 import numpy as np
 
+from dsp_lab.graph.physical.capabilities import (
+    SolverCapabilities,
+    derive_subsystem_requirements,
+    solver_matches_requirements,
+)
 from dsp_lab.graph.physical.events import TimedEvent
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem
 
@@ -26,9 +31,13 @@ class PhysicalSolver(ABC):
     """Solver plugin selected by the graph compiler for a physical subsystem."""
 
     name: str
+    capabilities: SolverCapabilities
 
-    @abstractmethod
-    def can_solve(self, subsystem: PhysicalSubsystem) -> bool: ...
+    def can_solve(self, subsystem: PhysicalSubsystem) -> bool:
+        return solver_matches_requirements(
+            self.capabilities,
+            derive_subsystem_requirements(subsystem),
+        )
 
     @abstractmethod
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem: ...

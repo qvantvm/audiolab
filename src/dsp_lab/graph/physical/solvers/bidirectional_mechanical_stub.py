@@ -7,6 +7,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 from dsp_lab.graph.physical.events import TimedEvent
+from dsp_lab.graph.physical.capabilities import SolverCapabilities
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem
 
@@ -83,14 +84,23 @@ class CompiledBidirectionalMechanicalStub(CompiledPhysicalSubsystem):
 
 class BidirectionalMechanicalStubSolver(PhysicalSolver):
     name = "bidirectional_mechanical_stub"
-    supported_families = frozenset({"bidirectional_mechanical", "bidirectional_mechanical_stub"})
-
-    def can_solve(self, subsystem: PhysicalSubsystem) -> bool:
-        return (
-            subsystem.topology == "connected_component"
-            and subsystem.solver_family in self.supported_families
-            and bool(subsystem.block_ids)
-        )
+    capabilities = SolverCapabilities(
+        allowed_node_types=frozenset({"PhysicalCouplingStub"}),
+        required_node_types=frozenset(),
+        min_nodes=1,
+        max_nodes=64,
+        allowed_topologies=frozenset({"connected_component"}),
+        input_boundary_kinds=frozenset({"signal"}),
+        output_boundary_kinds=frozenset({"signal"}),
+        supports_bidirectional_physical=True,
+        supports_wave_scattering=False,
+        supports_nonlinear_contact=False,
+        supports_multi_string_coupling=False,
+        supports_soundboard_feedback=False,
+        supports_sample_accurate_events=False,
+        supported_families=frozenset({"bidirectional_mechanical", "bidirectional_mechanical_stub"}),
+        priority=50,
+    )
 
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
         return CompiledBidirectionalMechanicalStub(subsystem, sample_rate)

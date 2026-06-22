@@ -9,6 +9,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 from dsp_lab.graph.physical.events import TimedEvent
+from dsp_lab.graph.physical.capabilities import SolverCapabilities
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
 from dsp_lab.graph.physical.subsystem import BoundaryPort, PhysicalSubsystem
 
@@ -125,15 +126,25 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
 
 class ExcitedWaveguideStringSolver(PhysicalSolver):
     name = "excited_waveguide_string"
-    supported_families = frozenset({"excited_waveguide_string"})
-
-    def can_solve(self, subsystem: PhysicalSubsystem) -> bool:
-        return (
-            subsystem.solver_family == "excited_waveguide_string"
-            and subsystem.topology == "isolated_host"
-            and len(subsystem.block_ids) == 1
-            and _waveguide_boundary_signature(subsystem)
-        )
+    capabilities = SolverCapabilities(
+        allowed_node_types=frozenset({"WaveguideString"}),
+        required_node_types=frozenset(),
+        min_nodes=1,
+        max_nodes=1,
+        allowed_topologies=frozenset({"isolated_host"}),
+        input_boundary_kinds=frozenset({"signal", "control"}),
+        output_boundary_kinds=frozenset({"signal"}),
+        required_input_ports=frozenset({"excitation", "frequency"}),
+        required_output_ports=frozenset({"audio"}),
+        supports_bidirectional_physical=False,
+        supports_wave_scattering=False,
+        supports_nonlinear_contact=False,
+        supports_multi_string_coupling=False,
+        supports_soundboard_feedback=False,
+        supports_sample_accurate_events=False,
+        supported_families=frozenset({"excited_waveguide_string"}),
+        priority=10,
+    )
 
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
         block_id = subsystem.block_ids[0]
@@ -173,16 +184,6 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
             warnings=tuple(warnings),
         )
         return CompiledExcitedWaveguideString(subsystem, sample_rate, config)
-
-
-def _waveguide_boundary_signature(subsystem: PhysicalSubsystem) -> bool:
-    input_ports = {port.port_name: port.kind for port in subsystem.boundary_inputs}
-    output_ports = {port.port_name: port.kind for port in subsystem.boundary_outputs}
-    return (
-        input_ports.get("excitation") == "signal"
-        and input_ports.get("frequency") == "control"
-        and output_ports.get("audio") == "signal"
-    )
 
 
 def _boundary_name(

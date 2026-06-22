@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from dsp_lab.graph.physical.capabilities import SubsystemRequirements, derive_subsystem_requirements
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem
 
 
@@ -19,6 +20,8 @@ class UnsupportedPhysicalGraphError(Exception):
     connection_endpoints: tuple[str, ...]
     reason: str
     available_solvers: tuple[str, ...] = ()
+    candidate_solvers: tuple[str, ...] = ()
+    requirements: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
         blocks = ", ".join(
@@ -26,6 +29,11 @@ class UnsupportedPhysicalGraphError(Exception):
         )
         connections = ", ".join(self.connection_endpoints)
         family_hint = f" solver_family={self.solver_family}" if self.solver_family else ""
+        candidate_hint = (
+            f" Partial matches: {', '.join(self.candidate_solvers)}."
+            if self.candidate_solvers
+            else ""
+        )
         solver_hint = (
             f" Registered solvers: {', '.join(self.available_solvers)}."
             if self.available_solvers
@@ -33,7 +41,8 @@ class UnsupportedPhysicalGraphError(Exception):
         )
         return (
             f"Physical subsystem '{self.subsystem_id}' ({self.subsystem_kind}, topology={self.topology}{family_hint}) "
-            f"with blocks [{blocks}] and connections [{connections}] cannot be executed: {self.reason}.{solver_hint}"
+            f"with blocks [{blocks}] and connections [{connections}] cannot be executed: {self.reason}."
+            f"{candidate_hint}{solver_hint}"
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -45,11 +54,13 @@ def unsupported_subsystem_error(
     *,
     reason: str,
     available_solvers: tuple[str, ...] = (),
+    candidate_solvers: tuple[str, ...] = (),
 ) -> UnsupportedPhysicalGraphError:
     block_types = tuple(subsystem.block_types[block_id] for block_id in subsystem.block_ids)
     connection_endpoints = tuple(
         f"{edge.connection.from_}->{edge.connection.to}" for edge in subsystem.internal_connections
     )
+    requirements = derive_subsystem_requirements(subsystem)
     return UnsupportedPhysicalGraphError(
         subsystem_id=subsystem.subsystem_id,
         subsystem_kind=subsystem.kind,
@@ -60,4 +71,20 @@ def unsupported_subsystem_error(
         connection_endpoints=connection_endpoints,
         reason=reason,
         available_solvers=available_solvers,
+        candidate_solvers=candidate_solvers,
+        requirements=requirements.to_dict(),
+    )
+
+
+def ambiguous_solver_error(
+    subsystem: PhysicalSubsystem,
+    *,
+    solver_names: tuple[str, ...],
+    available_solvers: tuple[str, ...] = (),
+) -> UnsupportedPhysicalGraphError:
+    return unsupported_subsystem_error(
+        subsystem,
+        reason=f"Multiple physical solvers matched with equal specificity: {', '.join(solver_names)}",
+        available_solvers=available_solvers,
+        candidate_solvers=solver_names,
     )

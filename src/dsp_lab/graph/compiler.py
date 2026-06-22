@@ -154,10 +154,17 @@ def _compile_physical_subsystems(
     for subsystem in subsystems:
         solver = solver_registry.find_solver(subsystem)
         if solver is None:
+            partial = tuple(s.name for s in solver_registry.find_matching_solvers(subsystem))
+            reason = (
+                "No registered PhysicalSolver can execute this subsystem"
+                if not partial
+                else f"No solver matches requirements; partial capability matches: {', '.join(partial)}"
+            )
             raise unsupported_subsystem_error(
                 subsystem,
-                reason="No registered PhysicalSolver can execute this subsystem",
+                reason=reason,
                 available_solvers=available,
+                candidate_solvers=partial,
             )
         compiled_subsystem = solver.compile(subsystem, sample_rate)
         compiled.append(compiled_subsystem)
