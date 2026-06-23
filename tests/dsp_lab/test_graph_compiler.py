@@ -8,7 +8,7 @@ import pytest
 
 from dsp_lab.graph.compiler import CompiledGraph, compile_graph
 from dsp_lab.graph.connections import ConnectionEdgeKind, classify_connection
-from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
+from dsp_lab.graph.physical.errors import UnsupportedComputationError, UnsupportedPhysicalGraphError
 from dsp_lab.graph.physical.registry import SolverRegistry
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 from dsp_lab.graph.serialization import load_graph
@@ -48,10 +48,9 @@ def test_compile_rejects_bidirectional_physical_connection_on_pasp_graph():
     )
 
     validation = validate_graph(graph)
-    assert not validation.valid
-    assert any(message.code == "PHYSICAL_SOLVER_MISSING" for message in validation.messages)
+    assert validation.valid
 
-    with pytest.raises(ValueError, match="solver"):
+    with pytest.raises(UnsupportedComputationError):
         compile_graph(graph)
 
 
@@ -84,7 +83,7 @@ def test_compile_unsupported_physical_graph_has_structured_error():
             {"from": "stub_b.audio", "to": "out.audio"},
         ],
     )
-    with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
+    with pytest.raises(UnsupportedComputationError) as exc_info:
         compile_graph(graph, solver_registry=SolverRegistry())
 
     error = exc_info.value

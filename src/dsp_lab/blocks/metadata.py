@@ -96,6 +96,8 @@ EXPERIMENTAL_BLOCKS: set[str] = {
     "EventSource",
     "EventPassThrough",
     "PythonCustom",
+    "BridgeCoupler",
+    "PhysicalCouplingStub",
 }
 
 CALIBRATION_TASK_BLOCKS: set[str] = {
@@ -352,6 +354,17 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "proposed": False,
         },
         "output:coupling": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+            "proposed": False,
+        },
+    },
+    "BridgeCoupler": {
+        "input:input": {
             "kind": "physical",
             "rate": "audio",
             "domain": "mechanical",

@@ -64,7 +64,20 @@ Implemented today as:
 
 ## Agent-safe failure mode
 
-When a graph requests unsupported physical wiring, validation fails with an actionable code (`PHYSICAL_SOLVER_MISSING`, `PHYSICAL_PORT_INCOMPATIBLE`) so agents can revise the graph rather than receiving silent incorrect audio.
+Audiolab separates **representation** from **computation**:
+
+1. **`validate_graph()`** — Is the graph structurally valid? (ports exist, domains match, no illegal cycles)
+2. **`compile_graph()`** — Can the engine compute it? (registered physical solvers, no signal substitution for bidirectional ports)
+
+### Invalid representation (validation errors)
+
+Examples: `PHYSICAL_PORT_INCOMPATIBLE`, `PORT_KIND_MISMATCH`, `MISSING_REQUIRED_INPUT`.
+
+### Valid representation, unsupported computation (compile errors)
+
+When a graph correctly declares physical wiring such as `WaveguideString.bridge ↔ BridgeCoupler.input` but no scattering/bridge solver is registered, `compile_graph()` raises `UnsupportedComputationError` with code `UNSUPPORTED_COMPUTATION` and message prefix **"Valid representation, unsupported computation"**.
+
+**Do not** rewrite such graphs to `WaveguideString.audio → BridgeCoupler.input` — that is a different topology and will corrupt the research loop. The compiler rejects signal edges routed into bidirectional physical inputs when an ordinary audio output is substituted for a declared physical port (e.g. `string.audio → coupler.input` instead of `string.bridge → coupler.input`).
 
 ## Execution tiers
 

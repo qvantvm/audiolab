@@ -15,6 +15,7 @@ import dsp_lab.blocks.modal  # noqa: F401
 import dsp_lab.blocks.pasp_piano  # noqa: F401
 import dsp_lab.blocks.performance  # noqa: F401
 import dsp_lab.blocks.physical_coupling_stub  # noqa: F401
+import dsp_lab.blocks.bridge_coupler  # noqa: F401
 from dsp_lab.blocks.piano import BodyEQ, HammerExcitation, MidiToFrequency, StiffStringModal
 import dsp_lab.blocks.research  # noqa: F401
 from dsp_lab.blocks.registry import BLOCK_REGISTRY, get_block_class, inspect_block, list_block_types, register_block

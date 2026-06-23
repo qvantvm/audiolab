@@ -112,6 +112,8 @@ for warning in result.structured_warnings:
 
 ## Error codes (validation)
 
+These indicate an **invalid representation** — fix the graph structure before compiling.
+
 | Code | Fix |
 |------|-----|
 | `UNKNOWN_BLOCK_TYPE` | Use `list_block_types()` |
@@ -120,8 +122,17 @@ for warning in result.structured_warnings:
 | `MISSING_REQUIRED_INPUT` | Add connection to required port |
 | `PORT_KIND_MISMATCH` | Connect matching port kinds |
 | `PHYSICAL_PORT_INCOMPATIBLE` | Match domain and variables |
-| `PHYSICAL_SOLVER_MISSING` | Use audio signal chain or composite PASP block |
 | `GRAPH_CYCLE` | Remove one-way signal cycle |
+
+## Error codes (compilation)
+
+These indicate **valid representation, unsupported computation** — the graph topology is acceptable but no registered solver can execute it.
+
+| Code | Meaning | Agent action |
+|------|---------|--------------|
+| `UNSUPPORTED_COMPUTATION` | Physical or wave-scattering wiring with no matching `PhysicalSolver`, or signal substitution for a bidirectional physical port | Do not rewrite to a signal chain; pick a supported topology or implement/register a solver |
+
+Example: `WaveguideString.bridge → BridgeCoupler.input` passes `validate_graph()` but `compile_graph()` raises `UnsupportedComputationError` until a bridge/scattering solver exists.
 
 ## CLI equivalents
 

@@ -249,21 +249,6 @@ def _validate_port_metadata(
     dst_spec = get_port_spec(dst_block.type, dst[1], is_output=False)
     if src_spec is None or dst_spec is None:
         return
-    if src_spec.proposed or dst_spec.proposed:
-        messages.append(
-            ValidationMessage(
-                "error",
-                "PHYSICAL_SOLVER_MISSING",
-                (
-                    f"Connection {connection.from_} -> {connection.to} is physically meaningful, "
-                    "but no runtime port/solver exists yet for this bidirectional connection type. "
-                    "Use the decomposed audio signal chain or a composite PASP block instead."
-                ),
-                dst[0],
-                dst[1],
-            )
-        )
-        return
     compatible, reason = ports_compatible(src_spec, dst_spec)
     if not compatible and reason:
         messages.append(
@@ -319,19 +304,7 @@ def _validate_source(
         return
     if port not in cls.output_ports:
         meta = get_port_spec(block.type, port, is_output=True)
-        if meta is not None and meta.proposed:
-            messages.append(
-                ValidationMessage(
-                    "error",
-                    "PHYSICAL_SOLVER_MISSING",
-                    (
-                        f"Connection source '{endpoint}' uses proposed physical port '{port}', "
-                        "but no runtime port/solver exists yet. Use the audio signal chain or a composite PASP block."
-                    ),
-                    owner,
-                    port,
-                )
-            )
+        if meta is not None:
             return
         messages.append(ValidationMessage("error", "UNKNOWN_CONNECTION_SOURCE", f"Unknown connection source '{endpoint}'", owner, port))
 
@@ -356,19 +329,7 @@ def _validate_destination(
         return
     if port not in cls.input_ports:
         meta = get_port_spec(block.type, port, is_output=False)
-        if meta is not None and meta.proposed:
-            messages.append(
-                ValidationMessage(
-                    "error",
-                    "PHYSICAL_SOLVER_MISSING",
-                    (
-                        f"Connection destination '{endpoint}' uses proposed physical port '{port}', "
-                        "but no runtime port/solver exists yet. Use the audio signal chain or a composite PASP block."
-                    ),
-                    owner,
-                    port,
-                )
-            )
+        if meta is not None:
             return
         messages.append(ValidationMessage("error", "UNKNOWN_CONNECTION_DESTINATION", f"Unknown connection destination '{endpoint}'", owner, port))
 
@@ -386,7 +347,12 @@ def _endpoint_kind(graph: GraphSpec, blocks_by_id: dict[str, object], endpoint: 
         return None
     ports = cls.output_ports if is_source else cls.input_ports
     found = ports.get(port)
-    return found.kind if found else None
+    if found is not None:
+        return found.kind
+    meta = get_port_spec(block.type, port, is_output=is_source)
+    if meta is not None:
+        return meta.runtime_kind
+    return None
 
 
 def _graph_input_kind(value: object) -> str:

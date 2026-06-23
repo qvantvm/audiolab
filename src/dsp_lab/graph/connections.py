@@ -108,6 +108,10 @@ def _classify_from_metadata(src_spec, dst_spec) -> ConnectionEdgeKind:
 
 
 def _is_bidirectional_physical(src_spec, dst_spec) -> bool:
+    if src_spec is not None and src_spec.kind == "signal":
+        return False
+    if dst_spec is not None and dst_spec.kind == "signal":
+        return False
     if src_spec is not None and src_spec.port_direction == "bidirectional":
         return True
     if dst_spec is not None and dst_spec.port_direction == "bidirectional":

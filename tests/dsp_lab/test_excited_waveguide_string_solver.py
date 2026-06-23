@@ -11,7 +11,7 @@ import soundfile as sf
 import dsp_lab.graph.physical.solvers  # noqa: F401 - register built-in solvers
 from dsp_lab.graph.compiler import compile_graph
 from dsp_lab.graph.executor import render_graph
-from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
+from dsp_lab.graph.physical.errors import UnsupportedComputationError, UnsupportedPhysicalGraphError
 from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
 from dsp_lab.graph.physical.solvers.excited_waveguide_string import ExcitedWaveguideStringSolver
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
@@ -81,13 +81,13 @@ def test_unsupported_bidirectional_physical_graph_raises_structured_error():
     graph.connections.append(
         ConnectionSpec(**{"from": "string.bridge", "to": "soundboard.bridge_input"})
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(UnsupportedComputationError):
         compile_graph(graph)
 
 
 def test_isolated_registry_rejects_waveguide_without_solver():
     graph = load_graph(WAVEGUIDE_GRAPH)
-    with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
+    with pytest.raises(UnsupportedComputationError) as exc_info:
         compile_graph(graph, solver_registry=SolverRegistry())
     assert exc_info.value.subsystem_kind == "excited_waveguide"
     assert exc_info.value.topology == "isolated_host"

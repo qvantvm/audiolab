@@ -8,7 +8,7 @@ import pytest
 from dsp_lab.graph.compiler import compile_graph
 from dsp_lab.graph.connections import ConnectionEdgeKind, classify_connection
 from dsp_lab.graph.executor import render_graph
-from dsp_lab.graph.physical.errors import UnsupportedPhysicalGraphError
+from dsp_lab.graph.physical.errors import UnsupportedComputationError
 from dsp_lab.graph.physical.events import TimedEvent, collect_timed_events
 from dsp_lab.graph.physical.registry import SolverRegistry
 from dsp_lab.graph.physical.solvers.bidirectional_mechanical_stub import (
@@ -62,7 +62,7 @@ def test_solver_registry_lists_and_finds_stub_solver():
 
 def test_compile_rejects_valid_physical_graph_without_registered_solver():
     graph = tiny_physical_graph()
-    with pytest.raises(UnsupportedPhysicalGraphError) as exc_info:
+    with pytest.raises(UnsupportedComputationError) as exc_info:
         compile_graph(graph, solver_registry=SolverRegistry())
 
     error = exc_info.value

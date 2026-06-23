@@ -59,14 +59,13 @@ def test_physical_port_compatibility_on_valid_minimal_piano_graph():
     assert result.valid, [message.message for message in result.messages if message.level == "error"]
 
 
-def test_physical_solver_missing_for_proposed_ports():
+def test_physical_bridge_connection_valid_representation():
     graph = load_graph(ROOT / "examples/piano/minimal_A4_note.json")
     graph.connections.append(
         ConnectionSpec(**{"from": "string.bridge", "to": "soundboard.bridge_input"})
     )
     result = validate_graph(graph)
-    assert not result.valid
-    assert any(message.code == "PHYSICAL_SOLVER_MISSING" for message in result.messages)
+    assert result.valid, [message.message for message in result.messages if message.level == "error"]
 
 
 def test_legacy_sine_graph_still_valid():

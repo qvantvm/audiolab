@@ -60,19 +60,18 @@ junction.excitation → string.excitation
 
 Validated as compatible `signal`/`audio` ports.
 
-### Physical (proposed bidirectional)
+### Physical (bidirectional)
 
 ```
 string.bridge ↔ soundboard.bridge_input
+WaveguideString.bridge ↔ BridgeCoupler.input
 ```
 
-Metadata declares these ports on `PASPStringLine` and `PASPSoundboardModal`, but they are **not yet wired in the runtime block classes**. The validator returns:
+Metadata declares bidirectional mechanical ports. `validate_graph()` accepts compatible physical connections as **valid representation**.
 
-```
-PHYSICAL_SOLVER_MISSING: Connection ... is physically meaningful, but no runtime port/solver exists yet
-```
+If no registered bridge/scattering solver can execute the subsystem, `compile_graph()` raises `UnsupportedComputationError` (`UNSUPPORTED_COMPUTATION`) with prefix **"Valid representation, unsupported computation"**.
 
-Do not silently insert delay lines to break physical loops.
+Do not silently substitute `string.audio → coupler.input` for `string.bridge → coupler.input`.
 
 ### Current production pattern
 

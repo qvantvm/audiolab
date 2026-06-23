@@ -21,6 +21,10 @@ from dsp_lab.graph.execution_plan import (
     derive_block_execution_roles,
     mixed_physical_execution_warning,
 )
+from dsp_lab.graph.physical.computation import (
+    assert_no_misclassified_physical_edges,
+    assert_physical_computation_supported,
+)
 import dsp_lab.graph.physical.solvers  # noqa: F401 - register built-in physical solvers
 from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem
@@ -92,6 +96,7 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
 
     blocks_by_id = {block.id: block for block in graph.blocks}
     classified = [classify_connection(graph, blocks_by_id, connection) for connection in graph.connections]
+    assert_no_misclassified_physical_edges(classified)
     order = _topological_order(set(blocks), scheduling_edges(classified))
 
     try:
@@ -103,6 +108,12 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
         )
     except GraphCompilationError as exc:
         raise ValueError(str(exc)) from exc
+
+    assert_physical_computation_supported(
+        execution_plan,
+        solver_registry,
+        solver_hint=graph.solver_hint,
+    )
 
     compiled_physical_subsystems, triggers, solver_owned_endpoints, solver_managed_ports, solver_hosted_blocks, compile_warnings, compile_structured_warnings = _compile_physical_subsystems(
         execution_plan.physical_subsystems,

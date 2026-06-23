@@ -126,24 +126,6 @@ def _build_warnings(
     physical_subsystems: tuple[PhysicalSubsystem, ...],
 ) -> list[str]:
     warnings: list[str] = []
-    stateful_count = 0
-    for edge in classified:
-        if edge.edge_kind == ConnectionEdgeKind.CONTROL:
-            continue
-        src = split_endpoint(edge.connection.from_)
-        dst = split_endpoint(edge.connection.to)
-        if src is None or dst is None:
-            continue
-        src_spec = get_port_spec(edge.src_block_type, src[1], is_output=True) if edge.src_block_type else None
-        dst_spec = get_port_spec(edge.dst_block_type, dst[1], is_output=False) if edge.dst_block_type else None
-        if src_spec is not None and src_spec.kind == "physical" and edge.edge_kind == ConnectionEdgeKind.SIGNAL:
-            stateful_count += 1
-        if dst_spec is not None and dst_spec.kind == "physical" and edge.edge_kind == ConnectionEdgeKind.SIGNAL:
-            stateful_count += 1
-    if stateful_count:
-        warnings.append(
-            "Graph uses feed-forward physical ports on audio buffers; internal state is owned by individual blocks."
-        )
     if physical_subsystems:
         warnings.append(
             "Graph contains physical subsystems that require a registered PhysicalSolver at compile time."
