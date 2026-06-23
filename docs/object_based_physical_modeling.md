@@ -65,3 +65,51 @@ Implemented today as:
 ## Agent-safe failure mode
 
 When a graph requests unsupported physical wiring, validation fails with an actionable code (`PHYSICAL_SOLVER_MISSING`, `PHYSICAL_PORT_INCOMPATIBLE`) so agents can revise the graph rather than receiving silent incorrect audio.
+
+## Execution tiers
+
+Audiolab distinguishes three execution tiers at compile time. `CompiledGraph.block_execution_roles` maps each block id to one of:
+
+| Role | Meaning |
+|------|---------|
+| `signal_scheduled` | Ordinary `DSPBlock.process()` in the signal schedule |
+| `solver_hosted` | Block skipped in the signal loop; an isolated-host `PhysicalSolver` owns it |
+| `subsystem_internal` | Block inside a connected-component physical subsystem whose solver does not host internal blocks |
+
+### Tier model
+
+| Tier | Trigger | Blocks run by |
+|------|---------|---------------|
+| **T1 — Signal schedule** | Ordinary `SIGNAL` / `CONTROL` / `EVENT` edges | `DSPBlock.process()` in the executor |
+| **T2 — Isolated-host subsystem** | `physical_subsystem_host=True`, no active physical/wave edges on the block | Registered `PhysicalSolver` per hosted block (e.g. Karplus string, modal body) |
+| **T3 — Connected-component subsystem** | `PHYSICAL_BIDIRECTIONAL` / `WAVE_SCATTERING` edge connected component | Bidirectional or scattering solver (stub or future PASP) |
+
+### Composed piano note (mixed execution)
+
+For `HammerExcitation → WaveguideString → ModalBankBody → Output`:
+
+| Block | Tier |
+|-------|------|
+| `HammerExcitation` | T1 — signal schedule (not `physical_subsystem_host`) |
+| `WaveguideString` | T2 — isolated-host solver (`ExcitedWaveguideStringSolver`) |
+| `ModalBankBody` | T2 — isolated-host solver (`ModalBankBodySolver`) |
+| `Output` | T1 — signal schedule |
+
+This is **mixed execution**: neither three ordinary signal nodes nor one fused physical subsystem. Chains of isolated-host blocks connected only by signal edges stay **decomposed** — the compiler emits one subsystem per hosted block and does **not** auto-fuse them.
+
+See `examples/piano/minimal_hammer_waveguide_body_A4.json` and `examples/piano/waveguide_modal_body_A4.json`.
+
+### Future T4 — Compound solver (opt-in only)
+
+A future compound solver may own a known multi-block chain (e.g. hammer + waveguide + modal body) for fewer boundary crossings. Selection requires a registered solver whose capabilities match the graph topology **and** an explicit opt-in (`solver_hint` or block metadata). Until such a solver exists, `solver_hint` cannot fuse chains; graphs compile as mixed T1+T2.
+
+Reserved capability shape (not implemented):
+
+```python
+SolverCapabilities(
+    allowed_node_types=frozenset({"HammerExcitation", "WaveguideString", "ModalBankBody"}),
+    required_node_types=frozenset({"HammerExcitation", "WaveguideString", "ModalBankBody"}),
+    max_nodes=3,
+    topology="compound_chain",
+)
+```

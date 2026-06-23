@@ -9,10 +9,15 @@ from dsp_lab.blocks.base import DSPBlock
 from dsp_lab.blocks.registry import get_block_class
 from dsp_lab.graph.connections import classify_connection, scheduling_edges
 from dsp_lab.graph.execution_plan import (
+    BlockExecutionRole,
     BlockInstance,
     ExecutionPlan,
+    ExecutionPlanSummary,
     GraphCompilationError,
     build_execution_plan,
+    build_execution_plan_summary,
+    derive_block_execution_roles,
+    mixed_physical_execution_warning,
 )
 import dsp_lab.graph.physical.solvers  # noqa: F401 - register built-in physical solvers
 from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
@@ -39,6 +44,8 @@ class CompiledGraph:
     solver_hosted_blocks: set[str] = field(default_factory=set)
     solver_owned_endpoints: set[str] = field(default_factory=set)
     solver_managed_ports: set[tuple[str, str]] = field(default_factory=set)
+    block_execution_roles: dict[str, BlockExecutionRole] = field(default_factory=dict)
+    execution_plan_summary: ExecutionPlanSummary | None = None
     sample_rate: int = 48000
     warnings: list[str] = field(default_factory=list)
 
@@ -107,6 +114,16 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
         warnings = [warning for warning in warnings if "require a registered PhysicalSolver" not in warning]
         warnings.extend(compile_warnings)
 
+    block_execution_roles = derive_block_execution_roles(graph, execution_plan, solver_hosted_blocks)
+    execution_plan_summary = build_execution_plan_summary(
+        execution_plan,
+        block_execution_roles,
+        solver_names=tuple(item.solver_name for item in compiled_physical_subsystems),
+    )
+    mixed_warning = mixed_physical_execution_warning(execution_plan)
+    if mixed_warning:
+        warnings.append(mixed_warning)
+
     return CompiledGraph(
         spec=graph,
         blocks=blocks,
@@ -123,6 +140,8 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
         solver_hosted_blocks=solver_hosted_blocks,
         solver_owned_endpoints=solver_owned_endpoints,
         solver_managed_ports=solver_managed_ports,
+        block_execution_roles=block_execution_roles,
+        execution_plan_summary=execution_plan_summary,
         sample_rate=graph.sample_rate,
         warnings=warnings,
     )

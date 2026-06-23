@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal
 
 from dsp_lab.blocks.metadata import STATEFUL_BLOCK_TYPES, get_port_spec
 from dsp_lab.graph.connections import (
@@ -18,6 +19,8 @@ from dsp_lab.graph.physical.subsystem import (
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 from dsp_lab.graph.validator import split_endpoint
 
+BlockExecutionRole = Literal["signal_scheduled", "solver_hosted", "subsystem_internal"]
+
 
 class GraphCompilationError(ValueError):
     """Raised when a graph cannot be compiled into an executable plan."""
@@ -28,6 +31,14 @@ class BlockInstance:
     block_id: str
     block_type: str
     stateful: bool = False
+
+
+@dataclass(frozen=True)
+class ExecutionPlanSummary:
+    signal_blocks: int
+    isolated_host_subsystems: int
+    connected_component_subsystems: int
+    solver_names: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -140,13 +151,69 @@ def _build_warnings(
     return warnings
 
 
+def derive_block_execution_roles(
+    graph: GraphSpec,
+    execution_plan: ExecutionPlan,
+    solver_hosted_blocks: set[str],
+) -> dict[str, BlockExecutionRole]:
+    connected_component_blocks: set[str] = set()
+    for subsystem in execution_plan.physical_subsystems:
+        if subsystem.topology == "connected_component":
+            connected_component_blocks.update(subsystem.block_ids)
+
+    roles: dict[str, BlockExecutionRole] = {}
+    for block in graph.blocks:
+        if block.id in solver_hosted_blocks:
+            roles[block.id] = "solver_hosted"
+        elif block.id in connected_component_blocks:
+            roles[block.id] = "subsystem_internal"
+        else:
+            roles[block.id] = "signal_scheduled"
+    return roles
+
+
+def build_execution_plan_summary(
+    execution_plan: ExecutionPlan,
+    block_execution_roles: dict[str, BlockExecutionRole],
+    *,
+    solver_names: tuple[str, ...] = (),
+) -> ExecutionPlanSummary:
+    return ExecutionPlanSummary(
+        signal_blocks=sum(1 for role in block_execution_roles.values() if role == "signal_scheduled"),
+        isolated_host_subsystems=sum(
+            1 for subsystem in execution_plan.physical_subsystems if subsystem.topology == "isolated_host"
+        ),
+        connected_component_subsystems=sum(
+            1 for subsystem in execution_plan.physical_subsystems if subsystem.topology == "connected_component"
+        ),
+        solver_names=solver_names,
+    )
+
+
+def mixed_physical_execution_warning(execution_plan: ExecutionPlan) -> str | None:
+    isolated_count = sum(
+        1 for subsystem in execution_plan.physical_subsystems if subsystem.topology == "isolated_host"
+    )
+    if isolated_count >= 2:
+        return (
+            f"Mixed physical execution: {isolated_count} isolated-host subsystems "
+            "connected by signal edges (not fused)."
+        )
+    return None
+
+
 __all__ = [
+    "BlockExecutionRole",
     "BlockInstance",
     "ClassifiedConnection",
     "ConnectionEdgeKind",
     "ExecutionPlan",
+    "ExecutionPlanSummary",
     "GraphCompilationError",
     "build_execution_plan",
+    "build_execution_plan_summary",
     "classify_connection",
+    "derive_block_execution_roles",
+    "mixed_physical_execution_warning",
     "scheduling_edges",
 ]

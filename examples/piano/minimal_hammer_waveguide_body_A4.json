@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.1",
+  "name": "minimal_hammer_waveguide_body_A4",
+  "description": "A4 piano note via HammerExcitation into WaveguideString and ModalBankBody (mixed T1+T2 execution, not fused).",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 69,
+    "velocity": 80
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {"a4": 440.0}
+    },
+    {
+      "id": "hammer",
+      "type": "HammerExcitation",
+      "params": {
+        "brightness": 0.75,
+        "seed": 4
+      }
+    },
+    {
+      "id": "string",
+      "type": "WaveguideString",
+      "params": {
+        "decay_seconds": 4.0,
+        "brightness": 0.55,
+        "gain": 1.0,
+        "frequency_hz": 440.0,
+        "inharmonicity_B": 0.0001
+      }
+    },
+    {
+      "id": "body",
+      "type": "ModalBankBody",
+      "params": {
+        "frequencies": [180.0, 420.0, 980.0],
+        "gains": [0.08, 0.05, 0.03],
+        "mix": 1.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "hammer.audio", "to": "string.excitation"},
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "hammer.audio",
+    "string.audio",
+    "body.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 80, "y": 120},
+      "hammer": {"x": 80, "y": 240},
+      "string": {"x": 360, "y": 180},
+      "body": {"x": 640, "y": 180},
+      "out": {"x": 920, "y": 180}
+    }
+  }
+}
