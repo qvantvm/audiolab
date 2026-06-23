@@ -66,11 +66,13 @@ def render_graph(
         )
 
     if events:
+        graph.events = list(events)
         for block in graph.blocks:
             if block.type in {
                 "PASPEventPianoModel",
                 "PASPPerformanceModel",
                 "EventSource",
+                "NotePerformanceSchedule",
             }:
                 block.params = dict(block.params)
                 block.params["events"] = events

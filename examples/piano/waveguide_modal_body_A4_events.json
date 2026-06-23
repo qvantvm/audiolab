@@ -1,0 +1,59 @@
+{
+  "schema_version": "0.1",
+  "name": "waveguide_modal_body_A4_events",
+  "description": "A4 note_on/note_off through PolyphonicWaveguideString and ModalBankBody (event-driven).",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "events": [
+    {"time_seconds": 0.0, "type": "note_on", "note": 69, "velocity": 92},
+    {"time_seconds": 1.2, "type": "note_off", "note": 69}
+  ],
+  "blocks": [
+    {
+      "id": "string",
+      "type": "PolyphonicWaveguideString",
+      "params": {
+        "max_polyphony": 4,
+        "a4": 440.0,
+        "decay_seconds": 4.0,
+        "brightness": 0.55,
+        "gain": 1.0,
+        "hammer_brightness": 0.75,
+        "hammer_seed": 4
+      }
+    },
+    {
+      "id": "body",
+      "type": "ModalBankBody",
+      "params": {
+        "frequencies": [180.0, 420.0, 980.0],
+        "gains": [0.08, 0.05, 0.03],
+        "mix": 1.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "string.audio",
+    "body.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "string": {"x": 200, "y": 160},
+      "body": {"x": 480, "y": 160},
+      "out": {"x": 760, "y": 160}
+    }
+  }
+}

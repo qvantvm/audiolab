@@ -321,6 +321,34 @@ class PianoStringBank(DSPBlock):
 
 
 @register_block
+class PolyphonicWaveguideString(DSPBlock):
+    block_type = "PolyphonicWaveguideString"
+    category = "Piano"
+    description = "Event-driven polyphonic Karplus-Strong string bank (solver-hosted)."
+    output_ports = {"audio": Port("audio", "audio")}
+
+    @classmethod
+    def default_params(cls) -> dict[str, float | int]:
+        return {
+            "max_polyphony": 8,
+            "a4": 440.0,
+            "decay_seconds": 4.0,
+            "brightness": 0.55,
+            "gain": 1.0,
+            "hammer_brightness": 0.75,
+            "hammer_attack_ms": 3.0,
+            "hammer_decay_ms": 30.0,
+            "hammer_seed": 0,
+            "damper_engage_delay_s": 0.01,
+            "damper_ramp_time_s": 0.05,
+        }
+
+    def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
+        del inputs
+        return {"audio": np.zeros(n_frames, dtype=np.float32)}
+
+
+@register_block
 class HammerExcitation(DSPBlock):
     block_type = "HammerExcitation"
     category = "Piano"

@@ -170,6 +170,7 @@ PHYSICAL_ACOUSTIC_BLOCKS: set[str] = {
 
 WAVEGUIDE_BLOCKS: set[str] = {
     "WaveguideString",
+    "PolyphonicWaveguideString",
     "PianoWaveguideString",
     "PASPStringLine",
     "FractionalDelay",
@@ -197,6 +198,10 @@ BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
     },
     "ModalBankBody": {
         "solver_family": "modal_bank_body",
+        "physical_subsystem_host": True,
+    },
+    "PolyphonicWaveguideString": {
+        "solver_family": "polyphonic_excited_waveguide",
         "physical_subsystem_host": True,
     },
 }
@@ -315,6 +320,9 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "direction": "bidirectional",
             "proposed": True,
         },
+    },
+    "PolyphonicWaveguideString": {
+        "output:audio": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
     },
     "PASPNoteModel": {
         "input:midi_note": {"kind": "control", "domain": "abstract_dsp"},

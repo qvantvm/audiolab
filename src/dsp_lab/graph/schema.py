@@ -43,6 +43,7 @@ class GraphSpec(BaseModel):
     duration: float = 1.0
     block_size: int = 64
     inputs: dict[str, Any] = Field(default_factory=dict)
+    events: list[dict[str, Any]] = Field(default_factory=list)
     blocks: list[BlockSpec] = Field(default_factory=list)
     connections: list[ConnectionSpec] = Field(default_factory=list)
     probes: list[str] = Field(default_factory=list)

@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
+from dsp_lab.graph.performance.events import collect_graph_performance_events
 from dsp_lab.graph.schema import GraphSpec
+from dsp_lab.physics.pasp_piano.events import PianoEvent
 
 
 @dataclass(frozen=True)
@@ -24,10 +26,51 @@ def collect_timed_events(graph: GraphSpec, sample_rate: int) -> list[TimedEvent]
     events: list[TimedEvent] = []
     duration_samples = int(round(graph.sample_rate * graph.duration))
 
+    performance_events = collect_graph_performance_events(graph)
+    if performance_events:
+        events.extend(
+            performance_events_to_timed(
+                performance_events,
+                sample_rate=sample_rate,
+                duration_samples=duration_samples,
+                source_endpoint="graph.events",
+            )
+        )
+
     for name, value in graph.inputs.items():
+        if name == "events":
+            continue
         events.extend(_events_from_input(name, value, sample_rate, duration_samples))
 
     return sorted(events, key=lambda event: (event.sample_index, event.source_endpoint, event.event_type))
+
+
+def performance_events_to_timed(
+    events: Sequence[PianoEvent],
+    *,
+    sample_rate: int,
+    duration_samples: int,
+    source_endpoint: str = "graph.events",
+) -> list[TimedEvent]:
+    timed: list[TimedEvent] = []
+    for event in events:
+        sample_index = max(0, min(int(round(event.time_s * sample_rate)), max(duration_samples - 1, 0)))
+        payload: dict[str, Any] = {"pedal": event.pedal}
+        if event.note is not None:
+            payload["note"] = event.note
+        if event.velocity_norm is not None:
+            payload["velocity_norm"] = event.velocity_norm
+        if event.voice_id is not None:
+            payload["voice_id"] = event.voice_id
+        timed.append(
+            TimedEvent(
+                sample_index=sample_index,
+                event_type=event.type,
+                payload=payload,
+                source_endpoint=source_endpoint,
+            )
+        )
+    return timed
 
 
 def events_for_block(
@@ -76,6 +119,7 @@ def _event_from_payload(
     event_payload.pop("sample_index", None)
     event_payload.pop("sample", None)
     event_payload.pop("time_s", None)
+    event_payload.pop("time_seconds", None)
     event_payload.pop("time", None)
     return TimedEvent(
         sample_index=sample_index,
@@ -92,6 +136,8 @@ def _resolve_sample_index(payload: Mapping[str, Any], sample_rate: int, duration
         return max(0, min(int(payload["sample"]), max(duration_samples - 1, 0)))
     if "time_s" in payload:
         return max(0, min(int(round(float(payload["time_s"]) * sample_rate)), max(duration_samples - 1, 0)))
+    if "time_seconds" in payload:
+        return max(0, min(int(round(float(payload["time_seconds"]) * sample_rate)), max(duration_samples - 1, 0)))
     if "time" in payload:
         return max(0, min(int(round(float(payload["time"]) * sample_rate)), max(duration_samples - 1, 0)))
     return 0

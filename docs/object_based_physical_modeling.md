@@ -113,3 +113,48 @@ SolverCapabilities(
     topology="compound_chain",
 )
 ```
+
+## Event-driven rendering
+
+Decomposed waveguide graphs can be driven by **performance events** on `GraphSpec.events` (or legacy `inputs.events`):
+
+```json
+"events": [
+  {"time_seconds": 0.0, "type": "note_on", "note": 69, "velocity": 92},
+  {"time_seconds": 1.2, "type": "note_off", "note": 69}
+]
+```
+
+### Event schema
+
+| Field | Aliases | Meaning |
+|-------|---------|---------|
+| `time_seconds` | `time_s`, `time` | Event time in seconds |
+| `type` | — | `note_on`, `note_off`, `pedal_down`, `pedal_up` |
+| `note` | `midi_note` | MIDI note number (21–108) |
+| `velocity` | `velocity_norm`, `vel` | MIDI 0–127 or normalized 0–1 |
+
+Events are collected by `collect_timed_events()` and delivered sample-accurately to physical solvers that support them.
+
+### Event → synthesis mapping
+
+| Event | Effect |
+|-------|--------|
+| `note_on` | MIDI note → `frequency_hz`; velocity → hammer burst amplitude/shape |
+| `note_off` | Damper engagement (faster decay) unless sustain pedal is down |
+| `pedal_down` / `pedal_up` | Sustain pedal state; `pedal_up` releases sustained notes |
+
+Sympathetic resonance and half-pedal curves are deferred.
+
+### Polyphonic vs static decomposed chains
+
+| Use case | Graph pattern |
+|----------|---------------|
+| **Calibration / fixed note** | `HammerExcitation → WaveguideString → ModalBankBody` with scalar `inputs` |
+| **Phrases / overlapping notes** | `PolyphonicWaveguideString → ModalBankBody` with `graph.events` |
+
+`PolyphonicWaveguideString` is solver-hosted (`PolyphonicWaveguideSolver`): internal multi-voice Karplus-Strong with per-voice hammer on `note_on`. A single `WaveguideString` delay line cannot represent multiple simultaneous pitches.
+
+`NotePerformanceSchedule` expands events into per-buffer control trajectories (`frequency`, `velocity`, `midi_note`, `sustain_pedal`) for probes and static-chain experiments. Control ports may be **scalars or length-`n_frames` float32 buffers**.
+
+Examples: `examples/piano/waveguide_modal_body_A4_events.json`, `examples/piano/polyphonic_two_note_overlap.json`.

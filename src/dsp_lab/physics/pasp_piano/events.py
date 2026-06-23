@@ -39,7 +39,7 @@ def parse_event(raw: Mapping[str, Any]) -> PianoEvent:
     etype = str(raw.get("type", "")).strip().lower()
     if etype not in VALID_EVENT_TYPES:
         raise ValueError(f"Unknown event type: {etype}")
-    time_s = float(raw.get("time_s", raw.get("time", 0.0)))
+    time_s = float(raw.get("time_s", raw.get("time_seconds", raw.get("time", 0.0))))
     note = raw.get("note", raw.get("midi_note"))
     note_int = int(note) if note is not None else None
     pedal = str(raw.get("pedal", "sustain"))
