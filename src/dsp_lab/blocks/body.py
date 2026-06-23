@@ -9,6 +9,13 @@ from dsp_lab.blocks.base import DSPBlock, Port
 from dsp_lab.blocks.registry import register_block
 
 
+from dsp_lab.graph.physical.modal_bank_body import (
+    DEFAULT_MODAL_FREQUENCIES,
+    DEFAULT_MODAL_GAINS,
+    render_modal_bank_body,
+)
+
+
 class _AudioBodyBlock(DSPBlock):
     category = "Body & Space"
     input_ports = {"audio": Port("audio", "audio")}
@@ -31,6 +38,36 @@ class ResonanceBank(_AudioBodyBlock):
             b, a = signal.iirpeak(float(freq), 8.0, fs=self.sample_rate)
             out += float(gain) * signal.lfilter(b, a, audio)
         return {"audio": np.nan_to_num(out).astype(np.float32)}
+
+
+        return {"audio": np.nan_to_num(out).astype(np.float32)}
+
+
+@register_block
+class ModalBankBody(_AudioBodyBlock):
+    block_type = "ModalBankBody"
+    description = "Soundboard modal resonance body hosted by ModalBankBodySolver."
+
+    @classmethod
+    def default_params(cls) -> dict[str, object]:
+        return {
+            "frequencies": list(DEFAULT_MODAL_FREQUENCIES),
+            "gains": list(DEFAULT_MODAL_GAINS),
+            "mix": 1.0,
+        }
+
+    def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
+        del n_frames
+        audio = np.asarray(inputs["audio"], dtype=np.float32)
+        return {
+            "audio": render_modal_bank_body(
+                audio,
+                sample_rate=self.sample_rate,
+                frequencies=self.params.get("frequencies", DEFAULT_MODAL_FREQUENCIES),
+                gains=self.params.get("gains", DEFAULT_MODAL_GAINS),
+                mix=float(self.params.get("mix", 1.0)),
+            )
+        }
 
 
 @register_block

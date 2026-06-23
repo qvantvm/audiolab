@@ -165,6 +165,7 @@ PHYSICAL_ACOUSTIC_BLOCKS: set[str] = {
     "MicPositionFilter",
     "BodyEQ",
     "ResonanceBank",
+    "ModalBankBody",
 }
 
 WAVEGUIDE_BLOCKS: set[str] = {
@@ -193,6 +194,10 @@ BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
     "PhysicalCouplingStub": {
         "solver_family": "bidirectional_mechanical_stub",
         "physical_subsystem_host": False,
+    },
+    "ModalBankBody": {
+        "solver_family": "modal_bank_body",
+        "physical_subsystem_host": True,
     },
 }
 

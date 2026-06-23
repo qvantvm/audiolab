@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.1",
+  "name": "waveguide_modal_body_A4",
+  "description": "Excited waveguide string at A4 through ModalBankBody soundboard resonance (two physical solvers).",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {
+    "frequency_hz": 440.0
+  },
+  "blocks": [
+    {
+      "id": "excitation",
+      "type": "NoiseBurst",
+      "params": {
+        "amplitude": 0.8,
+        "decay_ms": 3.0,
+        "seed": 0
+      }
+    },
+    {
+      "id": "string",
+      "type": "WaveguideString",
+      "params": {
+        "decay_seconds": 4.0,
+        "brightness": 0.55,
+        "gain": 1.0,
+        "frequency_hz": 440.0,
+        "inharmonicity_B": 0.0001
+      }
+    },
+    {
+      "id": "body",
+      "type": "ModalBankBody",
+      "params": {
+        "frequencies": [180.0, 420.0, 980.0],
+        "gains": [0.08, 0.05, 0.03],
+        "mix": 1.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {"from": "excitation.audio", "to": "string.excitation"},
+    {"from": "inputs.frequency_hz", "to": "string.frequency"},
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "excitation.audio",
+    "string.audio",
+    "body.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "excitation": {"x": 80, "y": 160},
+      "string": {"x": 320, "y": 160},
+      "body": {"x": 560, "y": 160},
+      "out": {"x": 800, "y": 160}
+    }
+  }
+}
