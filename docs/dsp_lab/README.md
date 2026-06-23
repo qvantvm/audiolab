@@ -6,6 +6,7 @@ Headless graph-based audio DSP for piano modeling, calibration, dataset evaluati
 
 | Audience | Document |
 |----------|----------|
+| **Concept and workflows** | [../user_manual.md](../user_manual.md) |
 | **Operators** | [guide.md](guide.md) |
 | **Full loop reference** | [pasp_streamlined_system.md](pasp_streamlined_system.md) |
 | **All scripts** | [examples_index.md](examples_index.md) |

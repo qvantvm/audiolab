@@ -1,5 +1,7 @@
 # PASP Autoresearch Guide (Audiolab)
 
+New users: start with the [user manual](../user_manual.md) (theory and practice). This guide is the **operator runbook** for baseline eval, autoresearch cycles, and governance.
+
 Plain-English guide for **reliable PASP autoresearch**: validate DSP Lab without agents, run eval → cycle → decision → governance.
 
 ### Operator quick start

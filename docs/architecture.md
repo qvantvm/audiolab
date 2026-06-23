@@ -49,6 +49,7 @@ See [agent_usage.md](agent_usage.md) and [object_based_physical_modeling.md](obj
 
 ## Related documentation
 
+- [user_manual.md](user_manual.md) — full introduction (theory and practice)
 - [graph_schema.md](graph_schema.md) — JSON graph format
 - [block_registry.md](block_registry.md) — registry API
 - [physical_ports.md](physical_ports.md) — typed ports and domains

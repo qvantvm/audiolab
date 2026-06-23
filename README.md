@@ -66,7 +66,7 @@ workspace/         Runtime outputs (gitignored)
 
 ## Docs
 
-Start at [docs/dsp_lab/guide.md](docs/dsp_lab/guide.md) and [docs/dsp_lab/README.md](docs/dsp_lab/README.md).
+Start at [docs/user_manual.md](docs/user_manual.md) (theory and practice). Operators: [docs/dsp_lab/guide.md](docs/dsp_lab/guide.md). Full index: [docs/dsp_lab/README.md](docs/dsp_lab/README.md).
 
 ## Relationship to Auralis
 
