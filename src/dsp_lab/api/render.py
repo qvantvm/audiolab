@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +12,7 @@ import numpy as np
 import dsp_lab.blocks  # noqa: F401
 from dsp_lab.audio.io import save_wav
 from dsp_lab.graph.executor import render_graph as execute_graph
+from dsp_lab.graph.hash import graph_content_hash
 from dsp_lab.graph.serialization import load_graph
 from dsp_lab.graph.validator import validate_graph
 
@@ -33,16 +32,6 @@ class AgentRenderResult:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-
-
-def _graph_hash(graph_path: str, events: list[dict[str, Any]] | None) -> str:
-    payload = {
-        "graph_path": str(Path(graph_path).resolve()),
-        "graph": json.loads(Path(graph_path).read_text(encoding="utf-8")),
-        "events": events or [],
-    }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def render_graph(
@@ -87,7 +76,7 @@ def render_graph(
         peak=float(metadata["peak"]),
         rms=float(metadata["rms"]),
         clipping=bool(wav_meta.get("clipped", False) or float(metadata["peak"]) > 1.0),
-        graph_hash=_graph_hash(graph_path, events),
+        graph_hash=graph_content_hash(graph, events=events),
         render_timestamp=datetime.now(timezone.utc).isoformat(),
         warnings=warnings,
         validation_status="valid",

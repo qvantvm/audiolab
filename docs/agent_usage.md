@@ -74,7 +74,31 @@ result = compare_audio(
     output_json_path="workspace/metrics.json",
 )
 print(result.metrics.get("spectral_shape.spectral_centroid_hz"))
+print(result.metrics.get("calibration_targets", {}).get("f0_error_cents"))
 ```
+
+### Experiment bundle (calibration / eval)
+
+After `run_calibration_cycle` or `run_experiment`, read the standard artifacts:
+
+```text
+render.wav
+render_metadata.json   # includes graph_hash, reference_wav, panel_row
+metrics.json           # full compare_audio + calibration_targets
+graph_hash.txt         # SHA-256 of graph content for regression
+```
+
+Use `metrics.json["calibration_targets"]` for agent decisions:
+
+| Key | Meaning |
+|-----|---------|
+| `f0_error_cents` | Pitch error |
+| `peak_dbfs_error` / `rms_dbfs_error` | Level match |
+| `T30_error` | Decay time error |
+| `spectral_centroid_error` | Brightness / spectral balance |
+| `log_stft_distance` | Log-STFT distance |
+| `partial_frequency_error_mean_cents` | Harmonic partial spacing |
+| `global_score` | Weighted aggregate (higher is better) |
 
 ## Error codes (validation)
 

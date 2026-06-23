@@ -8,6 +8,7 @@ import numpy as np
 
 from dsp_lab.audio.metrics.alignment import align_audio_pair
 from dsp_lab.audio.metrics.audio_health import compute_audio_health_metrics
+from dsp_lab.audio.metrics.calibration_targets import extract_calibration_targets
 from dsp_lab.audio.metrics.envelope_decay import compute_envelope_decay_metrics
 from dsp_lab.audio.metrics.pedal_panel import compute_pedal_panel_metrics
 from dsp_lab.audio.metrics.pitch_partial import compute_pitch_partial_metrics
@@ -103,6 +104,8 @@ def compare_audio(
     merged["log_stft_distance"] = families["time_frequency"].get("log_stft_distance")
     merged["mel_spectrogram_distance"] = families["time_frequency"].get("mel_spectrogram_distance")
     merged["estimated_f0_difference"] = families["pitch_partial"].get("f0_error_cents")
+
+    merged["calibration_targets"] = extract_calibration_targets(merged)
 
     return merged
 

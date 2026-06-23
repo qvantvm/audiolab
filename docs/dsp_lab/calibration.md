@@ -12,9 +12,9 @@ DSP Lab calibrates graph parameters by rendering synthetic audio and comparing i
 2. **Validate** the graph, then click **Calibrate** (save the graph to a file path if prompted).
 3. Inspect outputs next to the graph file:
    - `graph_calibrated.json` — graph with best tunables applied
-   - `calibrated_params.json` — `{stage, params, best_loss}`
+   - `calibrated_params.json` — `stage`, `params`, `best_loss`, `graph_hash`, `calibration_targets`
    - `calibration_log.json` — per-iteration search log
-   - `render.wav` — post-calibration render vs reference (when panel WAV exists)
+   - `render.wav`, `render_metadata.json`, `metrics.json`, `graph_hash.txt` — standard experiment bundle
 
 From the repo root without the GUI:
 

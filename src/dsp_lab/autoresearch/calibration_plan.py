@@ -547,7 +547,9 @@ def run_targeted_calibration(
         return {
             "status": "success",
             "best_loss": cycle_result.get("best_loss"),
-            "candidate_graph": cycle_result.get("output_graph"),
+            "candidate_graph": cycle_result.get("calibrated_graph_path"),
+            "graph_hash": cycle_result.get("graph_hash"),
+            "calibration_targets": cycle_result.get("calibration_targets"),
             "cycle_result": cycle_result,
         }
     except Exception as exc:

@@ -116,6 +116,13 @@ def test_calibration_cycle_smoke(tmp_path: Path):
     result = run_calibration_cycle(graph_path, out_dir=out, reference_root=root)
     assert Path(result["calibrated_params_path"]).exists()
     assert Path(result["calibration_log_path"]).exists()
+    assert (out / "render.wav").exists()
+    assert (out / "render_metadata.json").exists()
+    assert (out / "metrics.json").exists()
+    assert (out / "graph_hash.txt").exists()
+    metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+    assert "calibration_targets" in metrics
+    assert result.get("graph_hash") == (out / "graph_hash.txt").read_text(encoding="utf-8").strip()
     calibrated = json.loads(Path(result["calibrated_graph_path"]).read_text())
     from dsp_lab.graph.schema import GraphSpec
 

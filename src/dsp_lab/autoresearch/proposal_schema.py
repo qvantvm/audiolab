@@ -24,6 +24,16 @@ KNOWN_OBJECTIVE_METRICS = frozenset(
         "output_energy",
         "global_score",
         "log_stft_distance",
+        "f0_error_cents",
+        "peak_dbfs_error",
+        "rms_dbfs_error",
+        "T30_error",
+        "T20_error",
+        "spectral_centroid_error",
+        "multi_resolution_stft_distance",
+        "partial_frequency_error_mean_cents",
+        "partial_amplitude_error_mean_db",
+        "B_error",
     }
 )
 

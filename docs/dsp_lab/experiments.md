@@ -4,13 +4,31 @@ DSP Lab experiment tooling renders graphs against reference audio, scores metric
 
 ## Standard experiment output
 
-`run-experiment` (CLI `run-experiment` / `dsp_lab.experiments.reports.run_experiment`) creates a directory containing:
+`run-experiment` (CLI `run-experiment` / `dsp_lab.experiments.reports.run_experiment`) and `dsp_lab.experiments.bundle.write_experiment_bundle` create a directory containing:
 
-- Source or calibrated graph copy
-- `render.wav` and `render_metadata.json`
-- Probe buffers when configured
-- `metrics.json`, spectrogram/envelope plots
-- `report.md`
+| File | Contents |
+| --- | --- |
+| `graph.json` | Graph copy (when source path provided) |
+| `render.wav` | Synthetic render |
+| `render_metadata.json` | Sample rate, duration, peak, RMS, `graph_hash`, reference path, panel row |
+| `graph_hash.txt` | SHA-256 of canonical graph content (path-independent) |
+| `metrics.json` | Full `compare_audio` output plus `calibration_targets` summary |
+| `probes.npz` | Probe buffers when configured |
+| `waveform.png`, spectrograms, `envelope.png` | When reference WAV is available |
+| `report.md` | Markdown summary (`run_experiment` only) |
+
+### `calibration_targets` (agent contract)
+
+`metrics.json` includes a top-level `calibration_targets` object with stable scalars for Auralis agents:
+
+- `f0_error_cents`, `partial_frequency_error_mean_cents`, `partial_amplitude_error_mean_db`, `B_error`
+- `peak_dbfs_error`, `rms_dbfs_error`
+- `T30_error`, `T20_error`
+- `spectral_centroid_error`
+- `log_stft_distance`, `multi_resolution_stft_distance`
+- `global_score`, `validity_gate`, `metric_family_scores`
+
+Full per-family detail remains under `families.*`.
 
 Experiment artifacts may contain timestamps or generated files. Graph JSON remains stable and readable for git diffs.
 
@@ -23,9 +41,13 @@ When a graph includes a `CalibrationTask` block, `run_calibration_cycle` searche
 | File | Contents |
 | --- | --- |
 | `graph_calibrated.json` | Graph with best tunables applied |
-| `calibrated_params.json` | `stage`, `params` map, `best_loss` |
-| `calibration_log.json` | Optimizer name and per-iteration log |
-| `render.wav` | Render of calibrated graph vs first panel reference |
+| `calibrated_params.json` | `stage`, `params`, `best_loss`, `graph_hash`, bundle paths, `calibration_targets` |
+| `calibration_log.json` | Optimizer name, per-iteration log, final `calibration_targets` |
+| `render.wav` | Post-calibration render (always) |
+| `render_metadata.json` | Render stats + `graph_hash` + panel context |
+| `graph_hash.txt` | Content hash for regression checks |
+| `metrics.json` | `compare_audio` + `calibration_targets` |
+| `panel_metrics.json` | Per-panel-row scores when panel has multiple rows |
 
 Full workflow, block reference, GUI **Calibrate** button, and examples: **[calibration.md](calibration.md)**.
 

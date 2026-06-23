@@ -19,6 +19,10 @@ def test_run_experiment_without_reference_marks_metrics_invalid(tmp_path: Path) 
     assert metrics["validity"]["valid"] is False
     assert "no_reference_audio" in metrics["validity"]["reasons"]
     assert (out / "metrics.json").exists()
+    assert (out / "render.wav").exists()
+    assert (out / "graph_hash.txt").exists()
+    assert "calibration_targets" in metrics
+    assert result.get("graph_hash") == (out / "graph_hash.txt").read_text(encoding="utf-8").strip()
     assert not (out / "spectrogram_real.png").exists()
 
 
@@ -34,3 +38,5 @@ def test_run_experiment_with_reference_compares_against_real_wav(tmp_path: Path)
     assert metrics.get("reference_missing") is not True
     assert (out / "spectrogram_real.png").exists()
     assert metrics.get("global_score") is not None
+    assert "calibration_targets" in metrics
+    assert (out / "graph_hash.txt").exists()

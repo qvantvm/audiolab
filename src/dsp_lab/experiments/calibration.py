@@ -20,7 +20,7 @@ from dsp_lab.experiments.param_utils import (
     load_graph_dict,
     write_graph_dict,
 )
-from dsp_lab.experiments.reports import run_experiment
+from dsp_lab.experiments.bundle import evaluate_panel_metrics, write_experiment_bundle
 from dsp_lab.graph.executor import render_graph
 from dsp_lab.graph.parameter_maps import materialize_parameter_maps
 from dsp_lab.graph.schema import GraphSpec
@@ -58,6 +58,7 @@ def _evaluate_single(
     if ref_sr != render.sample_rate:
         return 1e6
     midi_note = int(panel_row.get("midi_note", 0)) if panel_row.get("midi_note") is not None else None
+    scoring_stage = str(updated.get("inputs", {}).get("scoring_stage", "early"))
     if loss_name in {"piano_model", "model", "model_calibrate"}:
         return piano_model_loss(ref_audio, render.audio, render.sample_rate, midi_note=midi_note)
     metrics = compare_audio(
@@ -65,6 +66,7 @@ def _evaluate_single(
         render.audio,
         render.sample_rate,
         midi_note=midi_note,
+        scoring_stage=scoring_stage,
     )
     return _default_loss(metrics)
 
@@ -230,10 +232,57 @@ def run_calibration_cycle(
     calibration_log_path = out_dir / "calibration_log.json"
     calibrated_graph_path = out_dir / "graph_calibrated.json"
 
+    write_graph_dict(calibrated_graph_path, calibrated_graph)
+
+    calibrated_spec = GraphSpec.model_validate(calibrated_graph)
+    calibrated_spec = materialize_parameter_maps(calibrated_spec)
+    scoring_stage = str(calibrated_graph.get("inputs", {}).get("scoring_stage", "early"))
+
+    primary_row = panel[0]
+    primary_ref = reference_paths.get(str(primary_row.get("wav_path", "")))
+
+    bundle_result = write_experiment_bundle(
+        out_dir,
+        graph=calibrated_spec,
+        graph_source_path=calibrated_graph_path,
+        reference_path=primary_ref if primary_ref and primary_ref.exists() else None,
+        panel_row=primary_row,
+        scoring_stage=scoring_stage,
+        write_plots=primary_ref is not None and primary_ref.exists(),
+        copy_graph=False,
+    )
+
+    panel_metrics: list[dict[str, Any]] = []
+    if len(panel) > 1:
+        panel_metrics = evaluate_panel_metrics(
+            calibrated_spec,
+            panel,
+            reference_paths,
+            scoring_stage=scoring_stage,
+        )
+        if panel_metrics:
+            (out_dir / "panel_metrics.json").write_text(
+                json.dumps(panel_metrics, indent=2) + "\n",
+                encoding="utf-8",
+            )
+
+    calibration_targets = bundle_result.metrics.get("calibration_targets", {})
+    calibrated_params_payload = {
+        "stage": stage,
+        "params": calibrated_params,
+        "best_loss": best_loss,
+        "graph_hash": bundle_result.graph_hash,
+        "render_wav": str(bundle_result.render_wav),
+        "render_metadata_path": str(bundle_result.render_metadata_path),
+        "metrics_path": str(bundle_result.metrics_path),
+        "graph_hash_path": str(bundle_result.graph_hash_path),
+        "calibration_targets": calibration_targets,
+    }
     calibrated_params_path.write_text(
-        json.dumps({"stage": stage, "params": calibrated_params, "best_loss": best_loss}, indent=2) + "\n",
+        json.dumps(calibrated_params_payload, indent=2) + "\n",
         encoding="utf-8",
     )
+
     calibration_log_path.write_text(
         json.dumps(
             {
@@ -242,6 +291,8 @@ def run_calibration_cycle(
                 "optimizer": effective_optimizer,
                 "optimizer_note": optimizer_note,
                 "loss": loss_name,
+                "calibration_targets": calibration_targets,
+                "graph_hash": bundle_result.graph_hash,
                 "log": log,
             },
             indent=2,
@@ -249,13 +300,13 @@ def run_calibration_cycle(
         + "\n",
         encoding="utf-8",
     )
-    write_graph_dict(calibrated_graph_path, calibrated_graph)
 
-    render_result: dict[str, Any] | None = None
-    primary_row = panel[0]
-    primary_ref = reference_paths.get(str(primary_row.get("wav_path", "")))
-    if primary_ref and primary_ref.exists():
-        render_result = run_experiment(calibrated_graph_path, primary_ref, out_dir)
+    render_result: dict[str, Any] = {
+        "experiment": str(out_dir),
+        "render_metadata": bundle_result.render_metadata,
+        "metrics": bundle_result.metrics,
+        "graph_hash": bundle_result.graph_hash,
+    }
 
     return {
         "stage": stage,
@@ -264,6 +315,8 @@ def run_calibration_cycle(
         "calibrated_params_path": str(calibrated_params_path),
         "calibration_log_path": str(calibration_log_path),
         "calibrated_graph_path": str(calibrated_graph_path),
+        "graph_hash": bundle_result.graph_hash,
+        "calibration_targets": calibration_targets,
         "render_result": render_result,
     }
 
