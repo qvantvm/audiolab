@@ -33,7 +33,7 @@ class ExcitedWaveguideConfig:
     gain: float
     inharmonicity_B: float
     excitation_port: str
-    frequency_port: str
+    frequency_port: str | None
     audio_output_port: str
     warnings: tuple[str, ...]
 
@@ -91,7 +91,10 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
         signal_inputs: Mapping[str, np.ndarray],
     ) -> dict[str, np.ndarray]:
         del events
-        frequency_hz = float(control_inputs.get(self.config.frequency_port, self.config.frequency_hz))
+        if self.config.frequency_port:
+            frequency_hz = float(control_inputs.get(self.config.frequency_port, self.config.frequency_hz))
+        else:
+            frequency_hz = self.config.frequency_hz
         frequency_hz = max(frequency_hz, 1.0)
         delay = _delay_length(frequency_hz, self.sample_rate)
         if delay != self._delay:
@@ -190,7 +193,7 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
                 decay_seconds = max(-3.0 / (math.log10(legacy_decay) * sample_rate), 0.01)
 
         excitation_port = _boundary_name(subsystem.boundary_inputs, "excitation", kind="signal")
-        frequency_port = _boundary_name(subsystem.boundary_inputs, "frequency", kind="control")
+        frequency_port = _optional_boundary_name(subsystem.boundary_inputs, "frequency", kind="control")
         audio_output_port = _boundary_name(subsystem.boundary_outputs, "audio", kind="signal")
 
         config = ExcitedWaveguideConfig(
@@ -206,6 +209,18 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
             warnings=tuple(warnings),
         )
         return CompiledExcitedWaveguideString(subsystem, sample_rate, config)
+
+
+def _optional_boundary_name(
+    ports: tuple[BoundaryPort, ...],
+    port_name: str,
+    *,
+    kind: str,
+) -> str | None:
+    try:
+        return _boundary_name(ports, port_name, kind=kind)
+    except ValueError:
+        return None
 
 
 def _boundary_name(

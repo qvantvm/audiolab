@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 from dsp_lab.blocks.metadata import block_solver_family, physical_subsystem_host
 from dsp_lab.graph.connections import ClassifiedConnection, ConnectionEdgeKind
+from dsp_lab.graph.parameter_maps import parameter_map_satisfied_ports
 from dsp_lab.graph.schema import GraphSpec
 from dsp_lab.graph.validator import split_endpoint
 
@@ -42,6 +43,7 @@ class PhysicalSubsystem:
     edge_kind: PhysicalEdgeKind | None = None
     solver_family: str | None = None
     block_params: dict[str, dict[str, Any]] = field(default_factory=dict)
+    static_satisfied_input_ports: frozenset[str] = field(default_factory=frozenset)
 
 
 def extract_all_physical_subsystems(
@@ -205,6 +207,7 @@ def _extract_isolated_host_subsystems(
             block_types,
             subsystem_index=index,
         )
+        static_ports = _static_satisfied_ports(graph, block_id_set)
         subsystems.append(
             PhysicalSubsystem(
                 subsystem_id=f"isolated_host_{block_spec.id}",
@@ -216,6 +219,7 @@ def _extract_isolated_host_subsystems(
                 boundary_inputs=boundary_inputs,
                 boundary_outputs=boundary_outputs,
                 block_params={block_spec.id: dict(block_spec.params)},
+                static_satisfied_input_ports=static_ports,
             )
         )
         index += 1
@@ -332,6 +336,13 @@ def _extract_boundaries(
                 )
 
     return tuple(boundary_inputs), tuple(boundary_outputs)
+
+
+def _static_satisfied_ports(graph: GraphSpec, block_ids: set[str]) -> frozenset[str]:
+    satisfied = parameter_map_satisfied_ports(graph)
+    return frozenset(
+        port_name for block_id, port_name in satisfied if block_id in block_ids
+    )
 
 
 def _make_boundary_port(

@@ -7,6 +7,7 @@ from dataclasses import asdict, dataclass
 import dsp_lab.blocks  # noqa: F401 - imports register built-in blocks
 from dsp_lab.blocks.metadata import get_port_spec, ports_compatible
 from dsp_lab.blocks.registry import BLOCK_REGISTRY, validate_node
+from dsp_lab.graph.parameter_maps import parameter_map_satisfied_ports
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 
 
@@ -123,12 +124,18 @@ def validate_graph(graph: GraphSpec) -> ValidationResult:
             if _connection_is_physical(graph, blocks_by_id, connection):
                 physical_edges.append(edge)
 
+    map_satisfied_ports = parameter_map_satisfied_ports(graph)
+
     for block in graph.blocks:
         cls = BLOCK_REGISTRY.get(block.type)
         if cls is None:
             continue
         for port in cls.input_ports.values():
-            if port.required and (block.id, port.name) not in incoming:
+            if (
+                port.required
+                and (block.id, port.name) not in incoming
+                and (block.id, port.name) not in map_satisfied_ports
+            ):
                 messages.append(
                     ValidationMessage(
                         "error",

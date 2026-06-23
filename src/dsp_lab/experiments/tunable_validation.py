@@ -59,6 +59,18 @@ def validate_tunable_path(graph_dict: dict[str, Any], path: str) -> str | None:
     if not normalized:
         return "tunable path is empty"
 
+    if normalized.startswith("parameter_maps."):
+        from dsp_lab.graph.parameter_maps import parse_parameter_map_path, parse_target
+
+        try:
+            target, _, _ = parse_parameter_map_path(normalized)
+            block_id, _ = parse_target(target)
+        except ValueError as exc:
+            return str(exc)
+        if _resolve_block(graph_dict, block_id) is None:
+            return f"{normalized}: block '{block_id}' not found in graph"
+        return None
+
     try:
         block_id, key, extra = parse_param_path(normalized)
     except ValueError as exc:

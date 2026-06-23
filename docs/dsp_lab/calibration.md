@@ -57,12 +57,17 @@ Reference WAV paths in `panel[].wav_path` are resolved relative to a **reference
 
 ### Tunable paths
 
-Paths target block parameters in the same graph JSON:
+Paths target block parameters or **parameter map coefficients** in the same graph JSON:
 
 ```text
 blocks.<block_id>.params.<param_name>
 blocks.curve.params.points[0].y
+parameter_maps.<block_id>.<param_key>.<coefficient>
+parameter_maps.string.decay_seconds.points[1].y
+parameter_maps.hammer.brightness.gamma
 ```
+
+When `CalibrationTask.tunables` is empty but the graph defines `parameter_maps`, `run_calibration_cycle` auto-generates tunables from map coefficients (`parameter_map_tunables()`).
 
 Example tunables on a `string` block (`StiffStringModal`):
 
@@ -71,6 +76,16 @@ Example tunables on a `string` block (`StiffStringModal`):
   "path": "blocks.string.params.inharmonicity_B",
   "min": 5e-5,
   "max": 0.0005
+}
+```
+
+Example tunables on **parameter maps** (per-key decay curve on a decomposed waveguide graph):
+
+```json
+{
+  "path": "parameter_maps.string.decay_seconds.points[1].y",
+  "min": 0.8,
+  "max": 6.0
 }
 ```
 

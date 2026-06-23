@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from typing import Any, Mapping, Sequence
 
 import numpy as np
 from scipy import signal
 
+from dsp_lab.graph.parameter_maps import resolve_block_parameter_maps
 from dsp_lab.graph.physical.capabilities import SolverCapabilities
 from dsp_lab.graph.physical.events import TimedEvent
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
@@ -76,6 +77,8 @@ class WaveguideVoice:
     state: str = "attack"
     active: bool = True
     seed: int = 0
+    decay_coefficient: float = 0.996
+    brightness: float = 0.55
 
 
 @dataclass(frozen=True)
@@ -92,6 +95,7 @@ class PolyphonicWaveguideConfig:
     hammer_seed: int
     audio_output_port: str
     damper_params: dict[str, Any]
+    parameter_maps: dict[str, Any] = field(default_factory=dict)
 
 
 class CompiledPolyphonicWaveguide(CompiledPhysicalSubsystem):
@@ -202,14 +206,37 @@ class CompiledPolyphonicWaveguide(CompiledPhysicalSubsystem):
         if len(self._voices) >= self.config.max_polyphony:
             self._voices.pop(0)
 
-        frequency_hz = _midi_to_frequency(note_int, self.config.a4)
+        velocity_midi = float(np.clip(velocity_norm * 127.0, 0.0, 127.0))
+        mapped = resolve_block_parameter_maps(
+            self.config.parameter_maps,
+            block_id=self.config.block_id,
+            block_type="PolyphonicWaveguideString",
+            midi_note=float(note_int),
+            velocity=velocity_midi,
+            a4=self.config.a4,
+        )
+
+        frequency_hz = float(mapped.get("frequency_hz", _midi_to_frequency(note_int, self.config.a4)))
+        decay_seconds = float(mapped.get("decay_seconds", self.config.decay_seconds))
+        brightness = float(np.clip(mapped.get("brightness", self.config.brightness), 0.0, 1.0))
+        hammer_brightness = float(
+            np.clip(
+                mapped.get("hammer_brightness", mapped.get("brightness", self.config.hammer_brightness)),
+                0.0,
+                1.0,
+            )
+        )
+        hammer_attack_ms = float(mapped.get("hammer_attack_ms", self.config.hammer_attack_ms))
+        hammer_decay_ms = float(mapped.get("hammer_decay_ms", self.config.hammer_decay_ms))
+        decay_coefficient = _decay_coefficient(decay_seconds, self.sample_rate)
+
         delay = _delay_length(frequency_hz, self.sample_rate)
         burst = _hammer_burst(
             sample_rate=self.sample_rate,
             velocity_norm=velocity_norm,
-            brightness=self.config.hammer_brightness,
-            attack_ms=self.config.hammer_attack_ms,
-            decay_ms=self.config.hammer_decay_ms,
+            brightness=hammer_brightness,
+            attack_ms=hammer_attack_ms,
+            decay_ms=hammer_decay_ms,
             seed=self.config.hammer_seed + note_int,
             max_samples=delay,
         )
@@ -227,6 +254,8 @@ class CompiledPolyphonicWaveguide(CompiledPhysicalSubsystem):
                 buffer=buffer,
                 delay=delay,
                 seed=self.config.hammer_seed + note_int,
+                decay_coefficient=decay_coefficient,
+                brightness=brightness,
             )
         )
 
@@ -270,12 +299,14 @@ class CompiledPolyphonicWaveguide(CompiledPhysicalSubsystem):
             else:
                 damper_amount = self._damper.amount_for(voice, pedal_lift, time_s)
 
-        decay = self._base_decay
+        decay = voice.decay_coefficient
         if damper_amount > 0.0:
             decay *= max(0.05, 1.0 - damper_amount * 0.92)
 
         average = 0.5 * (float(voice.buffer[idx]) + float(voice.buffer[nxt]))
-        voice.buffer[idx] = decay * (self._brightness * voice.buffer[idx] + (1.0 - self._brightness) * average)
+        voice.buffer[idx] = decay * (
+            voice.brightness * voice.buffer[idx] + (1.0 - voice.brightness) * average
+        )
         voice.buffer_idx += 1
 
         if damper_amount >= 0.99 and abs(value) < 1e-6:

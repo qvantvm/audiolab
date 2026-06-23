@@ -22,6 +22,7 @@ from dsp_lab.experiments.param_utils import (
 )
 from dsp_lab.experiments.reports import run_experiment
 from dsp_lab.graph.executor import render_graph
+from dsp_lab.graph.parameter_maps import materialize_parameter_maps
 from dsp_lab.graph.schema import GraphSpec
 
 
@@ -51,6 +52,7 @@ def _evaluate_single(
             updated["inputs"][key] = panel_row[key]
 
     spec = GraphSpec.model_validate(updated)
+    spec = materialize_parameter_maps(spec)
     render = render_graph(spec)
     ref_audio, ref_sr = load_wav(reference_path)
     if ref_sr != render.sample_rate:
@@ -166,6 +168,10 @@ def run_calibration_cycle(
     graph_dict = load_graph_dict(graph_path)
     task = calibration_spec or extract_calibration_task(graph_dict) or {}
     tunables = task.get("tunables", [])
+    if not tunables and graph_dict.get("parameter_maps"):
+        from dsp_lab.graph.parameter_maps import parameter_map_tunables
+
+        tunables = parameter_map_tunables(graph_dict)
     panel = task.get("panel", [{"midi_note": 60, "velocity": 120, "pedal": "on"}])
     optimizer = str(task.get("optimizer", "random_search"))
     loss_name = str(task.get("loss", "default"))

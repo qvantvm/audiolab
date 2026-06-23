@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from typing import Any
+
+from dataclasses import dataclass, field, replace
 
 import dsp_lab.blocks  # noqa: F401 - bootstrap built-in registry
 from dsp_lab.blocks.base import DSPBlock
@@ -23,6 +25,7 @@ import dsp_lab.graph.physical.solvers  # noqa: F401 - register built-in physical
 from dsp_lab.graph.physical.registry import SolverRegistry, get_default_solver_registry
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem, subsystem_trigger_block
+from dsp_lab.graph.parameter_maps import materialize_parameter_maps
 from dsp_lab.graph.schema import ConnectionSpec, GraphSpec
 from dsp_lab.graph.validator import split_endpoint, validate_graph
 
@@ -70,6 +73,7 @@ def compile_graph(
 
 
 def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistry) -> CompiledGraph:
+    graph = materialize_parameter_maps(graph)
     blocks: dict[str, DSPBlock] = {}
     block_types: dict[str, str] = {}
     for block_spec in graph.blocks:
@@ -106,6 +110,7 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
         input_connections=input_connections,
         solver_registry=solver_registry,
         solver_hint=graph.solver_hint,
+        parameter_maps=dict(graph.parameter_maps) if graph.parameter_maps else None,
     )
 
     output_blocks = [block.id for block in graph.blocks if block.type == "Output"]
@@ -155,6 +160,7 @@ def _compile_physical_subsystems(
     input_connections: dict[tuple[str, str], ConnectionSpec],
     solver_registry: SolverRegistry,
     solver_hint: str | None = None,
+    parameter_maps: dict[str, Any] | None = None,
 ) -> tuple[
     list[CompiledPhysicalSubsystem],
     dict[str, list[CompiledPhysicalSubsystem]],
@@ -173,6 +179,18 @@ def _compile_physical_subsystems(
     for subsystem in subsystems:
         solver = solver_registry.select_solver(subsystem, solver_hint=solver_hint)
         compiled_subsystem = solver.compile(subsystem, sample_rate)
+        config = getattr(compiled_subsystem, "config", None)
+        if (
+            parameter_maps
+            and config is not None
+            and hasattr(config, "parameter_maps")
+            and subsystem.block_ids
+            and any(
+                subsystem.block_types.get(block_id) == "PolyphonicWaveguideString"
+                for block_id in subsystem.block_ids
+            )
+        ):
+            compiled_subsystem.config = replace(config, parameter_maps=dict(parameter_maps))
         compiled.append(compiled_subsystem)
         trigger_block = subsystem_trigger_block(subsystem, order, input_connections)
         triggers.setdefault(trigger_block, []).append(compiled_subsystem)

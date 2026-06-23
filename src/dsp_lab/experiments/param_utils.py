@@ -12,9 +12,19 @@ from typing import Any
 _SIMPLE_RE = re.compile(r"^blocks\.([^.]+)\.params\.([^.]+)$")
 _POINTS_RE = re.compile(r"^blocks\.([^.]+)\.params\.points\[(\d+)\]\.([xy])$")
 _NESTED_RE = re.compile(r"^blocks\.([^.]+)\.params\.(.+)$")
+_PARAMETER_MAP_RE = re.compile(r"^parameter_maps\.")
 
 
 def parse_param_path(path: str) -> tuple[str, str, Any]:
+    if _PARAMETER_MAP_RE.match(path):
+        from dsp_lab.graph.parameter_maps import parse_parameter_map_path
+
+        target, key, extra = parse_parameter_map_path(path)
+        if key == "points":
+            return target, "points", (int(extra[0]), extra[1])
+        if key == "anchors":
+            return target, "anchors", extra[0]
+        return target, key, None
     points_match = _POINTS_RE.match(path)
     if points_match:
         return points_match.group(1), "points", (int(points_match.group(2)), points_match.group(3))
@@ -76,6 +86,10 @@ def _block_default_param(block_type: str, key: str, extra: Any) -> Any:
 
 
 def get_graph_param(graph: dict[str, Any], path: str) -> Any:
+    if _PARAMETER_MAP_RE.match(path):
+        from dsp_lab.graph.parameter_maps import get_parameter_map_value
+
+        return get_parameter_map_value(graph, path)
     block_id, key, extra = parse_param_path(path)
     for block in graph.get("blocks", []):
         if block.get("id") == block_id:
@@ -96,6 +110,11 @@ def get_graph_param(graph: dict[str, Any], path: str) -> Any:
 
 
 def set_graph_param(graph: dict[str, Any], path: str, value: Any) -> None:
+    if _PARAMETER_MAP_RE.match(path):
+        from dsp_lab.graph.parameter_maps import set_parameter_map_value
+
+        set_parameter_map_value(graph, path, value)
+        return
     block_id, key, extra = parse_param_path(path)
     for block in graph.get("blocks", []):
         if block.get("id") == block_id:

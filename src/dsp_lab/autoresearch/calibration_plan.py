@@ -190,6 +190,11 @@ def build_calibration_graph(
     graph = load_graph_dict(base_graph_path)
     graph = copy.deepcopy(graph)
 
+    if not tunables and graph.get("parameter_maps"):
+        from dsp_lab.graph.parameter_maps import parameter_map_tunables
+
+        tunables = list(parameter_map_tunables(graph))
+
     cal_block = {
         "id": "calibration",
         "type": "CalibrationTask",

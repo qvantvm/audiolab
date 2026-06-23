@@ -158,3 +158,53 @@ Sympathetic resonance and half-pedal curves are deferred.
 `NotePerformanceSchedule` expands events into per-buffer control trajectories (`frequency`, `velocity`, `midi_note`, `sustain_pedal`) for probes and static-chain experiments. Control ports may be **scalars or length-`n_frames` float32 buffers**.
 
 Examples: `examples/piano/waveguide_modal_body_A4_events.json`, `examples/piano/polyphonic_two_note_overlap.json`.
+
+## Parameter maps
+
+Graph-level **`parameter_maps`** declare how MIDI note and velocity map to block parameters—replacing per-parameter `ParameterCurve` / `MidiToFrequency` wiring for calibration and phrase renders.
+
+```json
+"inputs": {"midi_note": 69, "velocity": 80},
+"parameter_maps": {
+  "string.frequency_hz": "midi_equal_temperament",
+  "string.decay_seconds": {
+    "type": "piecewise_curve",
+    "points": [[21, 5.5], [60, 3.0], [108, 0.8]]
+  },
+  "hammer.brightness": {
+    "type": "velocity_curve",
+    "curve": "quadratic",
+    "min": 0.4,
+    "max": 1.0
+  }
+}
+```
+
+### Map types (phase 1)
+
+| Form | Axis | Example |
+|------|------|---------|
+| String builtin | note | `"midi_equal_temperament"` |
+| `piecewise_curve` / `piecewise_linear` | note | `{"type": "piecewise_curve", "points": [[60, 3.0], [108, 0.8]]}` |
+| `constant`, `linear`, `log_linear`, `anchor_interpolated` | note | delegates to `evaluate_curve()` |
+| `velocity_curve` | velocity | `{"type": "velocity_curve", "curve": "quadratic", "min": 0.4, "max": 1.0}` |
+
+Targets use shorthand `block_id.param_key` (e.g. `string.decay_seconds`, `hammer.brightness`). Aliases: `hammer_hardness` → `brightness`, `hammer.duration` → `decay_ms`.
+
+### Precedence
+
+1. **Wired control edges win** — if `string.decay_seconds` has an incoming connection, the map is not applied for that port.
+2. Otherwise maps **override static `block.params`** at compile/calibration time via `materialize_parameter_maps()`.
+3. For **polyphonic** graphs, note-axis maps resolve per voice on `note_on`; velocity-axis maps use `velocity_norm × 127`.
+
+### Supported targets (phase 1)
+
+| Target | Block type(s) | Axis |
+|--------|---------------|------|
+| `frequency_hz`, `inharmonicity_B`, `decay_seconds`, `brightness` | `WaveguideString`, `PolyphonicWaveguideString`, `StiffStringModal` | note |
+| `brightness`, `attack_ms`, `decay_ms` | `HammerExcitation` | velocity |
+| `hammer_brightness`, `hammer_attack_ms`, `hammer_decay_ms` | `PolyphonicWaveguideString` | note / velocity |
+
+Maps that satisfy required control ports (e.g. `frequency` from `string.frequency_hz`) are accepted by graph validation and physical solver selection without extra wiring.
+
+Example: `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` — same chain as `minimal_hammer_waveguide_body_A4.json` without `MidiToFrequency` / `ParameterCurve` blocks.

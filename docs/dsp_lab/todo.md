@@ -15,7 +15,7 @@ For **pilot-panel calibration** (one note, fixed velocity/pedal, whole-buffer re
 | ~~**P0**~~ | ~~**Event / note scheduler**~~ | Addressed for waveguide path: `graph.events`, `PolyphonicWaveguideString`, `NotePerformanceSchedule`. | — |
 | ~~**P0**~~ | ~~**Keyed release / damper-on-note-off**~~ | Addressed in `PolyphonicWaveguideSolver` (per-voice damper on `note_off`, pedal-aware). | Static chains still use scalar inputs |
 | ~~**P1**~~ | ~~**Polyphonic mixer / voice bank**~~ | Addressed via `PolyphonicWaveguideString` (solver-hosted voice bank). | — |
-| **P1** | **Per-key parameter bundle** | `ParameterCurve` + `LookupTable` can map `midi_note` → one value; no single block for `{B, decay, brightness}` per key. | Chain several curves or use `PythonCustom` |
+| ~~**P1**~~ | ~~**Per-key parameter bundle**~~ | Addressed via `GraphSpec.parameter_maps` (note/velocity → `{B, decay, brightness}`) with calibratable coefficients. | — |
 | **P1** | **Half-pedal / soft pedal** | `SustainPedalDamping` is binary on/off. | `Multiply` + filter params from curve |
 | **P2** | **Stiff-string modal bank (explicit)** | `StiffStringModal` already implements \(f_n = n f_0 \sqrt{1 + B n^2}\). `ModalResonatorBank` uses fixed ratios **without** inharmonicity. | Use `StiffStringModal`, not `ModalResonatorBank`, for piano strings |
 | **P2** | **Measured soundboard IR** | `SoundboardConvolution` exists but is synthetic-ish; no "load IR from WAV" block. | `SamplePlayer` + convolution in `PythonCustom` |

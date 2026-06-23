@@ -100,7 +100,7 @@ def derive_subsystem_requirements(subsystem: PhysicalSubsystem) -> SubsystemRequ
     node_count = len(subsystem.block_ids)
     input_boundary_kinds = frozenset(port.kind for port in subsystem.boundary_inputs)
     output_boundary_kinds = frozenset(port.kind for port in subsystem.boundary_outputs)
-    input_port_names = frozenset(port.port_name for port in subsystem.boundary_inputs)
+    input_port_names = frozenset(port.port_name for port in subsystem.boundary_inputs) | subsystem.static_satisfied_input_ports
     output_port_names = frozenset(port.port_name for port in subsystem.boundary_outputs)
 
     waveguide_count = sum(1 for block_type in node_types if block_type in WAVEGUIDE_BLOCKS)
