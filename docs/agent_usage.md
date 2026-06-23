@@ -110,6 +110,25 @@ for warning in result.structured_warnings:
         print(warning["node"], warning["param"], warning["message"])
 ```
 
+## What works today vs representation only
+
+Full status: [roadmap.md](roadmap.md). Machine-readable contract: `tests/fixtures/roadmap/physical_solver_roadmap.json`.
+
+**Supported computation (validate + compile + render):**
+
+- Ordinary DSP signal graphs (`examples/graphs/sine_test.json`, `examples/piano/minimal_A4_note.json`)
+- `ExcitedWaveguideStringSolver` — `examples/piano/minimal_waveguide_A4.json`
+- `PolyphonicWaveguideSolver` — event-driven phrases (`examples/piano/waveguide_modal_body_A4_events.json`)
+- `ModalBankBodySolver` — `examples/piano/waveguide_modal_body_A4.json`
+- Mixed T1+T2 chains — e.g. `examples/piano/minimal_hammer_waveguide_body_A4.json`
+
+**Representation only (validate passes, compile fails with `UNSUPPORTED_COMPUTATION`):**
+
+- Bidirectional bridge wiring (`WaveguideString.bridge ↔ BridgeCoupler.input`, PASP `bridge` / `bridge_input`)
+- Signal substitute for physical ports (`string.audio → BridgeCoupler.input` instead of `string.bridge`)
+
+**Planned next solvers:** `SimplePianoNoteSolver`, `ScatteringJunctionSolver`, `NonlinearHammerStringContactSolver`.
+
 ## Error codes (validation)
 
 These indicate an **invalid representation** — fix the graph structure before compiling.

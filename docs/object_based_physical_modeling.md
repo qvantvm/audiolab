@@ -28,7 +28,7 @@ One-way DSP data flow. Cycles are rejected (`GRAPH_CYCLE`).
 string.bridge ↔ soundboard.bridge_input
 ```
 
-Bidirectional mechanical port. Validated against domain and variable pairs. This phase adds **representation and validation**; a full nonlinear bidirectional solver is not required yet.
+Bidirectional mechanical port. **Representation** is validated today; **computation** requires a registered T3 solver. Without one, `compile_graph()` raises `UNSUPPORTED_COMPUTATION` (see [roadmap.md](roadmap.md)).
 
 ### Wave / scattering connection (target)
 
@@ -96,6 +96,18 @@ Audiolab distinguishes three execution tiers at compile time. `CompiledGraph.blo
 | **T1 — Signal schedule** | Ordinary `SIGNAL` / `CONTROL` / `EVENT` edges | `DSPBlock.process()` in the executor |
 | **T2 — Isolated-host subsystem** | `physical_subsystem_host=True`, no active physical/wave edges on the block | Registered `PhysicalSolver` per hosted block (e.g. Karplus string, modal body) |
 | **T3 — Connected-component subsystem** | `PHYSICAL_BIDIRECTIONAL` / `WAVE_SCATTERING` edge connected component | Bidirectional or scattering solver (stub or future PASP) |
+
+See [roadmap.md](roadmap.md) for the canonical **supported vs representation-only vs planned** solver list.
+
+### Solver roadmap (summary)
+
+| Status | What |
+|--------|------|
+| **Supported** | T1 DSP; `excited_waveguide_string`, `polyphonic_excited_waveguide`, `modal_bank_body` |
+| **Representation only** | Bidirectional bridge ports (`string.bridge ↔ BridgeCoupler.input`, PASP `bridge` / `bridge_input`); wave/scattering junctions |
+| **Planned** | `SimplePianoNoteSolver`, `ScatteringJunctionSolver`, `NonlinearHammerStringContactSolver` |
+
+Bidirectional ports pass `validate_graph()` but fail at `compile_graph()` with `UNSUPPORTED_COMPUTATION` unless a matching T3 solver is registered.
 
 ### Composed piano note (mixed execution)
 

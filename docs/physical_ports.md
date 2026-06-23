@@ -2,6 +2,8 @@
 
 This document describes the metadata layer for physically meaningful ports. Runtime execution still uses legacy kinds (`audio`, `control`, `event`); metadata maps them to agent-facing types.
 
+For which port topologies **compute today** versus **representation only**, see [roadmap.md](roadmap.md).
+
 ## Port kinds
 
 | Kind | Meaning |
