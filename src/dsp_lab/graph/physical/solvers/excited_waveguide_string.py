@@ -12,6 +12,11 @@ from dsp_lab.graph.physical.events import TimedEvent
 from dsp_lab.graph.physical.capabilities import SolverCapabilities
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
 from dsp_lab.graph.physical.subsystem import BoundaryPort, PhysicalSubsystem
+from dsp_lab.graph.physical.warnings import (
+    PhysicalWarning,
+    param_legacy_mapped,
+    warnings_for_ignored_params,
+)
 
 
 def _decay_coefficient(decay_seconds: float, sample_rate: int) -> float:
@@ -35,7 +40,7 @@ class ExcitedWaveguideConfig:
     excitation_port: str
     frequency_port: str | None
     audio_output_port: str
-    warnings: tuple[str, ...]
+    warnings: tuple[PhysicalWarning, ...]
 
 
 class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
@@ -72,7 +77,7 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
                 "gain": self.config.gain,
                 "inharmonicity_B": self.config.inharmonicity_B,
             },
-            "warnings": list(self._warnings),
+            "warnings": [warning.to_dict() for warning in self._warnings],
         }
 
     def set_state_snapshot(self, snapshot: Mapping[str, Any]) -> None:
@@ -131,24 +136,31 @@ def _estimate_excited_waveguide_warnings(
     subsystem: PhysicalSubsystem,
     *,
     sample_rate: int = 48000,
-) -> tuple[str, ...]:
+) -> tuple[PhysicalWarning, ...]:
+    del sample_rate
     if len(subsystem.block_ids) != 1:
         return ()
-    params = dict(subsystem.block_params.get(subsystem.block_ids[0], {}))
-    warnings: list[str] = []
-
-    inharmonicity_B = float(params.get("inharmonicity_B", 0.0))
-    if inharmonicity_B != 0.0:
-        warnings.append(
-            f"inharmonicity_B={inharmonicity_B} is not yet applied by ExcitedWaveguideStringSolver; "
-            "using pure Karplus-Strong delay length."
+    block_id = subsystem.block_ids[0]
+    params = dict(subsystem.block_params.get(block_id, {}))
+    warnings: list[PhysicalWarning] = []
+    warnings.extend(
+        warnings_for_ignored_params(
+            block_id=block_id,
+            params=params,
+            solver="excited_waveguide_string",
         )
+    )
 
     if "decay" in params and "decay_seconds" not in params and "decay_t60" not in params:
         legacy_decay = float(params["decay"])
         if 0.0 < legacy_decay < 1.0:
             warnings.append(
-                "Mapped legacy WaveguideString 'decay' parameter to decay_seconds for solver execution."
+                param_legacy_mapped(
+                    node=block_id,
+                    param="decay",
+                    solver="excited_waveguide_string",
+                    detail="Mapped legacy WaveguideString 'decay' parameter to decay_seconds for solver execution.",
+                )
             )
 
     return tuple(warnings)
@@ -176,13 +188,13 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
         priority=10,
     )
 
-    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[str, ...]:
+    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[PhysicalWarning, ...]:
         return _estimate_excited_waveguide_warnings(subsystem)
 
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
         block_id = subsystem.block_ids[0]
         params = dict(subsystem.block_params.get(block_id, {}))
-        warnings = list(_estimate_excited_waveguide_warnings(subsystem, sample_rate=sample_rate))
+        warnings = _estimate_excited_waveguide_warnings(subsystem, sample_rate=sample_rate)
 
         inharmonicity_B = float(params.get("inharmonicity_B", 0.0))
 
@@ -206,7 +218,7 @@ class ExcitedWaveguideStringSolver(PhysicalSolver):
             excitation_port=excitation_port,
             frequency_port=frequency_port,
             audio_output_port=audio_output_port,
-            warnings=tuple(warnings),
+            warnings=warnings,
         )
         return CompiledExcitedWaveguideString(subsystem, sample_rate, config)
 

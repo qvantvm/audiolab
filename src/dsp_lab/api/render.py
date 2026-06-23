@@ -28,6 +28,7 @@ class AgentRenderResult:
     graph_hash: str
     render_timestamp: str
     warnings: list[str] = field(default_factory=list)
+    structured_warnings: list[dict[str, Any]] = field(default_factory=list)
     validation_status: str = "valid"
 
     def to_dict(self) -> dict[str, Any]:
@@ -69,6 +70,8 @@ def render_graph(
     result = execute_graph(graph)
     wav_meta = save_wav(output_wav_path, result.audio, result.sample_rate)
     metadata = result.metadata
+    render_warnings = list(metadata.get("warnings", []))
+    structured_warnings = list(metadata.get("structured_warnings", []))
     return AgentRenderResult(
         output_path=str(Path(output_wav_path).resolve()),
         sample_rate=int(result.sample_rate),
@@ -78,7 +81,8 @@ def render_graph(
         clipping=bool(wav_meta.get("clipped", False) or float(metadata["peak"]) > 1.0),
         graph_hash=graph_content_hash(graph, events=events),
         render_timestamp=datetime.now(timezone.utc).isoformat(),
-        warnings=warnings,
+        warnings=warnings + render_warnings,
+        structured_warnings=structured_warnings,
         validation_status="valid",
     )
 

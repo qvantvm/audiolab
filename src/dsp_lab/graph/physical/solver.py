@@ -15,6 +15,7 @@ from dsp_lab.graph.physical.capabilities import (
 )
 from dsp_lab.graph.physical.events import TimedEvent
 from dsp_lab.graph.physical.subsystem import PhysicalSubsystem
+from dsp_lab.graph.physical.warnings import PhysicalWarning
 
 CausalityKind = Literal["instantaneous", "strictly_causal", "mixed"]
 
@@ -39,7 +40,7 @@ class PhysicalSolver(ABC):
             derive_subsystem_requirements(subsystem),
         )
 
-    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[str, ...]:
+    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[PhysicalWarning, ...]:
         return ()
 
     @abstractmethod

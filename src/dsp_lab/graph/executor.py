@@ -23,6 +23,7 @@ class RenderResult:
     block_outputs: dict[str, dict[str, Any]]
     block_states: dict[str, dict[str, Any]] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    structured_warnings: list[dict[str, Any]] = field(default_factory=list)
     physical_subsystem_states: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @property
@@ -37,6 +38,7 @@ class RenderResult:
             "peak": float(np.max(np.abs(self.audio))) if self.audio.size else 0.0,
             "rms": float(np.sqrt(np.mean(self.audio**2))) if self.audio.size else 0.0,
             "warnings": list(self.warnings),
+            "structured_warnings": list(self.structured_warnings),
             "physical_subsystem_states": dict(self.physical_subsystem_states),
         }
 
@@ -116,6 +118,7 @@ def render_graph(
         block_outputs=block_outputs,
         block_states=block_states,
         warnings=list(compiled.warnings),
+        structured_warnings=list(compiled.structured_warnings),
         physical_subsystem_states=physical_subsystem_states,
     )
 

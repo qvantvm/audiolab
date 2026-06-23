@@ -51,6 +51,7 @@ class CompiledGraph:
     execution_plan_summary: ExecutionPlanSummary | None = None
     sample_rate: int = 48000
     warnings: list[str] = field(default_factory=list)
+    structured_warnings: list[dict[str, Any]] = field(default_factory=list)
 
     def initialize_block_states(self) -> None:
         for block in self.blocks.values():
@@ -103,7 +104,7 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
     except GraphCompilationError as exc:
         raise ValueError(str(exc)) from exc
 
-    compiled_physical_subsystems, triggers, solver_owned_endpoints, solver_managed_ports, solver_hosted_blocks, compile_warnings = _compile_physical_subsystems(
+    compiled_physical_subsystems, triggers, solver_owned_endpoints, solver_managed_ports, solver_hosted_blocks, compile_warnings, compile_structured_warnings = _compile_physical_subsystems(
         execution_plan.physical_subsystems,
         sample_rate=graph.sample_rate,
         order=order,
@@ -114,7 +115,9 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
     )
 
     output_blocks = [block.id for block in graph.blocks if block.type == "Output"]
-    warnings = list(execution_plan.warnings)
+    structured_warnings = list(compile_structured_warnings)
+    warnings = [item["message"] for item in structured_warnings]
+    warnings.extend(execution_plan.warnings)
     if compiled_physical_subsystems:
         warnings = [warning for warning in warnings if "require a registered PhysicalSolver" not in warning]
         warnings.extend(compile_warnings)
@@ -149,6 +152,7 @@ def _compile_validated_graph(graph: GraphSpec, *, solver_registry: SolverRegistr
         execution_plan_summary=execution_plan_summary,
         sample_rate=graph.sample_rate,
         warnings=warnings,
+        structured_warnings=structured_warnings,
     )
 
 
@@ -168,6 +172,7 @@ def _compile_physical_subsystems(
     set[tuple[str, str]],
     set[str],
     list[str],
+    list[dict[str, Any]],
 ]:
     compiled: list[CompiledPhysicalSubsystem] = []
     triggers: dict[str, list[CompiledPhysicalSubsystem]] = {}
@@ -175,9 +180,12 @@ def _compile_physical_subsystems(
     solver_managed_ports: set[tuple[str, str]] = set()
     solver_hosted_blocks: set[str] = set()
     warnings: list[str] = []
+    structured_warnings: list[dict[str, Any]] = []
 
     for subsystem in subsystems:
         solver = solver_registry.select_solver(subsystem, solver_hint=solver_hint)
+        for warning in solver.estimate_warnings(subsystem):
+            structured_warnings.append(warning.to_dict())
         compiled_subsystem = solver.compile(subsystem, sample_rate)
         config = getattr(compiled_subsystem, "config", None)
         if (
@@ -211,11 +219,8 @@ def _compile_physical_subsystems(
             f"causality={compiled_subsystem.declarations.causality}, "
             f"deterministic={compiled_subsystem.declarations.deterministic})."
         )
-        config = getattr(compiled_subsystem, "config", None)
-        if config is not None and getattr(config, "warnings", ()):
-            warnings.extend(config.warnings)
 
-    return compiled, triggers, solver_owned_endpoints, solver_managed_ports, solver_hosted_blocks, warnings
+    return compiled, triggers, solver_owned_endpoints, solver_managed_ports, solver_hosted_blocks, warnings, structured_warnings
 
 
 def _topological_order(nodes: set[str], edges: list[tuple[str, str]]) -> list[str]:

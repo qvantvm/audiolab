@@ -15,6 +15,7 @@ from dsp_lab.graph.physical.capabilities import SolverCapabilities
 from dsp_lab.graph.physical.events import TimedEvent
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
 from dsp_lab.graph.physical.subsystem import BoundaryPort, PhysicalSubsystem
+from dsp_lab.graph.physical.warnings import PhysicalWarning, warnings_for_ignored_params
 from dsp_lab.physics.pasp_piano.damper import DamperModel
 from dsp_lab.physics.pasp_piano.pedal import SustainPedalState
 
@@ -341,6 +342,17 @@ class PolyphonicWaveguideSolver(PhysicalSolver):
         supported_families=frozenset({"polyphonic_excited_waveguide"}),
         priority=5,
     )
+
+    def estimate_warnings(self, subsystem: PhysicalSubsystem) -> tuple[PhysicalWarning, ...]:
+        if len(subsystem.block_ids) != 1:
+            return ()
+        block_id = subsystem.block_ids[0]
+        params = dict(subsystem.block_params.get(block_id, {}))
+        return warnings_for_ignored_params(
+            block_id=block_id,
+            params=params,
+            solver="polyphonic_excited_waveguide",
+        )
 
     def compile(self, subsystem: PhysicalSubsystem, sample_rate: int) -> CompiledPhysicalSubsystem:
         block_id = subsystem.block_ids[0]

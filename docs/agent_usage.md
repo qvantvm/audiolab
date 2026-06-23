@@ -100,6 +100,16 @@ Use `metrics.json["calibration_targets"]` for agent decisions:
 | `partial_frequency_error_mean_cents` | Harmonic partial spacing |
 | `global_score` | Weighted aggregate (higher is better) |
 
+### Structured warnings (ignored parameters)
+
+Check `render_metadata.json["structured_warnings"]` (or `AgentRenderResult.structured_warnings`) before adding calibration tunables. If a param has code `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for the target block, tuning it will not change the render.
+
+```python
+for warning in result.structured_warnings:
+    if warning["code"] == "PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED":
+        print(warning["node"], warning["param"], warning["message"])
+```
+
 ## Error codes (validation)
 
 | Code | Fix |

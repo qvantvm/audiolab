@@ -208,3 +208,33 @@ Targets use shorthand `block_id.param_key` (e.g. `string.decay_seconds`, `hammer
 Maps that satisfy required control ports (e.g. `frequency` from `string.frequency_hz`) are accepted by graph validation and physical solver selection without extra wiring.
 
 Example: `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` — same chain as `minimal_hammer_waveguide_body_A4.json` without `MidiToFrequency` / `ParameterCurve` blocks.
+
+## Structured warnings
+
+Physical solvers emit **structured warnings** when block parameters are accepted for schema compatibility but not applied at runtime. Agents should read these before calibrating tunables.
+
+`render_metadata.json` and `RenderResult.metadata` include:
+
+```json
+{
+  "warnings": [
+    "ExcitedWaveguideStringSolver accepts inharmonicity_B for schema compatibility but does not yet implement dispersion."
+  ],
+  "structured_warnings": [
+    {
+      "code": "PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED",
+      "node": "string",
+      "param": "inharmonicity_B",
+      "solver": "excited_waveguide_string",
+      "message": "ExcitedWaveguideStringSolver accepts inharmonicity_B for schema compatibility but does not yet implement dispersion."
+    }
+  ]
+}
+```
+
+| Code | Meaning |
+|------|---------|
+| `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` | Param is on the block / in `block_params` but the selected solver ignores it |
+| `PARAM_LEGACY_MAPPED` | Legacy param remapped (e.g. `decay` → `decay_seconds`) |
+
+Phase 1 ignored params on waveguide solvers: `inharmonicity_B` on `excited_waveguide_string` and `polyphonic_excited_waveguide`.
