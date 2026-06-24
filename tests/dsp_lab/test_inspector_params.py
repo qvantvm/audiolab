@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dsp_lab.blocks  # noqa: F401
-from dsp_lab.app.inspector import compact_params_for_save, merged_display_params
+from dsp_lab.app.inspector import compact_params_for_save, merged_display_params, parameter_choices
 
 
 def test_inspector_displays_default_params_missing_from_json():
@@ -24,3 +24,8 @@ def test_inspector_preserves_unknown_params():
     compact = compact_params_for_save("WaveguideString", {"custom_param": 12})
 
     assert compact == {"custom_param": 12}
+
+
+def test_inspector_profile_params_expose_choices():
+    assert parameter_choices("BellModalBody", "profile") == ("bowl", "church_bell", "handbell")
+    assert parameter_choices("StruckBarBody", "profile") == ("marimba", "metal_bar", "wood_block", "xylophone")

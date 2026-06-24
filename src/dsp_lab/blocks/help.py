@@ -190,6 +190,23 @@ BLOCK_OVERRIDES: dict[str, str] = {
             "bell partial structure and strike controls explicit while staying practical for offline graph rendering."
         ),
     ),
+    "StruckBarBody": _section(
+        what=(
+            "A physically-informed struck bar model: the bar is represented as damped bending modes excited by a short impact."
+        ),
+        why=(
+            "Bars such as xylophone keys, marimba bars, and metal bars do not radiate like ideal harmonic strings. "
+            "Their recognizable attack and pitch color come from bending modes, strike position, material damping, and resonator coupling."
+        ),
+        how=(
+            "Feed a short strike into `excitation` and optionally drive `frequency`. `profile` selects a tuned or free-free modal family; "
+            "`strike_position` suppresses modes near impact nodes; `strike_hardness` raises upper-mode energy; damping and resonator mix shape the tail."
+        ),
+        caveat=(
+            "This is a reduced-order beam/bar modal model, not a full 3D finite-element bar plus resonator simulation. "
+            "It is physically meaningful enough for controlled percussion experiments while remaining practical for offline graph rendering."
+        ),
+    ),
     "PolyphonicWaveguideString": _section(
         what="An event-driven version of the waveguide string path that can host several active notes.",
         why="Phrase and overlap tests need note_on/note_off behavior instead of a single static pitch.",

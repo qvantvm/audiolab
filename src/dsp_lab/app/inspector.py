@@ -8,6 +8,7 @@ from typing import Any
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDoubleSpinBox,
     QFormLayout,
     QLabel,
@@ -47,6 +48,19 @@ def compact_params_for_save(block_type: str, values: dict[str, Any]) -> dict[str
         if name not in defaults or value != defaults[name]:
             compact[name] = value
     return compact
+
+
+def parameter_choices(block_type: str, name: str) -> tuple[str, ...]:
+    """Return declared enum choices for a block parameter, if available."""
+
+    cls = BLOCK_REGISTRY.get(block_type)
+    if cls is None:
+        return ()
+    meta = cls.param_schema().get(name, {})
+    choices = meta.get("choices") if isinstance(meta, dict) else None
+    if not isinstance(choices, list | tuple):
+        return ()
+    return tuple(str(choice) for choice in choices)
 
 
 class InspectorPanel(QWidget):
@@ -92,7 +106,7 @@ class InspectorPanel(QWidget):
         self._defaults = cls.default_params() if cls else {}
         self.title.setText(f"{block.id} ({block.type})")
         for name, value in merged_display_params(block.type, block.params).items():
-            widget = self._widget_for_value(value)
+            widget = self._widget_for_param(block.type, name, value)
             self._widgets[name] = widget
             suffix = " (default)" if name not in block.params else ""
             self.form.addRow(f"{name}{suffix}", widget)
@@ -108,6 +122,19 @@ class InspectorPanel(QWidget):
                     self.ports.setItem(row, 1, QTableWidgetItem(port.name))
                     self.ports.setItem(row, 2, QTableWidgetItem(port.kind))
         self.delete_button.setEnabled(True)
+
+    def _widget_for_param(self, block_type: str, name: str, value: Any) -> QWidget:
+        choices = parameter_choices(block_type, name)
+        if choices:
+            widget = QComboBox()
+            widget.addItems(list(choices))
+            current = "" if value is None else str(value)
+            if current and current not in choices:
+                widget.insertItem(0, current)
+            if current:
+                widget.setCurrentText(current)
+            return widget
+        return self._widget_for_value(value)
 
     def _widget_for_value(self, value: Any) -> QWidget:
         if isinstance(value, bool):
@@ -133,6 +160,8 @@ class InspectorPanel(QWidget):
             return widget.isChecked()
         if isinstance(widget, QSpinBox | QDoubleSpinBox):
             return widget.value()
+        if isinstance(widget, QComboBox):
+            return widget.currentText()
         if isinstance(widget, QLineEdit):
             text = widget.text()
             if text.lower() == "none" or text == "":

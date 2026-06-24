@@ -7,6 +7,7 @@ from dsp_lab.graph.physical.solvers.bell_modal_body import BellModalBodySolver
 from dsp_lab.graph.physical.solvers.excited_waveguide_string import ExcitedWaveguideStringSolver
 from dsp_lab.graph.physical.solvers.modal_bank_body import ModalBankBodySolver
 from dsp_lab.graph.physical.solvers.polyphonic_waveguide import PolyphonicWaveguideSolver
+from dsp_lab.graph.physical.solvers.struck_bar_body import StruckBarBodySolver
 
 
 def register_builtin_solvers(registry: SolverRegistry | None = None) -> None:
@@ -19,6 +20,8 @@ def register_builtin_solvers(registry: SolverRegistry | None = None) -> None:
         registry.register(PolyphonicWaveguideSolver())
     if "bell_modal_body" not in registry.list_solvers():
         registry.register(BellModalBodySolver())
+    if "struck_bar_body" not in registry.list_solvers():
+        registry.register(StruckBarBodySolver())
 
 
 register_builtin_solvers()

@@ -6,7 +6,8 @@ import numpy as np
 
 from dsp_lab.blocks.base import DSPBlock, Port
 from dsp_lab.blocks.registry import register_block
-from dsp_lab.graph.physical.bell_modal import DEFAULT_BELL_PROFILE, render_bell_modal_body
+from dsp_lab.graph.physical.bell_modal import BELL_PROFILES, DEFAULT_BELL_PROFILE, render_bell_modal_body
+from dsp_lab.graph.physical.struck_bar import STRUCK_BAR_PROFILES, DEFAULT_STRUCK_BAR_PROFILE, render_struck_bar_body
 
 
 @register_block
@@ -94,6 +95,10 @@ class BellModalBody(DSPBlock):
             "output_gain": 0.9,
         }
 
+    @classmethod
+    def param_schema(cls) -> dict[str, dict[str, object]]:
+        return {"profile": {"type": "str", "default": DEFAULT_BELL_PROFILE, "choices": sorted(BELL_PROFILES)}}
+
     def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
         excitation = np.asarray(inputs.get("excitation", np.zeros(n_frames)), dtype=np.float32)
         nominal_hz = float(inputs.get("frequency", self.params.get("nominal_hz", 660.0)))
@@ -111,5 +116,56 @@ class BellModalBody(DSPBlock):
                 decay_scale=float(self.params.get("decay_scale", 1.0)),
                 radiation_mix=float(self.params.get("radiation_mix", 0.85)),
                 output_gain=float(self.params.get("output_gain", 0.9)),
+            )
+        }
+
+
+@register_block
+class StruckBarBody(DSPBlock):
+    block_type = "StruckBarBody"
+    category = "Modal"
+    description = "Physically-informed struck bar body with damped bending modes."
+    input_ports = {
+        "frequency": Port("frequency", "control", required=False),
+        "excitation": Port("excitation", "audio"),
+    }
+    output_ports = {"audio": Port("audio", "audio")}
+
+    @classmethod
+    def default_params(cls) -> dict[str, object]:
+        return {
+            "fundamental_hz": 440.0,
+            "profile": DEFAULT_STRUCK_BAR_PROFILE,
+            "strike_position": 0.28,
+            "strike_hardness": 0.55,
+            "material_damping": 0.35,
+            "length_scale": 1.0,
+            "stiffness_scale": 1.0,
+            "decay_scale": 1.0,
+            "resonator_mix": 0.75,
+            "output_gain": 0.85,
+        }
+
+    @classmethod
+    def param_schema(cls) -> dict[str, dict[str, object]]:
+        return {"profile": {"type": "str", "default": DEFAULT_STRUCK_BAR_PROFILE, "choices": sorted(STRUCK_BAR_PROFILES)}}
+
+    def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
+        excitation = np.asarray(inputs.get("excitation", np.zeros(n_frames)), dtype=np.float32)
+        fundamental_hz = float(inputs.get("frequency", self.params.get("fundamental_hz", 440.0)))
+        return {
+            "audio": render_struck_bar_body(
+                excitation,
+                sample_rate=self.sample_rate,
+                fundamental_hz=fundamental_hz,
+                profile=str(self.params.get("profile", DEFAULT_STRUCK_BAR_PROFILE)),
+                strike_position=float(self.params.get("strike_position", 0.28)),
+                strike_hardness=float(self.params.get("strike_hardness", 0.55)),
+                material_damping=float(self.params.get("material_damping", 0.35)),
+                length_scale=float(self.params.get("length_scale", 1.0)),
+                stiffness_scale=float(self.params.get("stiffness_scale", 1.0)),
+                decay_scale=float(self.params.get("decay_scale", 1.0)),
+                resonator_mix=float(self.params.get("resonator_mix", 0.75)),
+                output_gain=float(self.params.get("output_gain", 0.85)),
             )
         }
