@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from typing import Any
 
 from PyQt6.QtCore import pyqtSignal
@@ -21,6 +22,31 @@ from PyQt6.QtWidgets import (
 
 from dsp_lab.app.graph_document import GraphDocument
 from dsp_lab.blocks.registry import BLOCK_REGISTRY
+
+
+def merged_display_params(block_type: str, explicit_params: dict[str, Any]) -> dict[str, Any]:
+    """Return all editable params, including registry defaults omitted by JSON."""
+
+    cls = BLOCK_REGISTRY.get(block_type)
+    if cls is None:
+        return dict(explicit_params)
+    merged = dict(cls.default_params())
+    merged.update(explicit_params)
+    return merged
+
+
+def compact_params_for_save(block_type: str, values: dict[str, Any]) -> dict[str, Any]:
+    """Keep JSON concise by removing values that still equal block defaults."""
+
+    cls = BLOCK_REGISTRY.get(block_type)
+    if cls is None:
+        return dict(values)
+    defaults = cls.default_params()
+    compact: dict[str, Any] = {}
+    for name, value in values.items():
+        if name not in defaults or value != defaults[name]:
+            compact[name] = value
+    return compact
 
 
 class InspectorPanel(QWidget):
@@ -45,6 +71,8 @@ class InspectorPanel(QWidget):
         layout.addWidget(self.delete_button)
         self.delete_button.setEnabled(False)
         self._widgets: dict[str, QWidget] = {}
+        self._defaults: dict[str, Any] = {}
+        self._block_type: str | None = None
 
     def set_document(self, document: GraphDocument | None) -> None:
         self.document = document
@@ -60,11 +88,14 @@ class InspectorPanel(QWidget):
             return
         block = self.document.block(block_id)
         cls = BLOCK_REGISTRY.get(block.type)
+        self._block_type = block.type
+        self._defaults = cls.default_params() if cls else {}
         self.title.setText(f"{block.id} ({block.type})")
-        for name, value in block.params.items():
+        for name, value in merged_display_params(block.type, block.params).items():
             widget = self._widget_for_value(value)
             self._widgets[name] = widget
-            self.form.addRow(name, widget)
+            suffix = " (default)" if name not in block.params else ""
+            self.form.addRow(f"{name}{suffix}", widget)
         apply_button = QPushButton("Apply Params")
         apply_button.clicked.connect(self._apply)
         self.form.addRow(apply_button)
@@ -97,7 +128,7 @@ class InspectorPanel(QWidget):
         widget = QLineEdit("" if value is None else str(value))
         return widget
 
-    def _value_from_widget(self, widget: QWidget) -> Any:
+    def _value_from_widget(self, widget: QWidget, default: Any = None) -> Any:
         if isinstance(widget, QCheckBox):
             return widget.isChecked()
         if isinstance(widget, QSpinBox | QDoubleSpinBox):
@@ -106,13 +137,24 @@ class InspectorPanel(QWidget):
             text = widget.text()
             if text.lower() == "none" or text == "":
                 return None
-            return text
+            if isinstance(default, str):
+                return text
+            try:
+                return ast.literal_eval(text)
+            except (SyntaxError, ValueError):
+                return text
         return None
 
     def _apply(self) -> None:
         if self.block_id is None:
             return
-        self.params_changed.emit(self.block_id, {name: self._value_from_widget(widget) for name, widget in self._widgets.items()})
+        values = {
+            name: self._value_from_widget(widget, self._defaults.get(name))
+            for name, widget in self._widgets.items()
+        }
+        if self._block_type:
+            values = compact_params_for_save(self._block_type, values)
+        self.params_changed.emit(self.block_id, values)
 
     def _delete(self) -> None:
         if self.block_id:
@@ -125,3 +167,5 @@ class InspectorPanel(QWidget):
             if widget:
                 widget.deleteLater()
         self._widgets = {}
+        self._defaults = {}
+        self._block_type = None
