@@ -39,6 +39,21 @@ Audiolab (`dsp_lab`) is a **standalone synthesis and research engine**:
 - Real-time audio plugin or live performance host
 - A guarantee that every physically meaningful port topology can render today (see [representation vs computation](#4-representation-vs-computation))
 
+### Relationship to Auralis
+
+Audiolab proves the synthesis, evaluation, calibration, and headless autoresearch loop. Auralis can consume Audiolab as a dependency for agent-only workflows such as journals, critique, supervisors, and literature browsing, but those concerns stay outside this repository.
+
+### Repository and runtime layout
+
+| Path | What lives there |
+|------|------------------|
+| `src/dsp_lab/` | Engine, graph compiler/executor, UI, evaluation, autoresearch, governance |
+| `examples/` | Runnable scripts, graph JSON, calibration configs, autoresearch policies |
+| `data/` | Evaluation manifests plus local/gitreignored reference WAV generation |
+| `docs/dsp_lab/` | Operator and subsystem guides |
+| `tests/dsp_lab/` | Pytest suite and doc integrity checks |
+| `workspace/` | Runtime outputs, experiments, renders, and calibration bundles (gitignored) |
+
 ## Documentation map
 
 | I want to… | Go to |
@@ -49,7 +64,9 @@ Audiolab (`dsp_lab`) is a **standalone synthesis and research engine**:
 | Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
 | Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](dsp_lab/cli.md) |
 | Calibrate parameters to a reference | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) · [calibration.md](dsp_lab/calibration.md) |
+| Generate local reference WAVs | Part 2 §5–6 · [data/README.md](../data/README.md) · [data/references/README.md](../data/references/README.md) |
 | Run autoresearch (no agents) | Part 2 §6 · [dsp_lab/guide.md](dsp_lab/guide.md) |
+| Register or promote a model candidate | Part 2 §6 · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
 | Build an agent loop | [agent_usage.md](agent_usage.md) |
 | Look up block equations | [dsp_lab/pasp_block_io_reference.md](dsp_lab/pasp_block_io_reference.md) |
 | Find example scripts and graphs | [dsp_lab/examples_index.md](dsp_lab/examples_index.md) |
@@ -286,6 +303,12 @@ Canonical example: [`examples/piano/minimal_A4_note.json`](../examples/piano/min
 
 Single blocks wrap full physics cores (`PASPNoteModel`, `PASPBidirectionalHammerString`, phrase-level `PASPPerformanceModel`). Faster to render; less graph visibility.
 
+Run the composite C4 note demo when you want a quick Level B render rather than a decomposed tutorial graph:
+
+```bash
+python examples/run_pasp_note_example.py
+```
+
 ### Level C — Waveguide research path (physical solvers)
 
 Karplus-Strong style strings and modal bodies via T2 solvers:
@@ -298,6 +321,10 @@ Karplus-Strong style strings and modal bodies via T2 solvers:
 
 Mixed chain: `HammerExcitation → WaveguideString → ModalBankBody` in `minimal_hammer_waveguide_body_A4.json`.
 
+### Level D — model-recreation path
+
+The model-recreation track uses higher-level model blocks to recreate known instrument behavior while keeping reproducible graph artifacts. Use it when the research question is "match this model path" rather than "expose every PASP subcomponent."
+
 ### When to use which
 
 | Goal | Path |
@@ -305,9 +332,12 @@ Mixed chain: `HammerExcitation → WaveguideString → ModalBankBody` in `minima
 | Physical interpretability, hypothesis testing | Level A (PASP decomposed) |
 | Quick demo, panel render | Level B (composite) |
 | String/body solver research, events, parameter maps | Level C (waveguide + modal) |
+| Recreate a known model path with graph artifacts | Level D (model recreation) |
 | Fast baseline without physical params | Legacy blocks (`HammerExcitation`, `StiffStringModal`) |
 
-**Deep dive:** [minimal_piano_note.md](minimal_piano_note.md) · [piano_blocks.md](piano_blocks.md) · [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) · [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md)
+Beyond single notes, use the specialist PASP docs for string groups, lifecycle/damper/pedal behavior, note-family/register calibration, and phrase-level performance rendering.
+
+**Deep dive:** [minimal_piano_note.md](minimal_piano_note.md) · [piano_blocks.md](piano_blocks.md) · [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) · [dsp_lab/pasp_string_group_modeling.md](dsp_lab/pasp_string_group_modeling.md) · [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) · [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) · [dsp_lab/model_recreation.md](dsp_lab/model_recreation.md) · [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md)
 
 ## 6. Research and autoresearch philosophy
 
@@ -324,12 +354,15 @@ Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include
 | Layer | Can accept a model? |
 |-------|---------------------|
 | Dataset regression + `decision.json` | **Yes** (cycle authority) |
+| Governance promotion gates | **Yes** (active baseline authority; separate step) |
 | Safety scans (forbidden fixes) | Blocks bad graphs |
 | LLM planner / memory / active learning | **No** (advisory hints only) |
 
 Prove the engine works **without agents** (`smoke_pasp_autoresearch.py`, baseline eval) before trusting agent loops in Auralis.
 
-**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md)
+Cycle acceptance and model promotion are intentionally separate: an accepted cycle produces a candidate with evidence, but it does not become the active baseline unless governance gates and any required human review pass.
+
+**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md) · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md)
 
 ## 7. Metrics, bundles, and regression
 
@@ -341,6 +374,8 @@ Every calibration run and many eval paths write a **standard experiment bundle**
 | `render_metadata.json` | `graph_hash`, peak/RMS, `warnings`, `structured_warnings` |
 | `metrics.json` | Full `compare_audio` output + `calibration_targets` |
 | `graph_hash.txt` | Standalone hash for quick diff |
+| `probes.npz` | Optional probe taps when saved by CLI/API experiment runs |
+| `report.md` | Optional human-readable experiment summary |
 
 ### calibration_targets (agent-facing)
 
@@ -387,6 +422,8 @@ python examples/smoke_pasp_autoresearch.py   # green path (~2 min)
 
 Set `PYTHONPATH=src` when running scripts from the repo root if not using editable install entry points.
 
+Reference WAVs are local assets and are not committed. Calibration, dataset eval, and autoresearch require you to generate or provide them; see [§5 Calibration and metrics](#5-calibration-and-metrics) and [§6 Autoresearch for operators](#6-autoresearch-for-operators).
+
 ## 2. Your first render
 
 Or follow **[Tutorial 1](#tutorial-1--beginner-your-first-piano-note)** for a guided walkthrough.
@@ -421,6 +458,8 @@ print(result.rms, result.graph_hash)
 print(result.structured_warnings)
 ```
 
+The CLI uses the graph's `sample_rate` and `duration` fields. The agent-facing Python API can override `sample_rate` and `duration_seconds` for scripted renders.
+
 ### Three entry paths
 
 | Goal | Example graph | Notes |
@@ -428,6 +467,19 @@ print(result.structured_warnings)
 | Sanity check | `examples/graphs/sine_test.json` | Pure T1 DSP |
 | PASP decomposed note | `examples/piano/minimal_A4_note.json` | [minimal_piano_note.md](minimal_piano_note.md) |
 | Waveguide + body | `examples/piano/waveguide_modal_body_A4.json` | T2 solvers; [roadmap.md](roadmap.md) |
+
+### Compact CLI reference
+
+| Command | Use |
+|---------|-----|
+| `dsp-lab list-blocks` | Browse registered block types |
+| `dsp-lab inspect-block WaveguideString` | Inspect ports, params, and metadata for one block |
+| `dsp-lab render graph.json --out out.wav --probes probes.npz` | Render and save requested graph probes |
+| `dsp-lab compare --real ref.wav --synthetic out.wav --out metrics.json` | Compare one synthetic WAV to one reference WAV |
+| `dsp-lab run-experiment --graph graph.json --real ref.wav --out workspace/experiments/demo` | Render, optionally compare, and write a bundle |
+| `dsp-lab report --experiment workspace/experiments/demo` | Print a Markdown summary for an experiment bundle |
+
+There is no `dsp-lab calibrate` subcommand yet. Use `python examples/run_calibration_example.py` or `run_calibration_cycle()` from Python.
 
 ## 3. Authoring graphs
 
@@ -445,10 +497,12 @@ dsp-lab inspect-block WaveguideString
 ### GUI editor
 
 ```bash
-python -m dsp_lab.app.main examples/graphs/pasp_single_note_sound.json
+python -m dsp_lab.app.main examples/piano/minimal_A4_note.json
 ```
 
-The GUI supports validate, render preview, and calibration (save graph to disk first).
+The GUI supports graph editing, validation, render preview, and calibration. **Render** is one offline forward pass at current parameters. **Calibrate** runs many renders from a `CalibrationTask` block, compares them to reference WAVs, writes `graph_calibrated.json`, and reloads the calibrated graph. Save the graph to disk before calibrating.
+
+For a composite Level B GUI demo, open `examples/graphs/pasp_single_note_sound.json`.
 
 **Deep dive:** [dsp_lab/cli.md](dsp_lab/cli.md) · [dsp_lab/gui.md](dsp_lab/gui.md) · [graph_schema.md](graph_schema.md)
 
@@ -458,26 +512,67 @@ The GUI supports validate, render preview, and calibration (save graph to disk f
 |------------|------------|---------|
 | Learn step-by-step | [Part 3 — Tutorials](#part-3--tutorials) | This manual |
 | Render one PASP note | `examples/piano/minimal_A4_note.json` | [minimal_piano_note.md](minimal_piano_note.md) |
+| Render composite PASP note | `examples/graphs/pasp_note_c4.json` or `python examples/run_pasp_note_example.py` | [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) |
 | Karplus string research | `examples/piano/minimal_waveguide_A4.json` | [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | Waveguide + modal body | `examples/piano/waveguide_modal_body_A4.json` | [roadmap.md](roadmap.md) |
 | Phrase / polyphony | `examples/piano/waveguide_modal_body_A4_events.json` | Events in [object_based_physical_modeling.md](object_based_physical_modeling.md) |
+| Phrase-level PASP performance | `examples/graphs/pasp_performance_model_base.json` | [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) |
+| Damper/pedal lifecycle | `examples/graphs/pasp_lifecycle_c4_pedal_hold.json` | [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) |
+| Note-family calibration | `examples/graphs/pasp_family_b3_d4.json` | [dsp_lab/pasp_note_family_calibration.md](dsp_lab/pasp_note_family_calibration.md) |
+| Register A3–C5 calibration | `examples/graphs/pasp_register_a3_c5.json` | [dsp_lab/pasp_register_calibration.md](dsp_lab/pasp_register_calibration.md) |
 | Parameter maps (no MidiToFrequency wiring) | `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` | Parameter maps section in OBPM doc |
 | Calibrate to reference WAV | `examples/graphs/calibration_minimal_c4.json` | [calibration.md](dsp_lab/calibration.md) |
+| Generate reference WAVs | `python data/generate_references.py` | [data/README.md](../data/README.md) |
 | Score model on full panel | `run_autoresearch_harness.py baseline` | [dsp_lab/guide.md](dsp_lab/guide.md) |
 | Run one improvement cycle | `run_autoresearch_harness.py full` | [dsp_lab/guide.md](dsp_lab/guide.md) |
+| Promote accepted candidate | `run_autoresearch_harness.py promote --cycle ...` | [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
 | Agent loop (from Auralis) | `dsp_lab.api.render` + `compare_audio` | [agent_usage.md](agent_usage.md) |
 
 ## 5. Calibration and metrics
 
 Calibration searches tunable graph parameters by rendering and comparing to reference WAVs. Theory: [§7](#7-metrics-bundles-and-regression). Hands-on: [Tutorial 3 step 4](#tutorial-3--advanced-phrases-calibration-and-honest-failures).
 
+### Reference data prerequisite
+
+`examples/run_calibration_example.py` expects the graph's `CalibrationTask.params.panel[*].wav_path` to resolve under the repo root. The default C4 example uses a local, gitignored single-note reference such as `data/note_060_C4_vel_120_pedal_on.wav`.
+
+For phrase/register evaluation and autoresearch references:
+
+```bash
+pip install -e ".[pianoteq]"
+python data/generate_references.py
+```
+
+The default calibration graph still points at the legacy flat single-note location. If you do not already have `data/note_060_C4_vel_120_pedal_on.wav`, generate that local single-note reference or edit the graph panel to point at a generated `data/references/piano/*.wav` file:
+
+```bash
+python data/create_midi.py --single-notes
+python data/create_wav.py --ids note_060_C4_vel_120_pedal_on
+cp data/pianoteq_dataset/wav/note_060_C4_vel_120_pedal_on.wav data/
+```
+
+Legacy single-note calibration refs use `data/note_*.wav`; phrase and register eval refs live under `data/references/`.
+
+### CalibrationTask anatomy
+
+| Field | Meaning |
+|-------|---------|
+| `panel` | Reference items: WAV path, note, velocity, pedal, and comparison target |
+| `tunables` | Graph parameter paths plus search bounds |
+| `optimizer` | Search strategy, usually `random_search` for examples |
+| `max_iters` | Number of render/compare trials |
+
 **GUI:** open a graph with a `CalibrationTask` block → Validate → Calibrate.
 
 **Headless:**
 
 ```bash
-python examples/run_calibration_example.py
+python examples/run_calibration_example.py \
+  --graph examples/graphs/calibration_minimal_c4.json \
+  --out workspace/experiments/calibration_demo
 ```
+
+Inspect `workspace/experiments/calibration_demo/` for `render.wav`, `metrics.json`, `graph_hash.txt`, calibration logs, and calibrated graph/parameter JSON. Use `dsp-lab run-experiment` for a single render/compare bundle that does not search parameters.
 
 **Golden audio tests** (`tests/dsp_lab/test_golden_audio.py`) guard deterministic waveguide regression (F0, envelope, spectral centroid).
 
@@ -493,10 +588,59 @@ Audiolab runs the research loop **headlessly** — no agents required.
 | Baseline scoreboard | `python examples/run_autoresearch_harness.py baseline --out workspace/experiments/pasp_baseline_eval` |
 | Plan only | `python examples/run_autoresearch_harness.py plan --baseline workspace/experiments/pasp_baseline_eval` |
 | Full cycle | `python examples/run_autoresearch_harness.py full --baseline workspace/experiments/pasp_baseline_eval` |
+| Register/promote candidate | `python examples/run_autoresearch_harness.py promote --cycle workspace/experiments/autoresearch/pasp_cycle_NNN` |
 
-**Prerequisites:** reference WAVs (`data/references/`), baseline graph (`examples/graphs/pasp_performance_model_base.json`), production config (`examples/autoresearch/pasp_autoresearch_production.json`).
+**Prerequisites:** reference WAVs (`data/references/`), baseline graph (`examples/graphs/pasp_performance_model_base.json`), and a cycle config. The harness defaults to the fast dev config (`examples/autoresearch/pasp_autoresearch_fast.json`); pass `--config examples/autoresearch/pasp_autoresearch_production.json` for production-sized runs.
+
+Generate phrase/register references:
+
+```bash
+pip install -e ".[pianoteq]"
+python data/generate_references.py
+python examples/bootstrap_piano_phrase_references.py --check
+```
 
 The cycle changes `candidate_graph.json` parameters inside approved templates, runs calibration trials, and writes `decision.json` (accept/reject). Planner and memory layers are advisory only.
+
+### Baseline artifacts
+
+After `baseline`, inspect:
+
+| File | Meaning |
+|------|---------|
+| `summary.json` | Aggregate dataset score |
+| `aggregate/failure_clusters.json` | Failure clusters used for cycle selection |
+| `agent_regression_report.json` | Agent/operator-oriented regression summary |
+
+If these files report `reference_missing`, generate references before trusting the scoreboard.
+
+### Cycle artifacts
+
+Full cycles write `workspace/experiments/autoresearch/pasp_cycle_NNN/`:
+
+| File | Read for |
+|------|----------|
+| `agent_cycle_report.json` | Compact cycle summary; start here |
+| `selected_cluster.json` | Targeted failure cluster |
+| `hypothesis.json` | Chosen hypothesis and allowed params |
+| `targeted_calibration.json` | Tunables, panel, objective weights |
+| `candidate_graph.json` | Candidate model graph |
+| `candidate_dataset_eval/` | Full candidate eval |
+| `regression_vs_baseline.md` | Baseline-vs-candidate deltas |
+| `decision.json` | Accept/reject/needs review/incomplete |
+
+Use `--no-memory` to disable experiment memory and `--no-planner` for deterministic hypotheses. Smoke supports skip flags such as `--skip-pytest`, `--skip-render`, `--skip-dataset-eval`, and `--skip-cycle`.
+
+### Governance boundary
+
+`decision.json` accepts or rejects a cycle candidate. Promotion to active baseline is a separate governance step with gates, lineage, rollback metadata, and optional human review:
+
+```bash
+python examples/run_autoresearch_harness.py promote \
+  --cycle workspace/experiments/autoresearch/pasp_cycle_NNN
+```
+
+Default governance can register candidates without auto-promoting them. Do not treat a calibrated graph or accepted cycle as the active model until promotion gates pass.
 
 **Full operator runbook:** [dsp_lab/guide.md](dsp_lab/guide.md)
 
@@ -509,7 +653,7 @@ The cycle changes `candidate_graph.json` parameters inside approved templates, r
 | `string.audio → coupler.input` rejected | Signal substitute for physical port | Use `string.bridge → coupler.input` or pick supported topology |
 | Silent or near-zero audio | Missing excitation, wrong graph tier | Check probes; verify excitation / events wired |
 | Param tuning has no effect | Solver ignores parameter | Read `structured_warnings` (`PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED`) |
-| `reference_missing` in eval | Reference WAVs not generated | [data/references/README.md](../data/references/README.md) |
+| `reference_missing` in eval | Reference WAVs not generated or path mismatch | Run `python data/generate_references.py`; verify [data/references/README.md](../data/references/README.md) |
 | Graph validates but sounds wrong | Phenomenological fit, not physics bug | Compare metrics; check modeling discipline |
 
 ---
@@ -599,6 +743,12 @@ Re-render and compare RMS or listen for shorter decay.
 
 Probes listed in the graph are recorded when the render pipeline collects them. Use them to verify intermediate stages (hammer force, string audio) without adding `Output` blocks on every node.
 
+```bash
+dsp-lab render examples/piano/minimal_A4_note.json \
+  --out workspace/tutorial_beginner_a4.wav \
+  --probes workspace/tutorial_beginner_probes.npz
+```
+
 ### What you learned
 
 - Graph anatomy: blocks, connections, inputs, probes
@@ -678,13 +828,16 @@ If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for `inharmonicity_B`, do not tu
 
 ### Step 6 — Optional: compare to reference
 
-If you have a reference WAV under `data/`:
+If you have generated a matching local reference WAV under `data/` or `data/references/`:
 
 ```bash
-dsp-lab compare --real data/note_440.wav --synthetic workspace/tutorial_waveguide.wav --out workspace/metrics.json
+dsp-lab compare \
+  --real data/references/piano/A4_v100.wav \
+  --synthetic workspace/tutorial_waveguide.wav \
+  --out workspace/tutorial_waveguide_metrics.json
 ```
 
-Or use `compare_audio()` from `dsp_lab.api.compare`.
+Pick a reference that matches the rendered note/event. The path above is a local, gitignored A4 register reference produced by `python data/generate_references.py`; it is not shipped in git. Or use `compare_audio()` from `dsp_lab.api.compare`.
 
 ### Step 7 — Parameter maps (preview)
 
@@ -762,12 +915,15 @@ except UnsupportedComputationError as e:
 ### Step 3 — Calibration
 
 ```bash
-python examples/run_calibration_example.py
+python examples/run_calibration_example.py \
+  --out workspace/experiments/calibration_demo
 ```
 
 Or open `examples/graphs/calibration_minimal_c4.json` in the GUI → Validate → Calibrate.
 
-Inspect the output bundle next to the graph:
+This requires the C4 reference WAV named in the graph's `CalibrationTask` panel, typically `data/note_060_C4_vel_120_pedal_on.wav`. Generate or provide that flat single-note reference first if the script reports "Reference WAV not found."
+
+Inspect the output bundle in `workspace/experiments/calibration_demo/`:
 
 | File | Look for |
 |------|----------|
@@ -797,13 +953,13 @@ See [data/references/README.md](../data/references/README.md) for generating ref
 import json
 from pathlib import Path
 
-metrics = json.loads(Path("workspace/metrics.json").read_text())
+metrics = json.loads(Path("workspace/experiments/calibration_demo/metrics.json").read_text())
 targets = metrics.get("calibration_targets", {})
 print("global_score:", targets.get("global_score"))
 print("f0_error_cents:", targets.get("f0_error_cents"))
 ```
 
-Tie this to [§8 Design principles](#8-design-principles-research-safety): metrics and `decision.json` are authoritative; planner hints are not.
+If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_metrics.json`. Tie this to [§8 Design principles](#8-design-principles-research-safety): metrics and `decision.json` are authoritative; planner hints are not.
 
 ### What you learned
 
@@ -839,15 +995,19 @@ Tie this to [§8 Design principles](#8-design-principles-research-safety): metri
 | GUI | [dsp_lab/gui.md](dsp_lab/gui.md) |
 | Calibration | [dsp_lab/calibration.md](dsp_lab/calibration.md) |
 | Experiments | [dsp_lab/experiments.md](dsp_lab/experiments.md) |
+| Model recreation | [dsp_lab/model_recreation.md](dsp_lab/model_recreation.md) |
 
 ### PASP modeling
 
 | Topic | Document |
 |-------|----------|
 | PASP blocks | [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) |
+| Piano block inventory | [piano_blocks.md](piano_blocks.md) |
 | Block I/O and equations | [dsp_lab/pasp_block_io_reference.md](dsp_lab/pasp_block_io_reference.md) |
 | Modeling discipline | [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md) |
 | Minimal piano note | [minimal_piano_note.md](minimal_piano_note.md) |
+| String-group modeling | [dsp_lab/pasp_string_group_modeling.md](dsp_lab/pasp_string_group_modeling.md) |
+| Lifecycle, damper, pedal | [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) |
 | Note-family calibration | [dsp_lab/pasp_note_family_calibration.md](dsp_lab/pasp_note_family_calibration.md) |
 | Register A3–C5 | [dsp_lab/pasp_register_calibration.md](dsp_lab/pasp_register_calibration.md) |
 | Performance rendering | [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) |
@@ -860,6 +1020,8 @@ Tie this to [§8 Design principles](#8-design-principles-research-safety): metri
 | System overview | [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md) |
 | Dataset evaluation | [dsp_lab/pasp_dataset_evaluation.md](dsp_lab/pasp_dataset_evaluation.md) |
 | Autoresearch loop | [dsp_lab/pasp_autoresearch_loop.md](dsp_lab/pasp_autoresearch_loop.md) |
+| LLM planner | [dsp_lab/pasp_llm_planner.md](dsp_lab/pasp_llm_planner.md) |
+| Active learning | [dsp_lab/pasp_active_learning.md](dsp_lab/pasp_active_learning.md) |
 | Model governance | [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
 | All doc hub | [dsp_lab/README.md](dsp_lab/README.md) |
 
@@ -894,5 +1056,5 @@ Tutorial graphs:
 | Tutorial | Graphs |
 |----------|--------|
 | 1 | `examples/piano/minimal_A4_note.json` |
-| 2 | `minimal_waveguide_A4.json`, `waveguide_modal_body_A4.json`, `minimal_hammer_waveguide_body_A4.json` |
-| 3 | `waveguide_modal_body_A4_events.json`, `examples/graphs/calibration_minimal_c4.json` |
+| 2 | `examples/piano/minimal_waveguide_A4.json`, `examples/piano/waveguide_modal_body_A4.json`, `examples/piano/minimal_hammer_waveguide_body_A4.json`, `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` |
+| 3 | `examples/piano/waveguide_modal_body_A4_events.json`, `examples/piano/polyphonic_two_note_overlap.json`, `examples/graphs/calibration_minimal_c4.json` |
