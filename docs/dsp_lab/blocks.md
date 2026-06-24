@@ -1,19 +1,20 @@
 # DSP Lab Block Reference
 
-Catalog of **133** registered blocks in `dsp_lab`: ports, kinds, parameters, and descriptions.
+Catalog of **138** registered blocks in `dsp_lab`: ports, kinds, parameters, explanations, and formulas.
 Port kinds: **audio** (per-block buffer), **control** (scalar), **event** (note/event payloads).
 
 Calibration workflow (`CalibrationTask`, tunables, GUI **Calibrate** button): [calibration.md](calibration.md).
 
-Source of truth: `src/dsp_lab/blocks/` and `BLOCK_REGISTRY`. Regenerate port/param tables:
+Source of truth: `src/dsp_lab/blocks/` and `BLOCK_REGISTRY`. Regenerate this catalog:
 
 ```bash
 PYTHONPATH=src python scripts/generate_block_docs.py
 ```
 
-Regenerate **Formula** sections (after editing `scripts/block_formulas.json`):
+Block explanations live in `scripts/block_explanations.py`. Formula sections live in `scripts/block_formulas.json` and can be re-applied independently:
 
 ```bash
+python scripts/apply_block_explanations.py
 python scripts/apply_block_formulas.py
 ```
 
@@ -23,140 +24,144 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 
 | Block | Category | Inputs | Outputs | Start line | End line |
 | --- | --- | --- | --- | --- | --- |
-| ADSR | Envelopes | — | `audio` (audio) | 986 | 1005 |
-| AlignedReference | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio) | 1467 | 1483 |
-| Allpass | Filters | `audio` (audio) | `audio` (audio) | 1176 | 1195 |
-| AssertFinite | Debug | `audio` (audio) | `audio` (audio) | 774 | 789 |
-| AssertNoClipping | Debug | `audio` (audio) | `audio` (audio) | 790 | 809 |
-| AssertNotSilent | Debug | `audio` (audio) | `audio` (audio) | 810 | 829 |
-| AttackMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 1484 | 1501 |
-| AudioHealthMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 1502 | 1520 |
-| Bandpass | Filters | `audio` (audio) | `audio` (audio) | 1196 | 1216 |
-| BatchRenderTask | Calibration | — | `result` (control) | 464 | 482 |
-| BiquadFilter | Filters | `audio` (audio) | `audio` (audio) | 1217 | 1238 |
-| BodyEQ | Body & Space | `audio` (audio) | `audio` (audio) | 279 | 300 |
-| BridgeMixer | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 2738 | 2760 |
-| CabinetRadiation | Body & Space | `audio` (audio) | `audio` (audio) | 301 | 316 |
-| CalibrationTask | Calibration | — | `result` (control) | 483 | 502 |
-| Clamp | Math | `audio` (audio) | `audio` (audio) | 1364 | 1384 |
-| CompareTask | Experimental | — | `result` (control) | 1042 | 1053 |
-| Constant | Control | — | `value` (control) | 667 | 684 |
-| DamperReleaseEnvelope | Piano | — | `audio` (audio) | 2761 | 2776 |
-| DecayMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 1521 | 1538 |
-| Delay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 860 | 879 |
-| DifferenceSignal | Metrics | `synthetic` (audio), `reference` (audio) | `audio` (audio) | 1539 | 1555 |
-| DispersionAllpass | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 880 | 899 |
-| DuplexScaleResonance | Body & Space | `audio` (audio) | `audio` (audio) | 317 | 337 |
-| EQ3Band | Filters | `audio` (audio) | `audio` (audio) | 1239 | 1260 |
-| EnvelopeDecayMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 1556 | 1574 |
-| EnvelopeMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 1575 | 1592 |
-| EnvelopeProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 158 | 174 |
-| EventPassThrough | Experimental | `event` (event) | `event` (event) | 1054 | 1069 |
-| EventSource | Experimental | — | `event` (event) | 1070 | 1087 |
-| ExponentialDecay | Envelopes | — | `control` (control), `audio` (audio) | 1006 | 1023 |
-| F0Metric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 1593 | 1610 |
-| FeedbackDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 900 | 921 |
-| FractionalDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 922 | 941 |
-| FractionalStringDelay | Piano | `audio` (audio) | `audio` (audio) | 2777 | 2796 |
-| Gain | Mixing | `audio` (audio) | `audio` (audio) | 1880 | 1901 |
-| GitCommitTask | Experimental | — | `result` (control) | 1088 | 1099 |
-| GridSearch | Calibration | — | `result` (control) | 503 | 514 |
-| HammerExcitation | Piano | `velocity` (control), `brightness` (control) | `audio` (audio) | 2797 | 2820 |
-| HammerFeltFilter | Piano | `audio` (audio) | `audio` (audio) | 2821 | 2840 |
-| HammerNoise | Piano | `velocity` (control) | `audio` (audio) | 2841 | 2862 |
-| HammerVelocityMapper | Piano | `velocity` (control) | `force` (control), `brightness` (control) | 2863 | 2884 |
-| Highpass | Filters | `audio` (audio) | `audio` (audio) | 1261 | 1280 |
-| HumanReviewTask | Experimental | — | `result` (control) | 1100 | 1111 |
-| Impulse | Sources | — | `audio` (audio) | 3243 | 3259 |
-| LogSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 1611 | 1628 |
-| LookupTable | Control | `index` (control) | `value` (control) | 685 | 706 |
-| LoopFilter | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 942 | 961 |
-| LossAggregator | Calibration | `loss1` (control), `loss2` (control), `loss3` (control), `loss4` (control) | `loss` (control) | 515 | 537 |
-| Lowpass | Filters | `audio` (audio) | `audio` (audio) | 1281 | 1300 |
-| MetricFamilyScore | Metrics | `metrics` (control) | `scores` (control) | 1629 | 1644 |
-| MicPositionFilter | Body & Space | `audio` (audio) | `audio` (audio) | 338 | 357 |
-| MidiToFrequency | Control | `midi_note` (control) | `frequency` (control) | 707 | 726 |
-| Mixer | Mixing | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 1902 | 1924 |
-| ModalResonator | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 1950 | 1972 |
-| ModalResonatorBank | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 1973 | 1993 |
-| ModelHammerExcitation | Piano | `midi_note` (control), `frequency` (control), `velocity` (control) | `audio` (audio) | 2885 | 2910 |
-| ModelStereoOutput | Piano | `audio` (audio) | `audio` (audio) | 2911 | 2932 |
-| MultiResSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 1645 | 1663 |
-| MultiSegmentEnvelope | Envelopes | — | `audio` (audio) | 1024 | 1039 |
-| MultiStringUnison | Piano | `audio` (audio) | `audio` (audio) | 2933 | 2953 |
-| Multiply | Math | `audio` (audio), `factor` (control) | `audio` (audio) | 1385 | 1405 |
-| NoiseBurst | Sources | `velocity` (control) | `audio` (audio) | 3260 | 3281 |
-| NonlinearHammer | Piano | `audio` (audio), `force` (control) | `audio` (audio) | 2954 | 2974 |
-| Normalize | Math | `audio` (audio) | `audio` (audio) | 1406 | 1425 |
-| Notch | Filters | `audio` (audio) | `audio` (audio) | 1301 | 1321 |
-| OnePoleHighpass | Filters | `audio` (audio) | `audio` (audio) | 1322 | 1341 |
-| OnePoleLowpass | Filters | `audio` (audio) | `audio` (audio) | 1342 | 1361 |
-| OptunaOptimizer | Calibration | — | `result` (control) | 538 | 549 |
-| Output | Mixing | `audio` (audio) | `audio` (audio) | 1925 | 1947 |
-| OverallScore | Metrics | `value1` (control), `value2` (control), `value3` (control), `value4` (control), `value5` (control), `value6` (control) | `score` (control) | 1664 | 1689 |
-| PASPBidirectionalHammerString | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 1996 | 2083 |
-| PASPBridgeSoundboard | PASP Piano | `audio` (audio) | `audio` (audio) | 2084 | 2165 |
-| PASPBridgeTermination | PASP Piano | `audio` (audio) | `audio` (audio) | 2166 | 2187 |
-| PASPEventPianoModel | PASP Piano | `events` (control), `midi_note` (control), `velocity` (control) | `audio` (audio), `bridge_audio` (audio) | 2188 | 2272 |
-| PASPHammerFelt | PASP Piano | `velocity` (control), `midi_note` (control) | `force` (audio), `compression` (audio) | 2273 | 2300 |
-| PASPHammerStringJunction | PASP Piano | `force` (audio), `compression` (audio), `string_slope` (audio) | `excitation` (audio) | 2301 | 2325 |
-| PASPNoteFamilyModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 2326 | 2416 |
-| PASPNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 2417 | 2504 |
-| PASPPerformanceModel | PASP Piano | `events` (control) | `audio` (audio), `bridge_audio` (audio) | 2505 | 2587 |
-| PASPSoundboardModal | PASP Piano | `audio` (audio) | `audio` (audio) | 2588 | 2609 |
-| PASPStringGroupNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio), `string_1_audio` (audio), `string_2_audio` (audio), `string_3_audio` (audio) | 2610 | 2703 |
-| PASPStringLine | PASP Piano | `excitation` (audio), `frequency` (control), `inharmonicity_B` (control), `midi_note` (control) | `audio` (audio) | 2704 | 2735 |
-| PanelMetricsTask | Metrics | — | `result` (control) | 1690 | 1707 |
-| ParameterBinding | Calibration | `value` (control) | `value` (control), `bind_path` (control) | 550 | 571 |
-| ParameterCurve | Control | `x` (control) | `value` (control) | 727 | 749 |
-| ParameterSweep | Calibration | — | `result` (control) | 572 | 583 |
-| PartialTrackerProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 175 | 191 |
-| PeakMeter | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 192 | 208 |
-| PedalPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 1708 | 1728 |
-| PerNoteTable | Calibration | `midi_note` (control) | `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control) | 584 | 605 |
-| PianoStringBank | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control) | `audio` (audio), `brightness` (control) | 2975 | 3017 |
-| PianoWaveguideString | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control), `brightness` (control) | `audio` (audio) | 3018 | 3056 |
-| PitchPartialMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 1729 | 1747 |
-| PrintValue | Debug | `value` (control) | `value` (control) | 830 | 845 |
-| Probe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 209 | 225 |
-| PythonCustom | Experimental | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio), `ctrl1` (control), `ctrl2` (control), `event` (event) | `audio` (audio), `value` (control), `out2` (audio), `out3` (audio), `out4` (audio), `event` (event) | 1112 | 1149 |
-| RMSMeter | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 226 | 242 |
-| RandomSearch | Calibration | — | `result` (control) | 606 | 617 |
-| ReferenceCompare | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `metrics` (control), `loss` (control) | 1748 | 1766 |
-| ReferenceSample | Metrics | — | `audio` (audio) | 1767 | 1783 |
-| RenderTask | Experimental | — | `result` (control) | 1150 | 1161 |
-| ReportTask | Experimental | — | `result` (control) | 1162 | 1173 |
-| ResidualAnalyzer | Metrics | `audio` (audio) | `audio` (audio), `value` (control) | 1784 | 1800 |
-| ResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 358 | 378 |
-| SamplePlayer | Sources | — | `audio` (audio) | 3282 | 3299 |
-| ScipyOptimizer | Calibration | — | `result` (control) | 618 | 629 |
-| SineOscillator | Sources | `frequency` (control) | `audio` (audio) | 3300 | 3323 |
-| SoftClip | Math | `audio` (audio) | `audio` (audio) | 1426 | 1445 |
-| SoundboardConvolution | Body & Space | `audio` (audio) | `audio` (audio) | 379 | 399 |
-| SoundboardModalBank | Body & Space | `audio` (audio) | `audio` (audio) | 400 | 420 |
-| SpectralCentroidMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 1801 | 1818 |
-| SpectralShapeMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 1819 | 1837 |
-| SpectrogramProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 243 | 259 |
-| SpectrumProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 260 | 276 |
-| StateDump | Debug | — | `state` (control) | 846 | 857 |
-| StereoWidener | Body & Space | `audio` (audio) | `audio` (audio) | 421 | 440 |
-| StiffStringModal | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 3057 | 3086 |
-| StringCouplingMatrix | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio) | `audio` (audio) | 3087 | 3108 |
-| StringDetune | Piano | `frequency` (control) | `frequency` (control) | 3109 | 3128 |
-| StringDispersion | Piano | `audio` (audio) | `audio` (audio) | 3129 | 3148 |
-| StringLossFilter | Piano | `audio` (audio) | `audio` (audio) | 3149 | 3168 |
-| StringModeBank | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 3169 | 3198 |
-| StringTermination | Piano | `audio` (audio) | `audio` (audio) | 3199 | 3218 |
-| Sum | Math | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio) | `audio` (audio) | 1446 | 1464 |
-| SustainPedalDamping | Piano | `audio` (audio), `pedal` (control) | `audio` (audio) | 3219 | 3240 |
-| SympatheticResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 441 | 461 |
-| TrainableParameter | Calibration | — | `value` (control) | 630 | 652 |
-| ValidationSplit | Calibration | — | `result` (control) | 653 | 664 |
-| ValidityGate | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `valid` (control), `reasons` (control) | 1838 | 1856 |
-| VelocityCurve | Control | `velocity` (control) | `value` (control) | 750 | 771 |
-| VelocityPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 1857 | 1877 |
-| WaveguideString | Delay & Waveguide | `frequency` (control), `excitation` (audio) | `audio` (audio) | 962 | 983 |
-
+| ADSR | Envelopes | — | `audio` (audio) | 1873 | 1917 |
+| AlignedReference | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio) | 2909 | 2943 |
+| Allpass | Filters | `audio` (audio) | `audio` (audio) | 2387 | 2422 |
+| AssertFinite | Debug | `audio` (audio) | `audio` (audio) | 1464 | 1497 |
+| AssertNoClipping | Debug | `audio` (audio) | `audio` (audio) | 1499 | 1532 |
+| AssertNotSilent | Debug | `audio` (audio) | `audio` (audio) | 1534 | 1567 |
+| AttackMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 2945 | 2984 |
+| AudioHealthMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 2986 | 3022 |
+| Bandpass | Filters | `audio` (audio) | `audio` (audio) | 2424 | 2458 |
+| BatchRenderTask | Calibration | — | `result` (control) | 799 | 837 |
+| BiquadFilter | Filters | `audio` (audio) | `audio` (audio) | 2460 | 2500 |
+| BodyEQ | Body & Space | `audio` (audio) | `audio` (audio) | 422 | 461 |
+| BridgeCoupler | Experimental | `input` (audio) | `output` (audio) | 1999 | 2032 |
+| BridgeMixer | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 4897 | 4935 |
+| CabinetRadiation | Body & Space | `audio` (audio) | `audio` (audio) | 463 | 498 |
+| CalibrationTask | Calibration | — | `result` (control) | 839 | 878 |
+| Clamp | Math | `audio` (audio) | `audio` (audio) | 2719 | 2753 |
+| CompareTask | Experimental | — | `result` (control) | 2034 | 2069 |
+| Constant | Control | — | `value` (control) | 1270 | 1305 |
+| DamperReleaseEnvelope | Piano | — | `audio` (audio) | 4937 | 4970 |
+| DecayMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3024 | 3063 |
+| Delay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1641 | 1676 |
+| DifferenceSignal | Metrics | `synthetic` (audio), `reference` (audio) | `audio` (audio) | 3065 | 3099 |
+| DispersionAllpass | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1678 | 1711 |
+| DuplexScaleResonance | Body & Space | `audio` (audio) | `audio` (audio) | 500 | 534 |
+| EQ3Band | Filters | `audio` (audio) | `audio` (audio) | 2502 | 2537 |
+| EnvelopeDecayMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3101 | 3137 |
+| EnvelopeMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3139 | 3178 |
+| EnvelopeProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 168 | 202 |
+| EventPassThrough | Experimental | `event` (event) | `event` (event) | 2071 | 2104 |
+| EventSource | Experimental | — | `event` (event) | 2106 | 2141 |
+| ExponentialDecay | Envelopes | — | `control` (control), `audio` (audio) | 1919 | 1958 |
+| F0Metric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3180 | 3219 |
+| FeedbackDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1713 | 1750 |
+| FractionalDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1752 | 1785 |
+| FractionalStringDelay | Piano | `audio` (audio) | `audio` (audio) | 4972 | 5005 |
+| Gain | Mixing | `audio` (audio) | `audio` (audio) | 3758 | 3793 |
+| GitCommitTask | Experimental | — | `result` (control) | 2143 | 2178 |
+| GridSearch | Calibration | — | `result` (control) | 880 | 915 |
+| HammerExcitation | Piano | `velocity` (control), `brightness` (control) | `audio` (audio) | 5007 | 5046 |
+| HammerFeltFilter | Piano | `audio` (audio) | `audio` (audio) | 5048 | 5083 |
+| HammerNoise | Piano | `velocity` (control) | `audio` (audio) | 5085 | 5120 |
+| HammerVelocityMapper | Piano | `velocity` (control) | `force` (control), `brightness` (control) | 5122 | 5159 |
+| Highpass | Filters | `audio` (audio) | `audio` (audio) | 2539 | 2572 |
+| HumanReviewTask | Experimental | — | `result` (control) | 2180 | 2215 |
+| Impulse | Sources | — | `audio` (audio) | 5829 | 5867 |
+| LogSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3221 | 3260 |
+| LookupTable | Control | `index` (control) | `value` (control) | 1307 | 1344 |
+| LoopFilter | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1787 | 1822 |
+| LossAggregator | Calibration | `loss1` (control), `loss2` (control), `loss3` (control), `loss4` (control) | `loss` (control) | 917 | 955 |
+| Lowpass | Filters | `audio` (audio) | `audio` (audio) | 2574 | 2607 |
+| MetricFamilyScore | Metrics | `metrics` (control) | `scores` (control) | 3262 | 3295 |
+| MicPositionFilter | Body & Space | `audio` (audio) | `audio` (audio) | 536 | 571 |
+| MidiToFrequency | Control | `midi_note` (control) | `frequency` (control) | 1346 | 1381 |
+| Mixer | Mixing | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 3795 | 3833 |
+| ModalBankBody | Body & Space | `audio` (audio) | `audio` (audio) | 573 | 610 |
+| ModalResonator | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3879 | 3919 |
+| ModalResonatorBank | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3921 | 3963 |
+| ModelHammerExcitation | Piano | `midi_note` (control), `frequency` (control), `velocity` (control) | `audio` (audio) | 5161 | 5200 |
+| ModelStereoOutput | Piano | `audio` (audio) | `audio` (audio) | 5202 | 5239 |
+| MultiResSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3297 | 3333 |
+| MultiSegmentEnvelope | Envelopes | — | `audio` (audio) | 1960 | 1995 |
+| MultiStringUnison | Piano | `audio` (audio) | `audio` (audio) | 5241 | 5277 |
+| Multiply | Math | `audio` (audio), `factor` (control) | `audio` (audio) | 2755 | 2791 |
+| NoiseBurst | Sources | `velocity` (control) | `audio` (audio) | 5869 | 5908 |
+| NonlinearHammer | Piano | `audio` (audio), `force` (control) | `audio` (audio) | 5279 | 5315 |
+| Normalize | Math | `audio` (audio) | `audio` (audio) | 2793 | 2828 |
+| Notch | Filters | `audio` (audio) | `audio` (audio) | 2609 | 2643 |
+| NotePerformanceSchedule | Piano | — | `frequency` (control), `velocity` (control), `midi_note` (control), `sustain_pedal` (control) | 5317 | 5354 |
+| OnePoleHighpass | Filters | `audio` (audio) | `audio` (audio) | 2645 | 2678 |
+| OnePoleLowpass | Filters | `audio` (audio) | `audio` (audio) | 2680 | 2715 |
+| OptunaOptimizer | Calibration | — | `result` (control) | 957 | 992 |
+| Output | Mixing | `audio` (audio) | `audio` (audio) | 3835 | 3875 |
+| OverallScore | Metrics | `value1` (control), `value2` (control), `value3` (control), `value4` (control), `value5` (control), `value6` (control) | `score` (control) | 3335 | 3376 |
+| PASPBidirectionalHammerString | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 3967 | 4068 |
+| PASPBridgeSoundboard | PASP Piano | `audio` (audio) | `audio` (audio) | 4070 | 4165 |
+| PASPBridgeTermination | PASP Piano | `audio` (audio) | `audio` (audio) | 4167 | 4202 |
+| PASPEventPianoModel | PASP Piano | `events` (control), `midi_note` (control), `velocity` (control) | `audio` (audio), `bridge_audio` (audio) | 4204 | 4302 |
+| PASPHammerFelt | PASP Piano | `velocity` (control), `midi_note` (control) | `force` (audio), `compression` (audio) | 4304 | 4349 |
+| PASPHammerStringJunction | PASP Piano | `force` (audio), `compression` (audio), `string_slope` (audio) | `excitation` (audio) | 4351 | 4389 |
+| PASPNoteFamilyModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4391 | 4495 |
+| PASPNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 4497 | 4598 |
+| PASPPerformanceModel | PASP Piano | `events` (control) | `audio` (audio), `bridge_audio` (audio) | 4600 | 4696 |
+| PASPSoundboardModal | PASP Piano | `audio` (audio) | `audio` (audio) | 4698 | 4733 |
+| PASPStringGroupNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio), `string_1_audio` (audio), `string_2_audio` (audio), `string_3_audio` (audio) | 4735 | 4842 |
+| PASPStringLine | PASP Piano | `excitation` (audio), `frequency` (control), `inharmonicity_B` (control), `midi_note` (control) | `audio` (audio) | 4844 | 4893 |
+| PanelMetricsTask | Metrics | — | `result` (control) | 3378 | 3415 |
+| ParameterBinding | Calibration | `value` (control) | `value` (control), `bind_path` (control) | 994 | 1031 |
+| ParameterCurve | Control | `x` (control) | `value` (control) | 1383 | 1421 |
+| ParameterSweep | Calibration | — | `result` (control) | 1033 | 1068 |
+| PartialTrackerProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 204 | 238 |
+| PeakMeter | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 240 | 274 |
+| PedalPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 3417 | 3451 |
+| PerNoteTable | Calibration | `midi_note` (control) | `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control) | 1070 | 1109 |
+| PhysicalCouplingStub | Experimental | `audio` (audio), `coupling` (audio) | `audio` (audio), `coupling` (audio) | 2217 | 2252 |
+| PianoStringBank | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control) | `audio` (audio), `brightness` (control) | 5356 | 5412 |
+| PianoWaveguideString | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control), `brightness` (control) | `audio` (audio) | 5414 | 5466 |
+| PitchPartialMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3453 | 3489 |
+| PolyphonicWaveguideString | Piano | — | `audio` (audio) | 5468 | 5511 |
+| PrintValue | Debug | `value` (control) | `value` (control) | 1569 | 1602 |
+| Probe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 276 | 310 |
+| PythonCustom | Experimental | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio), `ctrl1` (control), `ctrl2` (control), `event` (event) | `audio` (audio), `value` (control), `out2` (audio), `out3` (audio), `out4` (audio), `event` (event) | 2254 | 2309 |
+| RMSMeter | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 312 | 346 |
+| RandomSearch | Calibration | — | `result` (control) | 1111 | 1146 |
+| ReferenceCompare | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `metrics` (control), `loss` (control) | 3491 | 3527 |
+| ReferenceSample | Metrics | — | `audio` (audio) | 3529 | 3565 |
+| RenderTask | Experimental | — | `result` (control) | 2311 | 2346 |
+| ReportTask | Experimental | — | `result` (control) | 2348 | 2383 |
+| ResidualAnalyzer | Metrics | `audio` (audio) | `audio` (audio), `value` (control) | 3567 | 3601 |
+| ResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 612 | 648 |
+| SamplePlayer | Sources | — | `audio` (audio) | 5910 | 5949 |
+| ScipyOptimizer | Calibration | — | `result` (control) | 1148 | 1183 |
+| SineOscillator | Sources | `frequency` (control) | `audio` (audio) | 5951 | 5990 |
+| SoftClip | Math | `audio` (audio) | `audio` (audio) | 2830 | 2865 |
+| SoundboardConvolution | Body & Space | `audio` (audio) | `audio` (audio) | 650 | 686 |
+| SoundboardModalBank | Body & Space | `audio` (audio) | `audio` (audio) | 688 | 722 |
+| SpectralCentroidMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3603 | 3642 |
+| SpectralShapeMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3644 | 3680 |
+| SpectrogramProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 348 | 382 |
+| SpectrumProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 384 | 418 |
+| StateDump | Debug | — | `state` (control) | 1604 | 1637 |
+| StereoWidener | Body & Space | `audio` (audio) | `audio` (audio) | 724 | 759 |
+| StiffStringModal | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5513 | 5562 |
+| StringCouplingMatrix | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio) | `audio` (audio) | 5564 | 5601 |
+| StringDetune | Piano | `frequency` (control) | `frequency` (control) | 5603 | 5636 |
+| StringDispersion | Piano | `audio` (audio) | `audio` (audio) | 5638 | 5671 |
+| StringLossFilter | Piano | `audio` (audio) | `audio` (audio) | 5673 | 5706 |
+| StringModeBank | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5708 | 5751 |
+| StringTermination | Piano | `audio` (audio) | `audio` (audio) | 5753 | 5786 |
+| Sum | Math | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio) | `audio` (audio) | 2867 | 2905 |
+| SustainPedalDamping | Piano | `audio` (audio), `pedal` (control) | `audio` (audio) | 5788 | 5825 |
+| SympatheticResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 761 | 795 |
+| TrainableParameter | Calibration | — | `value` (control) | 1185 | 1229 |
+| ValidationSplit | Calibration | — | `result` (control) | 1231 | 1266 |
+| ValidityGate | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `valid` (control), `reasons` (control) | 3682 | 3718 |
+| VelocityCurve | Control | `velocity` (control) | `value` (control) | 1423 | 1460 |
+| VelocityPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 3720 | 3754 |
+| WaveguideString | Delay & Waveguide | `frequency` (control), `excitation` (audio) | `audio` (audio) | 1824 | 1869 |
 ## Blocks by category
 
 ### Analysis
@@ -164,6 +169,16 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 #### `EnvelopeProbe`
 
 Outputs a smoothed amplitude envelope summary.
+
+**Explanation**
+
+**What it means:** `EnvelopeProbe` means: Outputs a smoothed amplitude envelope summary. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -182,9 +197,23 @@ Window $W = f_s/200$; smoothed envelope $e = |x| * \mathrm{boxcar}(W)$; downsamp
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `PartialTrackerProbe`
 
 Placeholder partial tracker based on spectrum peaks.
+
+**Explanation**
+
+**What it means:** `PartialTrackerProbe` means: Placeholder partial tracker based on spectrum peaks. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -203,9 +232,23 @@ Same computation as `SpectrumProbe`. Placeholder peak-based partial tracker summ
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `PeakMeter`
 
 Outputs peak level while passing audio through.
+
+**Explanation**
+
+**What it means:** `PeakMeter` means: Outputs peak level while passing audio through. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -224,9 +267,23 @@ Pass-through; $\text{value} = \max|x|$.
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `Probe`
 
 Pass-through probe with peak/rms summary.
+
+**Explanation**
+
+**What it means:** `Probe` means: Pass-through probe with peak/rms summary. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -245,9 +302,23 @@ Pass-through audio; `value` = $\{\text{peak}: \max|x|,\; \text{rms}: \sqrt{\math
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `RMSMeter`
 
 Outputs RMS level while passing audio through.
+
+**Explanation**
+
+**What it means:** `RMSMeter` means: Outputs RMS level while passing audio through. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -266,9 +337,23 @@ Pass-through; $\text{value} = \sqrt{\mathrm{mean}(x^2)}$.
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `SpectrogramProbe`
 
 Compact spectrogram-like probe summary.
+
+**Explanation**
+
+**What it means:** `SpectrogramProbe` means: Compact spectrogram-like probe summary. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -287,9 +372,23 @@ Same computation as `SpectrumProbe`.
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `SpectrumProbe`
 
 Outputs a compact magnitude spectrum summary.
+
+**Explanation**
+
+**What it means:** `SpectrumProbe` means: Outputs a compact magnitude spectrum summary. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
+
+**Why it matters:** Analysis blocks let you inspect a graph without changing its topology or relying only on listening.
+
+**How to think about it:** Place it at a boundary you care about, such as hammer force, string output, body output, or final render.
+
+**Caveat:** Most analysis values are summaries for debugging and reports, not replacement evidence for a full reference comparison.
 
 **Formula**
 
@@ -308,11 +407,25 @@ Pass-through; `value.bins` = first 128 magnitudes of $|\text{RFFT}(x)|$.
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 ### Body & Space
 
 #### `BodyEQ`
 
 Stable three-band body tone shaping.
+
+**Explanation**
+
+**What it means:** `BodyEQ` means: Stable three-band body tone shaping. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
 
 **Formula**
 
@@ -344,6 +457,16 @@ $G$ from `low_gain_db`, `mid_gain_db`, `high_gain_db` as $10^{dB/20}$.
 
 Gentle cabinet radiation tone shaping.
 
+**Explanation**
+
+**What it means:** `CabinetRadiation` means: Gentle cabinet radiation tone shaping. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
+
 **Formula**
 
 2nd-order bandpass 90–9000 Hz:
@@ -362,9 +485,23 @@ $$y = \text{sosfilt}(H_{BP}, x)$$
 | --- | --- | --- |
 | `audio` | audio | yes |
 
+**Parameters**
+
+—
+
 #### `DuplexScaleResonance`
 
 High-frequency duplex scale resonance approximation.
+
+**Explanation**
+
+**What it means:** `DuplexScaleResonance` means: High-frequency duplex scale resonance approximation. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
 
 **Formula**
 
@@ -391,6 +528,16 @@ Same computation as `ResonanceBank`. Different default frequency/gain tables.
 
 Simple distance/brightness microphone position filter.
 
+**Explanation**
+
+**What it means:** `MicPositionFilter` means: Simple distance/brightness microphone position filter. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
+
 **Formula**
 
 $d = \mathrm{clip}(\texttt{distance}, 0, 1)$, cutoff $f_c = 12000 - 7000d$:
@@ -413,9 +560,57 @@ $$y = \text{sosfilt}(H_{LP}(f_c), x)$$
 
 - `distance`: `0.5`
 
+#### `ModalBankBody`
+
+Soundboard modal resonance body hosted by ModalBankBodySolver.
+
+**Explanation**
+
+**What it means:** A solver-hosted body block that filters incoming string audio through a modal resonator bank.
+
+**Why it matters:** It gives the waveguide research path a body response so the output is not just a direct string delay line.
+
+**How to think about it:** Feed it an audio boundary from a string solver. The `modal_bank_body` solver owns the resonator computation and mixes modal response according to `frequencies`, `gains`, and `mix`.
+
+**Caveat:** The string-to-body edge is still signal-fed; it is not bidirectional bridge impedance coupling.
+
+**Formula**
+
+Solver-hosted modal body render. The incoming signal $x$ drives modal filters with configured frequencies $f_k$ and gains $g_k$; wet/dry blend is controlled by `mix`:
+
+$$y = (1-m)x + m\,\text{ModalBank}(x; f_k, g_k)$$
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `audio` | audio | yes |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `audio` | audio | yes |
+
+**Parameters**
+
+- `frequencies`: `[180.0, 420.0, 980.0]`
+- `gains`: `[0.08, 0.05, 0.03]`
+- `mix`: `1.0`
+
 #### `ResonanceBank`
 
 Adds a small bank of body resonances.
+
+**Explanation**
+
+**What it means:** A general-purpose bank of narrow resonances added to an incoming signal.
+
+**Why it matters:** Many instruments and bodies have a few dominant ringing regions; this block adds that color cheaply.
+
+**How to think about it:** Each frequency/gain pair creates a peak filter, and the filtered responses are summed with the dry input.
+
+**Caveat:** It is tone shaping, not a physical body solver.
 
 **Formula**
 
@@ -444,6 +639,16 @@ $$y = x + \sum_k g_k \cdot \text{iirpeak}(x, f_k, Q=8)$$
 
 Convolves audio with a simple synthetic body impulse.
 
+**Explanation**
+
+**What it means:** `SoundboardConvolution` means: Convolves audio with a simple synthetic body impulse. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
+
 **Formula**
 
 Synthetic IR $h[n] = e^{-t_n/\tau}\sin(2\pi \cdot 180 \cdot t_n)$, $\tau$ = `decay_seconds`; convolve and mix:
@@ -471,6 +676,16 @@ $$y = (1-m)x + m \cdot \mathrm{norm}(x * h), \quad m = \texttt{mix}$$
 
 Soundboard modal resonance approximation.
 
+**Explanation**
+
+**What it means:** **Soundboard modal resonance approximation** means replacing a full vibrating wooden plate simulation with a small bank of resonant filters. In a piano, strings radiate little sound directly; they drive the bridge, the bridge excites the soundboard, and the soundboard amplifies, colors, and radiates the tone.
+
+**Why it matters:** Without a body stage, a string model often sounds thin or direct. A modal soundboard approximation adds body, warmth, register-dependent color, low-frequency bloom, midrange character, and decay shaping.
+
+**How to think about it:** Think `string vibration -> bridge/body input -> resonator bank -> radiated signal`. Each resonator has a frequency, gain, and effective damping/Q. This block is the practical shortcut: `soundboard = sum of bandpass/modal filters`, not a solved plate model.
+
+**Caveat:** This is not a full physical soundboard with wood geometry, ribs, anisotropy, bridge impedance, and radiation. It is a useful engineering approximation for early convincing piano-body behavior.
+
 **Formula**
 
 Same computation as `ResonanceBank`. Different default frequency/gain tables.
@@ -495,6 +710,16 @@ Same computation as `ResonanceBank`. Different default frequency/gain tables.
 #### `StereoWidener`
 
 Mono-compatible widening placeholder; outputs shaped mono audio.
+
+**Explanation**
+
+**What it means:** `StereoWidener` means: Mono-compatible widening placeholder; outputs shaped mono audio. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
 
 **Formula**
 
@@ -521,6 +746,16 @@ $$y[n] = x[n] + 0.25 \cdot x[n-D]$$ (mono-compatible widening placeholder).
 #### `SympatheticResonanceBank`
 
 Light sympathetic resonance layer.
+
+**Explanation**
+
+**What it means:** `SympatheticResonanceBank` means: Light sympathetic resonance layer. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
+
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
+
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
+
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
 
 **Formula**
 
@@ -549,13 +784,27 @@ Same computation as `ResonanceBank`. Different default frequency/gain tables.
 
 Metadata for batch panel renders; runner sweeps inputs over panel rows.
 
+**Explanation**
+
+**What it means:** `BatchRenderTask` means: Metadata for batch panel renders; runner sweeps inputs over panel rows. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{BatchRenderTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -574,13 +823,27 @@ $$\text{result} = \{\,\text{block}: \texttt{BatchRenderTask},\; \text{params}: \
 
 Metadata for calibration runner: stage, panel, tunables, optimizer.
 
+**Explanation**
+
+**What it means:** A metadata block that describes a calibration run: panel rows, tunables, bounds, optimizer, and targets.
+
+**Why it matters:** It makes the optimization problem reviewable and reproducible instead of hidden in a script.
+
+**How to think about it:** Use it with the GUI or calibration runner; inspect output bundles and structured warnings before accepting changes.
+
+**Caveat:** A calibration result is a candidate, not proof. Require regression and audio validity checks.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{CalibrationTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -600,13 +863,27 @@ $$\text{result} = \{\,\text{block}: \texttt{CalibrationTask},\; \text{params}: \
 
 Describes grid-search calibration settings.
 
+**Explanation**
+
+**What it means:** `GridSearch` means: Describes grid-search calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{GridSearch},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -614,9 +891,23 @@ $$\text{result} = \{\,\text{block}: \texttt{GridSearch},\; \text{params}: \text{
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `LossAggregator`
 
 Weighted sum of up to four scalar loss values.
+
+**Explanation**
+
+**What it means:** `LossAggregator` means: Weighted sum of up to four scalar loss values. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
 
 **Formula**
 
@@ -647,13 +938,27 @@ $$\text{loss} = \frac{\sum_i w_i \ell_i}{\sum_i w_i}$$
 
 Describes Optuna optimizer calibration settings.
 
+**Explanation**
+
+**What it means:** `OptunaOptimizer` means: Describes Optuna optimizer calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{OptunaOptimizer},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -661,9 +966,23 @@ $$\text{result} = \{\,\text{block}: \texttt{OptunaOptimizer},\; \text{params}: \
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `ParameterBinding`
 
 Metadata block mapping a tunable value to a target graph param path.
+
+**Explanation**
+
+**What it means:** `ParameterBinding` means: Metadata block mapping a tunable value to a target graph param path. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
 
 **Formula**
 
@@ -693,13 +1012,27 @@ $$\text{value} = \text{input}, \quad \text{bind\_path} = \texttt{target\_path}$$
 
 Describes a parameter sweep for research graphs.
 
+**Explanation**
+
+**What it means:** `ParameterSweep` means: Describes a parameter sweep for research graphs. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{ParameterSweep},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -707,9 +1040,23 @@ $$\text{result} = \{\,\text{block}: \texttt{ParameterSweep},\; \text{params}: \t
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `PerNoteTable`
 
 Interpolates per-note parameter bundles from sparse MIDI entries.
+
+**Explanation**
+
+**What it means:** `PerNoteTable` means: Interpolates per-note parameter bundles from sparse MIDI entries. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
 
 **Formula**
 
@@ -741,13 +1088,27 @@ Outputs: `inharmonicity_B`, `decay_seconds`, `brightness`.
 
 Describes random-search calibration settings.
 
+**Explanation**
+
+**What it means:** `RandomSearch` means: Describes random-search calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{RandomSearch},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -755,9 +1116,23 @@ $$\text{result} = \{\,\text{block}: \texttt{RandomSearch},\; \text{params}: \tex
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `ScipyOptimizer`
 
 Describes scipy optimizer calibration settings.
+
+**Explanation**
+
+**What it means:** `ScipyOptimizer` means: Describes scipy optimizer calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
 
 **Formula**
 
@@ -765,7 +1140,11 @@ Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{ScipyOptimizer},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -773,9 +1152,23 @@ $$\text{result} = \{\,\text{block}: \texttt{ScipyOptimizer},\; \text{params}: \t
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `TrainableParameter`
 
 Named scalar tunable parameter for calibration graphs.
+
+**Explanation**
+
+**What it means:** `TrainableParameter` means: Named scalar tunable parameter for calibration graphs. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
 
 **Formula**
 
@@ -785,7 +1178,11 @@ $$\text{value} = \mathrm{clip}(\texttt{value}, \texttt{min}, \texttt{max})$$
 
 Bounds optional; used by external calibration runner via `bind_path`.
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -808,13 +1205,27 @@ Bounds optional; used by external calibration runner via `bind_path`.
 
 Describes train/validation split settings.
 
+**Explanation**
+
+**What it means:** `ValidationSplit` means: Describes train/validation split settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
+
+**Why it matters:** Calibration blocks make experiments reproducible: they name the tunables, bounds, panels, losses, and optimizer behavior.
+
+**How to think about it:** Treat the block as a declarative instruction to the calibration runner or GUI rather than as a sound generator.
+
+**Caveat:** Improving a calibration loss is not proof of perceptual improvement or dataset generalization.
+
 **Formula**
 
 Calibration metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{ValidationSplit},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -822,17 +1233,35 @@ $$\text{result} = \{\,\text{block}: \texttt{ValidationSplit},\; \text{params}: \
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 ### Control
 
 #### `Constant`
 
 Outputs a constant control value.
 
+**Explanation**
+
+**What it means:** `Constant` means: Outputs a constant control value. This block converts or maps scalar control values used by other blocks.
+
+**Why it matters:** Control blocks keep note, velocity, table, and curve logic explicit instead of hiding it inside a synthesis block.
+
+**How to think about it:** Use them to produce frequencies, normalized values, or parameter curves that feed audio blocks.
+
+**Caveat:** A control mapping can make a graph easier to calibrate, but it does not create sound by itself.
+
 **Formula**
 
 $\text{value} = \texttt{value}$ (scalar param, constant for whole render).
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -849,6 +1278,16 @@ $\text{value} = \texttt{value}$ (scalar param, constant for whole render).
 #### `LookupTable`
 
 Interpolates a normalized control input over a value table.
+
+**Explanation**
+
+**What it means:** `LookupTable` means: Interpolates a normalized control input over a value table. This block converts or maps scalar control values used by other blocks.
+
+**Why it matters:** Control blocks keep note, velocity, table, and curve logic explicit instead of hiding it inside a synthesis block.
+
+**How to think about it:** Use them to produce frequencies, normalized values, or parameter curves that feed audio blocks.
+
+**Caveat:** A control mapping can make a graph easier to calibrate, but it does not create sound by itself.
 
 **Formula**
 
@@ -878,6 +1317,16 @@ $$\text{value} = \text{interp}(\texttt{index}, \text{linspace}(lo, hi, |\texttt{
 
 Converts MIDI note number to frequency.
 
+**Explanation**
+
+**What it means:** `MidiToFrequency` means: Converts MIDI note number to frequency. This block converts or maps scalar control values used by other blocks.
+
+**Why it matters:** Control blocks keep note, velocity, table, and curve logic explicit instead of hiding it inside a synthesis block.
+
+**How to think about it:** Use them to produce frequencies, normalized values, or parameter curves that feed audio blocks.
+
+**Caveat:** A control mapping can make a graph easier to calibrate, but it does not create sound by itself.
+
 **Formula**
 
 MIDI note $m$, reference `a4` = $A_4$:
@@ -903,6 +1352,16 @@ $$f = A_4 \cdot 2^{(m - 69)/12}$$
 #### `ParameterCurve`
 
 Maps a control input through a piecewise-linear parameter curve.
+
+**Explanation**
+
+**What it means:** `ParameterCurve` means: Maps a control input through a piecewise-linear parameter curve. This block converts or maps scalar control values used by other blocks.
+
+**Why it matters:** Control blocks keep note, velocity, table, and curve logic explicit instead of hiding it inside a synthesis block.
+
+**How to think about it:** Use them to produce frequencies, normalized values, or parameter curves that feed audio blocks.
+
+**Caveat:** A control mapping can make a graph easier to calibrate, but it does not create sound by itself.
 
 **Formula**
 
@@ -932,6 +1391,16 @@ $$\text{value} = \text{interp}(\texttt{x}, \{x_i\}, \{y_i\})$$
 #### `VelocityCurve`
 
 Maps MIDI velocity to a normalized control value.
+
+**Explanation**
+
+**What it means:** `VelocityCurve` means: Maps MIDI velocity to a normalized control value. This block converts or maps scalar control values used by other blocks.
+
+**Why it matters:** Control blocks keep note, velocity, table, and curve logic explicit instead of hiding it inside a synthesis block.
+
+**How to think about it:** Use them to produce frequencies, normalized values, or parameter curves that feed audio blocks.
+
+**Caveat:** A control mapping can make a graph easier to calibrate, but it does not create sound by itself.
 
 **Formula**
 
@@ -963,6 +1432,16 @@ $$u = v^\gamma, \quad \text{value} = \texttt{min} + u(\texttt{max} - \texttt{min
 
 Fails if audio contains NaN or Inf.
 
+**Explanation**
+
+**What it means:** `AssertFinite` means: Fails if audio contains NaN or Inf. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
+
+**Why it matters:** Debug blocks catch silent renders, clipping, NaNs, and unexpected values early in an experiment.
+
+**How to think about it:** Insert them near outputs or important internal probes while developing a graph or regression test.
+
+**Caveat:** Remove or isolate debug blocks when measuring final performance if their behavior changes the graph contract.
+
 **Formula**
 
 Pass-through $y = x$ if $\forall n\, \mathrm{finite}(x[n])$; otherwise raise `ValueError`.
@@ -979,9 +1458,23 @@ Pass-through $y = x$ if $\forall n\, \mathrm{finite}(x[n])$; otherwise raise `Va
 | --- | --- | --- |
 | `audio` | audio | yes |
 
+**Parameters**
+
+—
+
 #### `AssertNoClipping`
 
 Fails if audio exceeds max peak.
+
+**Explanation**
+
+**What it means:** `AssertNoClipping` means: Fails if audio exceeds max peak. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
+
+**Why it matters:** Debug blocks catch silent renders, clipping, NaNs, and unexpected values early in an experiment.
+
+**How to think about it:** Insert them near outputs or important internal probes while developing a graph or regression test.
+
+**Caveat:** Remove or isolate debug blocks when measuring final performance if their behavior changes the graph contract.
 
 **Formula**
 
@@ -1007,6 +1500,16 @@ Pass-through if $\max|x| \le \texttt{max\_peak}$; otherwise raise.
 
 Fails if audio RMS is below threshold.
 
+**Explanation**
+
+**What it means:** `AssertNotSilent` means: Fails if audio RMS is below threshold. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
+
+**Why it matters:** Debug blocks catch silent renders, clipping, NaNs, and unexpected values early in an experiment.
+
+**How to think about it:** Insert them near outputs or important internal probes while developing a graph or regression test.
+
+**Caveat:** Remove or isolate debug blocks when measuring final performance if their behavior changes the graph contract.
+
 **Formula**
 
 Pass-through if $\text{RMS}(x) = \sqrt{\mathrm{mean}(x^2)} \ge \texttt{min\_rms}$; otherwise raise.
@@ -1031,6 +1534,16 @@ Pass-through if $\text{RMS}(x) = \sqrt{\mathrm{mean}(x^2)} \ge \texttt{min\_rms}
 
 Passes through a control value and exposes it for debugging.
 
+**Explanation**
+
+**What it means:** `PrintValue` means: Passes through a control value and exposes it for debugging. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
+
+**Why it matters:** Debug blocks catch silent renders, clipping, NaNs, and unexpected values early in an experiment.
+
+**How to think about it:** Insert them near outputs or important internal probes while developing a graph or regression test.
+
+**Caveat:** Remove or isolate debug blocks when measuring final performance if their behavior changes the graph contract.
+
 **Formula**
 
 $\text{value}_{out} = \text{value}_{in}$ (debug pass-through).
@@ -1047,15 +1560,33 @@ $\text{value}_{out} = \text{value}_{in}$ (debug pass-through).
 | --- | --- | --- |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `StateDump`
 
 Outputs block state placeholder for debugging.
+
+**Explanation**
+
+**What it means:** `StateDump` means: Outputs block state placeholder for debugging. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
+
+**Why it matters:** Debug blocks catch silent renders, clipping, NaNs, and unexpected values early in an experiment.
+
+**How to think about it:** Insert them near outputs or important internal probes while developing a graph or regression test.
+
+**Caveat:** Remove or isolate debug blocks when measuring final performance if their behavior changes the graph contract.
 
 **Formula**
 
 $\text{state} = \text{block internal state dict}$ (debug snapshot).
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1063,11 +1594,25 @@ $\text{state} = \text{block internal state dict}$ (debug snapshot).
 | --- | --- | --- |
 | `state` | control | yes |
 
+**Parameters**
+
+—
+
 ### Delay & Waveguide
 
 #### `Delay`
 
 Static sample/millisecond delay.
+
+**Explanation**
+
+**What it means:** `Delay` means: Static sample/millisecond delay. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
+
+**Why it matters:** Delay-line behavior is the core abstraction behind echoes, resonators, and simple string models.
+
+**How to think about it:** Think in terms of signal memory: samples leave now, return later, and may be filtered or fed back.
+
+**Caveat:** A delay-line string can be useful without being a high-fidelity stiff-string piano solver.
 
 **Formula**
 
@@ -1095,6 +1640,16 @@ $$y[n] = \text{interp}(n - d, n, x[n])$$
 
 First-order allpass dispersion approximation.
 
+**Explanation**
+
+**What it means:** `DispersionAllpass` means: First-order allpass dispersion approximation. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
+
+**Why it matters:** Delay-line behavior is the core abstraction behind echoes, resonators, and simple string models.
+
+**How to think about it:** Think in terms of signal memory: samples leave now, return later, and may be filtered or fed back.
+
+**Caveat:** A delay-line string can be useful without being a high-fidelity stiff-string piano solver.
+
 **Formula**
 
 Same computation as `Allpass`. `coefficient` from param (default 0.4).
@@ -1118,6 +1673,16 @@ Same computation as `Allpass`. `coefficient` from param (default 0.4).
 #### `FeedbackDelay`
 
 Simple feedback delay line.
+
+**Explanation**
+
+**What it means:** `FeedbackDelay` means: Simple feedback delay line. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
+
+**Why it matters:** Delay-line behavior is the core abstraction behind echoes, resonators, and simple string models.
+
+**How to think about it:** Think in terms of signal memory: samples leave now, return later, and may be filtered or fed back.
+
+**Caveat:** A delay-line string can be useful without being a high-fidelity stiff-string piano solver.
 
 **Formula**
 
@@ -1147,6 +1712,16 @@ $$w[n] = x[n] + g \cdot w[n-D], \quad y[n] = (1-m)x[n] + m w[n]$$
 
 Linear-interpolated fractional delay.
 
+**Explanation**
+
+**What it means:** `FractionalDelay` means: Linear-interpolated fractional delay. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
+
+**Why it matters:** Delay-line behavior is the core abstraction behind echoes, resonators, and simple string models.
+
+**How to think about it:** Think in terms of signal memory: samples leave now, return later, and may be filtered or fed back.
+
+**Caveat:** A delay-line string can be useful without being a high-fidelity stiff-string piano solver.
+
 **Formula**
 
 Same computation as `Delay`.
@@ -1170,6 +1745,16 @@ Same computation as `Delay`.
 #### `LoopFilter`
 
 Lowpass loop filter used in waveguides.
+
+**Explanation**
+
+**What it means:** `LoopFilter` means: Lowpass loop filter used in waveguides. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
+
+**Why it matters:** Delay-line behavior is the core abstraction behind echoes, resonators, and simple string models.
+
+**How to think about it:** Think in terms of signal memory: samples leave now, return later, and may be filtered or fed back.
+
+**Caveat:** A delay-line string can be useful without being a high-fidelity stiff-string piano solver.
 
 **Formula**
 
@@ -1197,6 +1782,16 @@ $$y = \text{sosfilt}(H_{LP}, x)$$
 
 Karplus-Strong style waveguide string approximation.
 
+**Explanation**
+
+**What it means:** A delay-line string approximation hosted by the `excited_waveguide_string` physical solver.
+
+**Why it matters:** It is the current solver-backed prototype for string-like pitched decay in the object-based physical-modeling path.
+
+**How to think about it:** Excitation enters the delay line, the loop length sets pitch, and loop filtering shapes brightness and decay.
+
+**Caveat:** This is Karplus-Strong-style behavior; accepted parameters such as `inharmonicity_B` may not be implemented by this solver.
+
 **Formula**
 
 Karplus–Strong loop length $L = \max(2, \lfloor f_s / f_0 \rfloor)$, decay $d$ = `decay`, brightness $b$ = `brightness`:
@@ -1220,14 +1815,30 @@ Initialized from `excitation` first $L$ samples.
 
 **Parameters**
 
-- `brightness`: `0.5`
-- `decay`: `0.996`
+| Parameter | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `brightness` | float | 0.5 |  |
+| `decay` | float | 0.996 |  |
+| `decay_seconds` | float | 4.0 |  |
+| `frequency_hz` | float | 440.0 |  |
+| `gain` | float | 1.0 |  |
+| `inharmonicity_B` | float | 0.0 |  |
 
 ### Envelopes
 
 #### `ADSR`
 
 Whole-buffer ADSR envelope generator.
+
+**Explanation**
+
+**What it means:** `ADSR` means: Whole-buffer ADSR envelope generator. This block generates an amplitude or control contour over the render buffer.
+
+**Why it matters:** Envelopes shape when a sound starts, decays, sustains, or releases, which strongly affects perceived instrument behavior.
+
+**How to think about it:** Use it as a time-varying multiplier or control source for level, excitation, or modulation.
+
+**Caveat:** A plausible envelope can hide missing physical lifecycle behavior, so keep it tied to the modeling question.
 
 **Formula**
 
@@ -1240,7 +1851,11 @@ Piecewise-linear ADSR over buffer length $N$, with segment sample counts from `a
 
 $$e[n] = \text{piecewise linear segments as above}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1260,6 +1875,16 @@ $$e[n] = \text{piecewise linear segments as above}$$
 
 Generates an exponential decay envelope.
 
+**Explanation**
+
+**What it means:** `ExponentialDecay` means: Generates an exponential decay envelope. This block generates an amplitude or control contour over the render buffer.
+
+**Why it matters:** Envelopes shape when a sound starts, decays, sustains, or releases, which strongly affects perceived instrument behavior.
+
+**How to think about it:** Use it as a time-varying multiplier or control source for level, excitation, or modulation.
+
+**Caveat:** A plausible envelope can hide missing physical lifecycle behavior, so keep it tied to the modeling question.
+
 **Formula**
 
 Let $t_n = n / f_s$, $\tau = \max(\texttt{decay\_seconds}, 0.001)$, $A = \texttt{amplitude}$:
@@ -1268,7 +1893,11 @@ $$e[n] = A \exp(-t_n / \tau)$$
 
 `control` = $e[0]$; `audio` = full envelope buffer.
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1286,13 +1915,27 @@ $$e[n] = A \exp(-t_n / \tau)$$
 
 Piecewise-linear whole-buffer envelope.
 
+**Explanation**
+
+**What it means:** `MultiSegmentEnvelope` means: Piecewise-linear whole-buffer envelope. This block generates an amplitude or control contour over the render buffer.
+
+**Why it matters:** Envelopes shape when a sound starts, decays, sustains, or releases, which strongly affects perceived instrument behavior.
+
+**How to think about it:** Use it as a time-varying multiplier or control source for level, excitation, or modulation.
+
+**Caveat:** A plausible envelope can hide missing physical lifecycle behavior, so keep it tied to the modeling question.
+
 **Formula**
 
 Sort `points` $\{(t_i, v_i)\}$ by time; let $t_n = n/f_s$:
 
 $$e[n] = \text{interp}(t_n, \{t_i\}, \{v_i\})$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1306,9 +1949,53 @@ $$e[n] = \text{interp}(t_n, \{t_i\}, \{v_i\})$$
 
 ### Experimental
 
+#### `BridgeCoupler`
+
+Bridge coupling junction with a bidirectional physical input port (representation stub).
+
+**Explanation**
+
+**What it means:** A representation stub for future bridge coupling topology.
+
+**Why it matters:** It lets validation express physical bridge connections before production T3 bridge solvers exist.
+
+**How to think about it:** Use it to test representation-vs-computation boundaries and expected `UNSUPPORTED_COMPUTATION` failures.
+
+**Caveat:** It is not a production bridge solver. Do not replace physical bridge edges with signal edges to make it render.
+
+**Formula**
+
+Representation stub. Passes `input` to `output` when run as ordinary DSP, but its purpose is to exercise physical-port topology and unsupported-computation checks.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `input` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `output` | audio | no |
+
+**Parameters**
+
+—
+
 #### `CompareTask`
 
 CompareTask placeholder for research graphs.
+
+**Explanation**
+
+**What it means:** `CompareTask` means: CompareTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
 
 **Formula**
 
@@ -1316,7 +2003,11 @@ Research placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{CompareTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1324,9 +2015,23 @@ $$\text{result} = \{\,\text{block}: \texttt{CompareTask},\; \text{params}: \text
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `EventPassThrough`
 
 Passes event-shaped values through for event-port validation.
+
+**Explanation**
+
+**What it means:** `EventPassThrough` means: Passes event-shaped values through for event-port validation. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
 
 **Formula**
 
@@ -1344,15 +2049,33 @@ $$\text{event}_{out} = \text{event}_{in}$$
 | --- | --- | --- |
 | `event` | event | yes |
 
+**Parameters**
+
+—
+
 #### `EventSource`
 
 Emits an event-shaped value for schema and GUI experiments.
+
+**Explanation**
+
+**What it means:** `EventSource` means: Emits an event-shaped value for schema and GUI experiments. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
 
 **Formula**
 
 $$\text{event} = \{\texttt{type}, \texttt{time}, \texttt{payload}, \ldots\}$$ from block params.
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1370,13 +2093,27 @@ $$\text{event} = \{\texttt{type}, \texttt{time}, \texttt{payload}, \ldots\}$$ fr
 
 GitCommitTask placeholder for research graphs.
 
+**Explanation**
+
+**What it means:** `GitCommitTask` means: GitCommitTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
+
 **Formula**
 
 Research placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{GitCommitTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1384,9 +2121,23 @@ $$\text{result} = \{\,\text{block}: \texttt{GitCommitTask},\; \text{params}: \te
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `HumanReviewTask`
 
 HumanReviewTask placeholder for research graphs.
+
+**Explanation**
+
+**What it means:** `HumanReviewTask` means: HumanReviewTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
 
 **Formula**
 
@@ -1394,7 +2145,11 @@ Research placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{HumanReviewTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1402,9 +2157,59 @@ $$\text{result} = \{\,\text{block}: \texttt{HumanReviewTask},\; \text{params}: \
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
+#### `PhysicalCouplingStub`
+
+Minimal stub block with a bidirectional physical coupling port for solver tests.
+
+**Explanation**
+
+**What it means:** A minimal block for testing bidirectional physical coupling contracts.
+
+**Why it matters:** It exercises compiler and solver-hosting paths without pretending to model a real instrument part.
+
+**How to think about it:** Use it in tests or controlled experiments where the goal is compiler behavior.
+
+**Caveat:** It is a stub, not an audio-quality or physics-quality block.
+
+**Formula**
+
+Test stub. Optional `audio` input passes through to `audio`; `coupling` ports exist to exercise physical solver hosting contracts.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `audio` | audio | no |
+| `coupling` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `audio` | audio | yes |
+| `coupling` | audio | no |
+
+**Parameters**
+
+—
+
 #### `PythonCustom`
 
 Runs sandboxed Python on connected inputs. Define process(inputs, n_frames, params, ctx) returning a dict of outputs, or assign to outputs in a short script body. np, math, and ctx helpers are available; imports and filesystem access are blocked.
+
+**Explanation**
+
+**What it means:** A sandboxed custom-code block whose behavior is defined by its `code` parameter.
+
+**Why it matters:** It can prototype unusual DSP quickly when no built-in block exists.
+
+**How to think about it:** Treat it as an escape hatch: make inputs, outputs, and assumptions explicit in the graph.
+
+**Caveat:** Do not use custom Python to hide physical-model failures or bypass reproducible block design.
 
 **Formula**
 
@@ -1452,13 +2257,27 @@ No fixed formula — behavior is entirely defined by `code` param.
 
 RenderTask placeholder for research graphs.
 
+**Explanation**
+
+**What it means:** `RenderTask` means: RenderTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
+
 **Formula**
 
 Research placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{RenderTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1466,9 +2285,23 @@ $$\text{result} = \{\,\text{block}: \texttt{RenderTask},\; \text{params}: \text{
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 #### `ReportTask`
 
 ReportTask placeholder for research graphs.
+
+**Explanation**
+
+**What it means:** `ReportTask` means: ReportTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
+
+**Why it matters:** Experimental blocks make incomplete ideas explicit so unsupported computation fails honestly instead of being hidden.
+
+**How to think about it:** Use them when testing schemas, runner integration, or future solver contracts.
+
+**Caveat:** Do not treat an experimental block as production synthesis evidence unless the surrounding docs and tests say so.
 
 **Formula**
 
@@ -1476,7 +2309,11 @@ Research placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{ReportTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -1484,11 +2321,25 @@ $$\text{result} = \{\,\text{block}: \texttt{ReportTask},\; \text{params}: \text{
 | --- | --- | --- |
 | `result` | control | yes |
 
+**Parameters**
+
+—
+
 ### Filters
 
 #### `Allpass`
 
 First-order allpass phase shaper.
+
+**Explanation**
+
+**What it means:** `Allpass` means: First-order allpass phase shaper. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
 
 **Formula**
 
@@ -1516,6 +2367,16 @@ $$H(z) = \frac{a + z^{-1}}{1 + a z^{-1}}$$
 
 Bandpass filter.
 
+**Explanation**
+
+**What it means:** `Bandpass` means: Bandpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
+
 **Formula**
 
 Same computation as `BiquadFilter`. Fixed `mode` for bandpass.
@@ -1540,6 +2401,16 @@ Same computation as `BiquadFilter`. Fixed `mode` for bandpass.
 #### `BiquadFilter`
 
 Generic second-order filter.
+
+**Explanation**
+
+**What it means:** `BiquadFilter` means: Generic second-order filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
 
 **Formula**
 
@@ -1572,6 +2443,16 @@ $$y = \text{sosfilt}(H, x) \quad \text{or} \quad \text{lfilter}(b,a,x)$$
 
 Simple three-band EQ.
 
+**Explanation**
+
+**What it means:** `EQ3Band` means: Simple three-band EQ. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
+
 **Formula**
 
 Same computation as `BodyEQ`. Three-band EQ alias using same crossover split.
@@ -1598,6 +2479,16 @@ Same computation as `BodyEQ`. Three-band EQ alias using same crossover split.
 
 Butterworth highpass filter.
 
+**Explanation**
+
+**What it means:** `Highpass` means: Butterworth highpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
+
 **Formula**
 
 Same computation as `BiquadFilter`. Fixed `mode` for highpass.
@@ -1622,6 +2513,16 @@ Same computation as `BiquadFilter`. Fixed `mode` for highpass.
 
 Butterworth lowpass filter.
 
+**Explanation**
+
+**What it means:** `Lowpass` means: Butterworth lowpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
+
 **Formula**
 
 Same computation as `BiquadFilter`. Fixed `mode` for lowpass.
@@ -1645,6 +2546,16 @@ Same computation as `BiquadFilter`. Fixed `mode` for lowpass.
 #### `Notch`
 
 Notch filter.
+
+**Explanation**
+
+**What it means:** `Notch` means: Notch filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
 
 **Formula**
 
@@ -1671,6 +2582,16 @@ Same computation as `BiquadFilter`. Fixed `mode` for notch.
 
 One-pole highpass filter.
 
+**Explanation**
+
+**What it means:** `OnePoleHighpass` means: One-pole highpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
+
 **Formula**
 
 $$y[n] = x[n] - \text{OnePoleLowpass}(x)[n]$$
@@ -1694,6 +2615,16 @@ $$y[n] = x[n] - \text{OnePoleLowpass}(x)[n]$$
 #### `OnePoleLowpass`
 
 One-pole lowpass filter.
+
+**Explanation**
+
+**What it means:** `OnePoleLowpass` means: One-pole lowpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
+
+**Why it matters:** Filters are the basic vocabulary for tone shaping, stability, anti-ringing, and simplified acoustic coloration.
+
+**How to think about it:** Think of it as an operator on an existing signal: it does not create an instrument, it reshapes one.
+
+**Caveat:** Filtering can improve fit while hiding physical-model errors, so document why a filter belongs in the model.
 
 **Formula**
 
@@ -1723,6 +2654,16 @@ $$H(z) = \frac{\alpha}{1 - (1-\alpha) z^{-1}}$$
 
 Clamps audio to a min/max range.
 
+**Explanation**
+
+**What it means:** `Clamp` means: Clamps audio to a min/max range. This block performs a generic arithmetic operation on audio or control values.
+
+**Why it matters:** Math blocks are small graph-building primitives for scaling, summing, limiting, or constraining signals.
+
+**How to think about it:** Use them when the operation is part of the graph artifact and should be visible to validation and review.
+
+**Caveat:** Generic math can be abused as a secret fix; keep it physically or experimentally justified.
+
 **Formula**
 
 $$y[n] = \mathrm{clip}(x[n], \texttt{min}, \texttt{max})$$
@@ -1747,6 +2688,16 @@ $$y[n] = \mathrm{clip}(x[n], \texttt{min}, \texttt{max})$$
 #### `Multiply`
 
 Multiplies an audio input by a control or audio factor.
+
+**Explanation**
+
+**What it means:** `Multiply` means: Multiplies an audio input by a control or audio factor. This block performs a generic arithmetic operation on audio or control values.
+
+**Why it matters:** Math blocks are small graph-building primitives for scaling, summing, limiting, or constraining signals.
+
+**How to think about it:** Use them when the operation is part of the graph artifact and should be visible to validation and review.
+
+**Caveat:** Generic math can be abused as a secret fix; keep it physically or experimentally justified.
 
 **Formula**
 
@@ -1775,6 +2726,16 @@ where $g$ is `factor` input or param (scalar broadcast).
 
 Peak-normalizes an audio signal.
 
+**Explanation**
+
+**What it means:** `Normalize` means: Peak-normalizes an audio signal. This block performs a generic arithmetic operation on audio or control values.
+
+**Why it matters:** Math blocks are small graph-building primitives for scaling, summing, limiting, or constraining signals.
+
+**How to think about it:** Use them when the operation is part of the graph artifact and should be visible to validation and review.
+
+**Caveat:** Generic math can be abused as a secret fix; keep it physically or experimentally justified.
+
 **Formula**
 
 $$y[n] = \begin{cases} x[n] \cdot P / \max|x| & \max|x| > 0 \\ x[n] & \text{otherwise} \end{cases}$$
@@ -1800,6 +2761,16 @@ $P$ = `peak` (default $\approx -1$ dBFS).
 #### `SoftClip`
 
 Applies tanh soft clipping.
+
+**Explanation**
+
+**What it means:** `SoftClip` means: Applies tanh soft clipping. This block performs a generic arithmetic operation on audio or control values.
+
+**Why it matters:** Math blocks are small graph-building primitives for scaling, summing, limiting, or constraining signals.
+
+**How to think about it:** Use them when the operation is part of the graph artifact and should be visible to validation and review.
+
+**Caveat:** Generic math can be abused as a secret fix; keep it physically or experimentally justified.
 
 **Formula**
 
@@ -1827,6 +2798,16 @@ $$y[n] = \tanh(d \cdot x[n])$$
 
 Sums up to four audio/control inputs.
 
+**Explanation**
+
+**What it means:** `Sum` means: Sums up to four audio/control inputs. This block performs a generic arithmetic operation on audio or control values.
+
+**Why it matters:** Math blocks are small graph-building primitives for scaling, summing, limiting, or constraining signals.
+
+**How to think about it:** Use them when the operation is part of the graph artifact and should be visible to validation and review.
+
+**Caveat:** Generic math can be abused as a secret fix; keep it physically or experimentally justified.
+
 **Formula**
 
 Sum all connected inputs (scalars broadcast to buffer length $N$):
@@ -1848,11 +2829,25 @@ $$y[n] = \sum_i x_i[n]$$
 | --- | --- | --- |
 | `audio` | audio | yes |
 
+**Parameters**
+
+—
+
 ### Metrics
 
 #### `AlignedReference`
 
 Aligns reference audio onset to synthetic audio.
+
+**Explanation**
+
+**What it means:** `AlignedReference` means: Aligns reference audio onset to synthetic audio. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -1871,9 +2866,23 @@ Onset-align reference to synthetic via `align_audio_pair`; truncate/pad to $N$ f
 | --- | --- | --- |
 | `audio` | audio | yes |
 
+**Parameters**
+
+—
+
 #### `AttackMetric`
 
 AttackMetric legacy compare metric.
+
+**Explanation**
+
+**What it means:** `AttackMetric` means: AttackMetric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -1897,9 +2906,23 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `AudioHealthMetric`
 
 §5.1 basic audio health metric family.
+
+**Explanation**
+
+**What it means:** `AudioHealthMetric` means: §5.1 basic audio health metric family. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -1920,9 +2943,23 @@ After alignment: $\text{details} = \text{compute\_audio\_health\_metrics}$; $\te
 | `value` | control | yes |
 | `details` | control | yes |
 
+**Parameters**
+
+—
+
 #### `DecayMetric`
 
 DecayMetric legacy compare metric.
+
+**Explanation**
+
+**What it means:** `DecayMetric` means: DecayMetric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -1946,9 +2983,23 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `DifferenceSignal`
 
 Subtracts reference audio from synthetic audio.
+
+**Explanation**
+
+**What it means:** `DifferenceSignal` means: Subtracts reference audio from synthetic audio. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -1967,9 +3018,23 @@ $$y[n] = x_{syn}[n] - x_{ref}[n]$$
 | --- | --- | --- |
 | `audio` | audio | yes |
 
+**Parameters**
+
+—
+
 #### `EnvelopeDecayMetric`
 
 §5.3 envelope and decay metrics.
+
+**Explanation**
+
+**What it means:** `EnvelopeDecayMetric` means: §5.3 envelope and decay metrics. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -1990,9 +3055,23 @@ After alignment: $\text{details} = \text{compute\_envelope\_decay\_metrics}$; $\
 | `value` | control | yes |
 | `details` | control | yes |
 
+**Parameters**
+
+—
+
 #### `EnvelopeMetric`
 
 EnvelopeMetric legacy compare metric.
+
+**Explanation**
+
+**What it means:** `EnvelopeMetric` means: EnvelopeMetric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2016,9 +3095,23 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `F0Metric`
 
 F0Metric legacy compare metric.
+
+**Explanation**
+
+**What it means:** `F0Metric` means: F0Metric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2042,9 +3135,23 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `LogSTFTMetric`
 
 LogSTFTMetric legacy compare metric.
+
+**Explanation**
+
+**What it means:** `LogSTFTMetric` means: LogSTFTMetric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2068,9 +3175,23 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `MetricFamilyScore`
 
 Maps metric family dict to normalized subscores.
+
+**Explanation**
+
+**What it means:** `MetricFamilyScore` means: Maps metric family dict to normalized subscores. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2088,9 +3209,23 @@ $$\text{scores} = \text{compute\_metric\_family\_scores}(\text{metrics dict})$$
 | --- | --- | --- |
 | `scores` | control | yes |
 
+**Parameters**
+
+—
+
 #### `MultiResSTFTMetric`
 
 §5.5 multi-resolution STFT distance metrics.
+
+**Explanation**
+
+**What it means:** `MultiResSTFTMetric` means: §5.5 multi-resolution STFT distance metrics. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2111,9 +3246,23 @@ After alignment: $\text{value} = \text{multi\_resolution\_stft\_distance}$ (or `
 | `value` | control | yes |
 | `details` | control | yes |
 
+**Parameters**
+
+—
+
 #### `OverallScore`
 
 Weighted global score from metric family subscores.
+
+**Explanation**
+
+**What it means:** `OverallScore` means: Weighted global score from metric family subscores. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2147,13 +3296,27 @@ Weighted by `weights` when family inputs not wired.
 
 Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_render runner.
 
+**Explanation**
+
+**What it means:** `PanelMetricsTask` means: Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_render runner. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
+
 **Formula**
 
 Batch panel evaluation metadata placeholder — no audio DSP in-graph. Returns:
 
 $$\text{result} = \{\,\text{block}: \texttt{PanelMetricsTask},\; \text{params}: \text{block params}\,\}$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -2170,6 +3333,16 @@ $$\text{result} = \{\,\text{block}: \texttt{PanelMetricsTask},\; \text{params}: 
 #### `PedalPanelMetric`
 
 §5.7 pedal and resonance metrics across pedal on/off panel rows.
+
+**Explanation**
+
+**What it means:** `PedalPanelMetric` means: §5.7 pedal and resonance metrics across pedal on/off panel rows. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2196,6 +3369,16 @@ $$\text{details} = \text{compute\_pedal\_panel\_metrics}(\texttt{panel\_rows}), 
 
 §5.2 pitch and partial structure metrics.
 
+**Explanation**
+
+**What it means:** `PitchPartialMetric` means: §5.2 pitch and partial structure metrics. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
+
 **Formula**
 
 After alignment: $\text{details} = \text{compute\_pitch\_partial\_metrics}$; $\text{value} = \text{f0\_error\_cents}$ (or 100 if missing).
@@ -2215,9 +3398,23 @@ After alignment: $\text{details} = \text{compute\_pitch\_partial\_metrics}$; $\t
 | `value` | control | yes |
 | `details` | control | yes |
 
+**Parameters**
+
+—
+
 #### `ReferenceCompare`
 
 Compares reference and synthetic audio; outputs metrics dict and scalar loss.
+
+**Explanation**
+
+**What it means:** A metric block that compares synthetic audio to reference audio and emits both detailed metrics and scalar loss.
+
+**Why it matters:** It is the basic bridge from rendering to evidence for calibration and regression.
+
+**How to think about it:** Feed matched reference/synthetic signals and read pitch, envelope, spectral, and global-score fields.
+
+**Caveat:** Comparison is only meaningful when references match the note, velocity, pedal, duration, and alignment assumptions.
 
 **Formula**
 
@@ -2238,9 +3435,23 @@ $$\text{metrics} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s), \quad \text{los
 | `metrics` | control | yes |
 | `loss` | control | yes |
 
+**Parameters**
+
+—
+
 #### `ReferenceSample`
 
 Loads reference audio from WAV path for metric graphs.
+
+**Explanation**
+
+**What it means:** `ReferenceSample` means: Loads reference audio from WAV path for metric graphs. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2248,7 +3459,11 @@ Load WAV from `path`; resample to $f_s$; zero-pad/truncate to buffer:
 
 $$x[n] = \text{load\_wav}(\texttt{path})[n]$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -2264,6 +3479,16 @@ $$x[n] = \text{load\_wav}(\texttt{path})[n]$$
 #### `ResidualAnalyzer`
 
 Analyzes residual audio with peak/rms summary.
+
+**Explanation**
+
+**What it means:** `ResidualAnalyzer` means: Analyzes residual audio with peak/rms summary. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2282,9 +3507,23 @@ Same computation as `Probe`. Same peak/RMS summary on residual audio.
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `SpectralCentroidMetric`
 
 SpectralCentroidMetric legacy compare metric.
+
+**Explanation**
+
+**What it means:** `SpectralCentroidMetric` means: SpectralCentroidMetric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2308,9 +3547,23 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 | `audio` | audio | yes |
 | `value` | control | yes |
 
+**Parameters**
+
+—
+
 #### `SpectralShapeMetric`
 
 §5.4 spectral shape metrics.
+
+**Explanation**
+
+**What it means:** `SpectralShapeMetric` means: §5.4 spectral shape metrics. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2331,9 +3584,23 @@ After alignment: $\text{value} = \text{spectral\_centroid\_error}$ from `compute
 | `value` | control | yes |
 | `details` | control | yes |
 
+**Parameters**
+
+—
+
 #### `ValidityGate`
 
 Hard validity gate for render quality (task.md §4).
+
+**Explanation**
+
+**What it means:** `ValidityGate` means: Hard validity gate for render quality (task.md §4). This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2354,9 +3621,23 @@ $$\{\text{valid}, \text{reasons}\} = \text{check\_validity\_gate}(x_{ref}, x_{sy
 | `valid` | control | yes |
 | `reasons` | control | yes |
 
+**Parameters**
+
+—
+
 #### `VelocityPanelMetric`
 
 §5.6 velocity behavior metrics across a panel of renders.
+
+**Explanation**
+
+**What it means:** `VelocityPanelMetric` means: §5.6 velocity behavior metrics across a panel of renders. This block computes or packages objective measurements from reference and synthetic audio.
+
+**Why it matters:** Metric blocks turn listening questions into reproducible numbers for calibration, regression, and gating.
+
+**How to think about it:** Use them after render/compare stages to inspect pitch, level, envelope, spectrum, and aggregate scores.
+
+**Caveat:** Metrics are evidence, not truth. Always check reference coverage, audio validity, and perceptual failures.
 
 **Formula**
 
@@ -2385,6 +3666,16 @@ $$\text{details} = \text{compute\_velocity\_panel\_metrics}(\texttt{panel\_rows}
 
 Applies gain in decibels to an audio input.
 
+**Explanation**
+
+**What it means:** `Gain` means: Applies gain in decibels to an audio input. This block combines, scales, or emits audio at graph boundaries.
+
+**Why it matters:** Mixing blocks define how signals meet and what ultimately leaves the graph as rendered audio.
+
+**How to think about it:** Use them for explicit gain staging, summing, and output normalization.
+
+**Caveat:** Output normalization can hide level problems, so inspect pre-output probes when calibrating physical parameters.
+
 **Formula**
 
 $$y[n] = 10^{\texttt{gain\_db}/20} \cdot x[n]$$
@@ -2410,6 +3701,16 @@ $$y[n] = 10^{\texttt{gain\_db}/20} \cdot x[n]$$
 #### `Mixer`
 
 Mixes up to four optional audio inputs.
+
+**Explanation**
+
+**What it means:** `Mixer` means: Mixes up to four optional audio inputs. This block combines, scales, or emits audio at graph boundaries.
+
+**Why it matters:** Mixing blocks define how signals meet and what ultimately leaves the graph as rendered audio.
+
+**How to think about it:** Use them for explicit gain staging, summing, and output normalization.
+
+**Caveat:** Output normalization can hide level problems, so inspect pre-output probes when calibrating physical parameters.
 
 **Formula**
 
@@ -2439,6 +3740,16 @@ Sums all connected `audio*` ports.
 #### `Output`
 
 Final graph output with optional peak normalization.
+
+**Explanation**
+
+**What it means:** `Output` means: Final graph output with optional peak normalization. This block combines, scales, or emits audio at graph boundaries.
+
+**Why it matters:** Mixing blocks define how signals meet and what ultimately leaves the graph as rendered audio.
+
+**How to think about it:** Use them for explicit gain staging, summing, and output normalization.
+
+**Caveat:** Output normalization can hide level problems, so inspect pre-output probes when calibrating physical parameters.
 
 **Formula**
 
@@ -2473,6 +3784,16 @@ Skip normalization when `peak_normalize_db` is null.
 
 Single damped sinusoidal resonator excited by audio energy.
 
+**Explanation**
+
+**What it means:** `ModalResonator` means: Single damped sinusoidal resonator excited by audio energy. This block represents a sound as a sum of resonant modes with frequencies, amplitudes, and decays.
+
+**Why it matters:** Modal models are a practical shortcut for objects that ring in characteristic patterns, such as bodies or strings.
+
+**How to think about it:** Think of each mode as one resonant way the object likes to vibrate; the output is their summed response.
+
+**Caveat:** A modal approximation is useful, but it is not the same as solving the full coupled physical object.
+
 **Formula**
 
 $f$ = `frequency`, $s = \sqrt{\mathrm{mean}(x_{exc}^2)}$ from `excitation`, $\tau = \max(\texttt{decay\_seconds}, 0.001)$:
@@ -2503,6 +3824,16 @@ $A$ = `amplitude`, $\phi$ = `phase`, $t_n = n/f_s$.
 #### `ModalResonatorBank`
 
 Bank of damped sinusoidal resonators.
+
+**Explanation**
+
+**What it means:** `ModalResonatorBank` means: Bank of damped sinusoidal resonators. This block represents a sound as a sum of resonant modes with frequencies, amplitudes, and decays.
+
+**Why it matters:** Modal models are a practical shortcut for objects that ring in characteristic patterns, such as bodies or strings.
+
+**How to think about it:** Think of each mode as one resonant way the object likes to vibrate; the output is their summed response.
+
+**Caveat:** A modal approximation is useful, but it is not the same as solving the full coupled physical object.
 
 **Formula**
 
@@ -2539,6 +3870,16 @@ No stiff-string $B$ term — use `StiffStringModal` for $f_n = n f_0 \sqrt{1 + B
 
 Bidirectional PASP hammer-string contact note model.
 
+**Explanation**
+
+**What it means:** A composite PASP note block configured around bidirectional hammer-string contact behavior.
+
+**Why it matters:** It targets the most important nonlinear part of piano attack: the hammer and string pushing on each other.
+
+**How to think about it:** Use it for contact-model experiments and inspect force, compression, hammer velocity, and string displacement outputs.
+
+**Caveat:** Check the implementation and evidence path; the name alone does not prove a full coupled piano solve.
+
 **Formula**
 
 Same computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way hammer–string force exchange.
@@ -2572,7 +3913,7 @@ Same computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way h
 | `bridge_loss_high` | float | 0.2 | dimensionless |
 | `bridge_loss_low` | float | 0.2 | dimensionless |
 | `contact_base_ms` | float | 6.0 | ms |
-| `contact_model` | str | 'bidirectional' |  |
+| `contact_model` | str | 'coupled_approx' |  |
 | `coupled` | bool | True |  |
 | `damper_damping_base` | float | 0.35 |  |
 | `damper_damping_high` | float | 0.65 |  |
@@ -2630,6 +3971,16 @@ Same computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way h
 #### `PASPBridgeSoundboard`
 
 Unified bridge impedance, soundboard modal bank, and radiation filter.
+
+**Explanation**
+
+**What it means:** A composite PASP bridge/body stage that combines bridge impedance, modal soundboard response, and radiation filtering.
+
+**Why it matters:** It keeps the bridge/body part of the piano model together when the experiment needs fewer graph nodes.
+
+**How to think about it:** Feed it string or bridge audio and inspect body diagnostics when available.
+
+**Caveat:** Composite convenience reduces graph visibility. Use regression artifacts before claiming improved physical realism.
 
 **Formula**
 
@@ -2717,6 +4068,16 @@ Couples bridge motion to soundboard excitation via `PASPBridgeSoundboardModel`.
 
 Bridge termination with frequency-dependent loss.
 
+**Explanation**
+
+**What it means:** A bridge-loss stage that shapes how string energy leaves the string side of the model.
+
+**Why it matters:** Bridge behavior strongly affects decay, brightness, and how much energy reaches the body.
+
+**How to think about it:** Use `bridge_loss` to test hypotheses about termination damping before the soundboard/body stage.
+
+**Caveat:** A one-way bridge-loss block is not the same as a physical bridge scattering or impedance solver.
+
 **Formula**
 
 Frequency-dependent bridge loss applied via `PASPBridgeModel` (bridge impedance / loss params).
@@ -2742,6 +4103,16 @@ Frequency-dependent bridge loss applied via `PASPBridgeModel` (bridge impedance 
 #### `PASPEventPianoModel`
 
 Event-driven PASP piano with note lifecycle, damper, and sustain pedal.
+
+**Explanation**
+
+**What it means:** An event-driven PASP note renderer with lifecycle, damper, and sustain-pedal handling.
+
+**Why it matters:** It connects piano note models to performance events, which is necessary for release and pedal experiments.
+
+**How to think about it:** Feed normalized events and compare diagnostics for note_on, note_off, pedal_down, and pedal_up behavior.
+
+**Caveat:** Lifecycle behavior can sound plausible while still failing pedal or release metrics.
 
 **Formula**
 
@@ -2773,7 +4144,7 @@ Offline event list render via `EventPianoRenderer` (phrase-level note scheduling
 | `bridge_loss_high` | float | 0.2 | dimensionless |
 | `bridge_loss_low` | float | 0.2 | dimensionless |
 | `contact_base_ms` | float | 6.0 | ms |
-| `contact_model` | str | 'bidirectional' |  |
+| `contact_model` | str | 'coupled_approx' |  |
 | `coupled` | bool | True |  |
 | `damper_damping_base` | float | 0.35 |  |
 | `damper_damping_high` | float | 0.65 |  |
@@ -2790,7 +4161,7 @@ Offline event list render via `EventPianoRenderer` (phrase-level note scheduling
 | `finished_energy_threshold` | float | 1e-07 |  |
 | `hammer_damping_Ns_m` | float | 0.05 | N·s/m |
 | `hammer_mass_kg` | float | 0.008 | kg |
-| `hammer_rest_position_m` | float | 0.002 | m |
+| `hammer_rest_position_m` | float | 0.008 | m |
 | `inharmonicity_B` | float | 0.00035 | dimensionless |
 | `linear_density_kg_m` | float | 0.006 | kg/m |
 | `max_contact_force_N` | float | 2000.0 | N |
@@ -2798,7 +4169,7 @@ Offline event list render via `EventPianoRenderer` (phrase-level note scheduling
 | `modal_gain` | float | 1.0 | dimensionless |
 | `modal_loss_base` | float | 0.15 | dimensionless |
 | `modal_loss_high` | float | 0.35 | dimensionless |
-| `num_modes` | int | 32 | count |
+| `num_modes` | int | 48 | count |
 | `output_gain` | float | 1.0 | dimensionless |
 | `oversample` | int | 2 | count |
 | `partials` | int | 32 | count |
@@ -2808,7 +4179,7 @@ Offline event list render via `EventPianoRenderer` (phrase-level note scheduling
 | `pedal_value` | float | 0.0 |  |
 | `radiation_lowpass_hz` | float | 8000.0 | Hz |
 | `release_noise_level` | float | 0.0 |  |
-| `seed` | int | 11 |  |
+| `seed` | int | 0 |  |
 | `soundboard_mix` | float | 0.5 | dimensionless |
 | `soundboard_modal_decays` | float | [2.0, 1.5, 1.0] |  |
 | `soundboard_modal_frequencies` | float | [180.0, 420.0, 980.0] |  |
@@ -2820,17 +4191,27 @@ Offline event list render via `EventPianoRenderer` (phrase-level note scheduling
 | `sustain_pedal_enabled` | float | True |  |
 | `sympathetic_enabled` | float | False |  |
 | `sympathetic_mix` | float | 0.0 |  |
-| `sympathetic_pedal_mode` | float | 'pedal_down' |  |
+| `sympathetic_pedal_mode` | float | 'off' |  |
 | `unison_detune_pattern` | float | 'centered_3' |  |
 | `unison_detune_spread_cents` | float | 0.8 |  |
-| `use_string_groups` | float | True |  |
-| `velocity_exponent` | float | 1.9 | dimensionless |
+| `use_string_groups` | float | False |  |
+| `velocity_exponent` | float | 1.8 | dimensionless |
 | `velocity_norm` | float | 0.8 | dimensionless |
-| `velocity_scale` | float | 3.0 | m/s scale |
+| `velocity_scale` | float | 2.5 | m/s scale |
 
 #### `PASPHammerFelt`
 
 Nonlinear hammer felt force envelope from velocity and felt parameters.
+
+**Explanation**
+
+**What it means:** A nonlinear felt-contact model that turns key velocity into force and compression buffers.
+
+**Why it matters:** Hammer felt controls attack hardness, velocity response, and the first milliseconds of piano tone.
+
+**How to think about it:** Tune felt stiffness, exponent, damping, and velocity scale as physical hypotheses, then inspect force/compression probes.
+
+**Caveat:** The block can be interpretable while still being an approximation of real hammer-string contact.
 
 **Formula**
 
@@ -2868,6 +4249,16 @@ Rendered as force/compression buffers via `PASPHammerFeltModel.render`.
 
 Quasi-static hammer-string contact excitation shaping (phase-1 approximation).
 
+**Explanation**
+
+**What it means:** A junction stage that converts hammer contact force/compression into string excitation.
+
+**Why it matters:** It is the handoff from hammer mechanics into string motion in the decomposed PASP chain.
+
+**How to think about it:** Feed it `force` and optional compression/slope information, then send `excitation` into the string block.
+
+**Caveat:** This is quasi-static excitation shaping unless a registered bidirectional contact solver owns the subsystem.
+
 **Formula**
 
 Maps contact force to string excitation via `PASPJunctionModel.shape_excitation` (quasi-static stiffness shaping from $F$ and optional compression).
@@ -2896,6 +4287,16 @@ Maps contact force to string excitation via `PASPJunctionModel.shape_excitation`
 #### `PASPNoteFamilyModel`
 
 Bidirectional PASP note with note-family parameter curves (B3–D4 local family).
+
+**Explanation**
+
+**What it means:** A PASP note model parameterized over a local note family rather than one isolated note.
+
+**Why it matters:** Physical changes should generalize across neighboring notes and velocities, not just overfit C4.
+
+**How to think about it:** Use smooth parameter curves and panel metrics across B3-D4 style families.
+
+**Caveat:** Reject fits that improve one note while breaking smoothness, contact diagnostics, or neighboring notes.
 
 **Formula**
 
@@ -2932,7 +4333,7 @@ Register/family parameterization + per-note PASP render via `NoteFamilyParameter
 | `bridge_loss_high` | float | 0.2 | dimensionless |
 | `bridge_loss_low` | float | 0.2 | dimensionless |
 | `contact_base_ms` | float | 6.0 | ms |
-| `contact_model` | str | 'bidirectional' |  |
+| `contact_model` | str | 'coupled_approx' |  |
 | `coupled` | bool | True |  |
 | `damper_damping_base` | float | 0.35 |  |
 | `damper_damping_high` | float | 0.65 |  |
@@ -2957,7 +4358,7 @@ Register/family parameterization + per-note PASP render via `NoteFamilyParameter
 | `modal_gain` | float | 1.0 | dimensionless |
 | `modal_loss_base` | float | 0.15 | dimensionless |
 | `modal_loss_high` | float | 0.35 | dimensionless |
-| `num_modes` | int | 32 | count |
+| `num_modes` | int | 48 | count |
 | `output_gain` | float | 1.0 | dimensionless |
 | `oversample` | int | 2 | count |
 | `parameterization` | dict | {'type': 'note_family', 'notes': [59, 60, 61, 62], 'curves': {'hammer_mass_kg': {'type': 'linear', 'center_note': 60, 'a0': 0.0082, 'a1': -0.00012, 'bounds': [0.004, 0.014], 'smoothness_weight': 1.0}, 'felt_Q0': {'type': 'log_linear', 'center_note': 60, 'log_a0': 15.424948470398375, 'log_a1': 0.02, 'bounds': [10000.0, 1000000000.0], 'smoothness_weight': 0.5}, 'felt_p': {'type': 'constant', 'value': 3.2, 'bounds': [1.5, 4.5], 'smoothness_weight': 0.2}, 'felt_damping_Ns_m': {'type': 'linear', 'center_note': 60, 'a0': 80.0, 'a1': 1.5, 'bounds': [10.0, 300.0], 'smoothness_weight': 0.5}, 'string_length_m': {'type': 'anchor_interpolated', 'anchors': {'59': 0.672, '60': 0.665, '61': 0.658, '62': 0.651}, 'bounds': [0.03, 2.5], 'smoothness_weight': 1.0}, 'string_tension_N': {'type': 'log_linear', 'center_note': 60, 'log_a0': 6.579251212010101, 'log_a1': 0.015, 'bounds': [50.0, 1500.0], 'smoothness_weight': 0.5}, 'linear_density_kg_m': {'type': 'log_linear', 'center_note': 60, 'log_a0': -5.083205986931091, 'log_a1': -0.002, 'bounds': [0.0001, 0.05], 'smoothness_weight': 0.5}, 'inharmonicity_B': {'type': 'anchor_interpolated', 'anchors': {'59': 0.00028, '60': 0.0003, '61': 0.00032, '62': 0.00034}, 'bounds': [0.0, 0.01], 'smoothness_weight': 1.0}, 'strike_position_ratio': {'type': 'constant', 'value': 0.12, 'bounds': [0.05, 0.25], 'smoothness_weight': 0.1}, 'modal_loss_base': {'type': 'log_linear', 'center_note': 60, 'log_a0': -2.120263536200091, 'log_a1': 0.01, 'bounds': [0.01, 1.0], 'smoothness_weight': 0.5}, 'modal_loss_high': {'type': 'log_linear', 'center_note': 60, 'log_a0': -0.916290731874155, 'log_a1': 0.012, 'bounds': [0.01, 1.0], 'smoothness_weight': 0.5}, 'bridge_loss': {'type': 'linear', 'center_note': 60, 'a0': 0.2, 'a1': 0.002, 'bounds': [0.05, 0.45], 'smoothness_weight': 0.3}, 'soundboard_mix': {'type': 'constant', 'value': 0.5, 'bounds': [0.2, 0.7], 'smoothness_weight': 0.1}}} |  |
@@ -2968,7 +4369,7 @@ Register/family parameterization + per-note PASP render via `NoteFamilyParameter
 | `pedal_value` | float | 0.0 |  |
 | `radiation_lowpass_hz` | float | 8000.0 | Hz |
 | `release_noise_level` | float | 0.0 |  |
-| `seed` | int | 11 |  |
+| `seed` | int | 0 |  |
 | `soundboard_mix` | float | 0.5 | dimensionless |
 | `soundboard_modal_decays` | float | [2.0, 1.5, 1.0] |  |
 | `soundboard_modal_frequencies` | float | [180.0, 420.0, 980.0] |  |
@@ -2984,13 +4385,23 @@ Register/family parameterization + per-note PASP render via `NoteFamilyParameter
 | `unison_detune_pattern` | float | 'centered_3' |  |
 | `unison_detune_spread_cents` | float | 0.8 |  |
 | `use_string_groups` | float | False |  |
-| `velocity_exponent` | float | 1.9 | dimensionless |
+| `velocity_exponent` | float | 1.8 | dimensionless |
 | `velocity_norm` | float | 0.8 | dimensionless |
-| `velocity_scale` | float | 3.0 | m/s scale |
+| `velocity_scale` | float | 2.5 | m/s scale |
 
 #### `PASPNoteModel`
 
 Coupled PASP hammer-string-bridge-soundboard note model.
+
+**Explanation**
+
+**What it means:** A composite single-note PASP chain: hammer, string, bridge, and soundboard inside one block.
+
+**Why it matters:** It is convenient for rendering and calibration when a full decomposed graph is too verbose.
+
+**How to think about it:** Drive it with MIDI note, velocity, and optional frequency, then inspect its diagnostic outputs when available.
+
+**Caveat:** Composite blocks hide internal boundaries; compare against decomposed graphs and dataset metrics before trusting changes.
 
 **Formula**
 
@@ -3084,6 +4495,16 @@ Single-note PASP chain: hammer felt $\to$ string modal line $\to$ bridge $\to$ s
 
 Phrase-level PASP piano with multi-voice scheduling and shared body.
 
+**Explanation**
+
+**What it means:** A phrase-level PASP piano block with multi-voice scheduling and shared body behavior.
+
+**Why it matters:** Realistic piano evaluation must include phrases, overlaps, release, pedal, and voice-management behavior.
+
+**How to think about it:** Drive it with event lists and evaluate against phrase/register manifests rather than isolated notes only.
+
+**Caveat:** Phrase success requires dataset regression; a nice single render is not enough evidence.
+
 **Formula**
 
 Full performance render via `PASPPerformanceRenderer` (multi-note phrase with governance params).
@@ -3112,7 +4533,7 @@ Full performance render via `PASPPerformanceRenderer` (multi-note phrase with go
 | `bridge_loss_high` | float | 0.2 | dimensionless |
 | `bridge_loss_low` | float | 0.2 | dimensionless |
 | `contact_base_ms` | float | 6.0 | ms |
-| `contact_model` | str | 'bidirectional' |  |
+| `contact_model` | str | 'coupled_approx' |  |
 | `coupled` | bool | True |  |
 | `damper_damping_base` | float | 0.35 |  |
 | `damper_damping_high` | float | 0.65 |  |
@@ -3129,7 +4550,7 @@ Full performance render via `PASPPerformanceRenderer` (multi-note phrase with go
 | `finished_energy_threshold` | float | 1e-07 |  |
 | `hammer_damping_Ns_m` | float | 0.05 | N·s/m |
 | `hammer_mass_kg` | float | 0.008 | kg |
-| `hammer_rest_position_m` | float | 0.002 | m |
+| `hammer_rest_position_m` | float | 0.008 | m |
 | `inharmonicity_B` | float | 0.00035 | dimensionless |
 | `linear_density_kg_m` | float | 0.006 | kg/m |
 | `max_contact_force_N` | float | 2000.0 | N |
@@ -3137,7 +4558,7 @@ Full performance render via `PASPPerformanceRenderer` (multi-note phrase with go
 | `modal_gain` | float | 1.0 | dimensionless |
 | `modal_loss_base` | float | 0.15 | dimensionless |
 | `modal_loss_high` | float | 0.35 | dimensionless |
-| `num_modes` | int | 32 | count |
+| `num_modes` | int | 48 | count |
 | `output_gain` | float | 1.0 | dimensionless |
 | `oversample` | int | 2 | count |
 | `partials` | int | 32 | count |
@@ -3147,7 +4568,7 @@ Full performance render via `PASPPerformanceRenderer` (multi-note phrase with go
 | `pedal_value` | float | 0.0 |  |
 | `radiation_lowpass_hz` | float | 8000.0 | Hz |
 | `release_noise_level` | float | 0.0 |  |
-| `seed` | int | 11 |  |
+| `seed` | int | 0 |  |
 | `soundboard_mix` | float | 0.5 | dimensionless |
 | `soundboard_modal_decays` | float | [2.0, 1.5, 1.0] |  |
 | `soundboard_modal_frequencies` | float | [180.0, 420.0, 980.0] |  |
@@ -3157,19 +4578,29 @@ Full performance render via `PASPPerformanceRenderer` (multi-note phrase with go
 | `string_loss` | float | 0.15 | dimensionless |
 | `string_tension_N` | float | 700.0 | N |
 | `sustain_pedal_enabled` | float | True |  |
-| `sympathetic_enabled` | float | True |  |
-| `sympathetic_mix` | float | 0.04 |  |
+| `sympathetic_enabled` | float | False |  |
+| `sympathetic_mix` | float | 0.0 |  |
 | `sympathetic_pedal_mode` | float | 'off' |  |
 | `unison_detune_pattern` | float | 'centered_3' |  |
 | `unison_detune_spread_cents` | float | 0.8 |  |
-| `use_string_groups` | float | True |  |
-| `velocity_exponent` | float | 1.9 | dimensionless |
+| `use_string_groups` | float | False |  |
+| `velocity_exponent` | float | 1.8 | dimensionless |
 | `velocity_norm` | float | 0.8 | dimensionless |
-| `velocity_scale` | float | 3.0 | m/s scale |
+| `velocity_scale` | float | 2.5 | m/s scale |
 
 #### `PASPSoundboardModal`
 
 Soundboard modal radiation mix.
+
+**Explanation**
+
+**What it means:** The PASP soundboard stage: it turns bridge/string audio into a modal body/radiation mix.
+
+**Why it matters:** In the decomposed PASP chain, this is where string energy becomes a more piano-like body sound.
+
+**How to think about it:** Place it after `PASPBridgeTermination`. The `soundboard_mix` parameter controls how much modal/radiation coloration is applied.
+
+**Caveat:** In the decomposed chain this is still a one-way DSP stage, not a bidirectional bridge-soundboard solve.
 
 **Formula**
 
@@ -3196,6 +4627,16 @@ Soundboard modal bank synthesis via `PASPSoundboardModel` (modal frequencies, de
 #### `PASPStringGroupNoteModel`
 
 Bidirectional PASP note with multi-string unison string groups (A3–C5 register).
+
+**Explanation**
+
+**What it means:** A PASP note model that exposes multiple unison string outputs.
+
+**Why it matters:** Piano registers often use multiple strings per note; detune and energy balance create beating and width.
+
+**How to think about it:** Compare per-string outputs, bridge audio, and group diagnostics when evaluating unison behavior.
+
+**Caveat:** Do not use unison mixing as arbitrary chorus without physical bounds and ablation.
 
 **Formula**
 
@@ -3235,7 +4676,7 @@ Same computation as `PASPNoteFamilyModel`. Adds per-string group outputs.
 | `bridge_loss_high` | float | 0.2 | dimensionless |
 | `bridge_loss_low` | float | 0.2 | dimensionless |
 | `contact_base_ms` | float | 6.0 | ms |
-| `contact_model` | str | 'bidirectional' |  |
+| `contact_model` | str | 'coupled_approx' |  |
 | `coupled` | bool | True |  |
 | `damper_damping_base` | float | 0.35 |  |
 | `damper_damping_high` | float | 0.65 |  |
@@ -3260,10 +4701,10 @@ Same computation as `PASPNoteFamilyModel`. Adds per-string group outputs.
 | `modal_gain` | float | 1.0 | dimensionless |
 | `modal_loss_base` | float | 0.15 | dimensionless |
 | `modal_loss_high` | float | 0.35 | dimensionless |
-| `num_modes` | int | 32 | count |
+| `num_modes` | int | 48 | count |
 | `output_gain` | float | 1.0 | dimensionless |
 | `oversample` | int | 2 | count |
-| `parameterization` | dict | {'type': 'register_family', 'notes': [57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72], 'registers': {'low_mid': {'midi_min': 57, 'midi_max': 59}, 'middle': {'midi_min': 60, 'midi_max': 67}, 'high_mid': {'midi_min': 68, 'midi_max': 72}}, 'curves': {'hammer_mass_kg': {'type': 'log_piecewise_linear', 'anchors': {'57': 0.009, '60': 0.0082, '64': 0.0075, '69': 0.0068, '72': 0.0063}, 'bounds': [0.003, 0.015], 'smoothness_weight': 1.0}, 'felt_Q0': {'type': 'log_piecewise_linear', 'anchors': {'57': 6000000.0, '60': 5000000.0, '64': 4500000.0, '69': 4000000.0, '72': 3500000.0}, 'bounds': [10000.0, 1000000000.0], 'smoothness_weight': 0.5}, 'felt_p': {'type': 'piecewise_linear', 'anchors': {'57': 2.5, '60': 2.7, '64': 2.8, '69': 2.9, '72': 3.0}, 'bounds': [1.5, 4.5], 'smoothness_weight': 0.3}, 'felt_damping_Ns_m': {'type': 'linear', 'center_note': 64, 'a0': 75.0, 'a1': 2.0, 'bounds': [10.0, 300.0], 'smoothness_weight': 0.5}, 'string_length_m': {'type': 'piecewise_linear', 'anchors': {'57': 0.685, '60': 0.665, '64': 0.64, '69': 0.61, '72': 0.585}, 'bounds': [0.03, 2.5], 'smoothness_weight': 1.0}, 'string_tension_N': {'type': 'log_piecewise_linear', 'anchors': {'57': 680.0, '60': 720.0, '64': 760.0, '69': 800.0, '72': 840.0}, 'bounds': [50.0, 1500.0], 'smoothness_weight': 0.5}, 'linear_density_kg_m': {'type': 'log_piecewise_linear', 'anchors': {'57': 0.0065, '60': 0.0062, '64': 0.006, '69': 0.0058, '72': 0.0056}, 'bounds': [0.0001, 0.05], 'smoothness_weight': 0.5}, 'inharmonicity_B': {'type': 'piecewise_linear', 'anchors': {'57': 0.00026, '60': 0.0003, '64': 0.00032, '69': 0.00034, '72': 0.00036}, 'bounds': [0.0, 0.01], 'smoothness_weight': 1.0}, 'strike_position_ratio': {'type': 'constant', 'value': 0.12, 'bounds': [0.05, 0.25], 'smoothness_weight': 0.1}, 'modal_loss_base': {'type': 'log_piecewise_linear', 'anchors': {'57': 0.14, '60': 0.12, '64': 0.11, '69': 0.1, '72': 0.09}, 'bounds': [0.01, 1.0], 'smoothness_weight': 0.5}, 'modal_loss_high': {'type': 'log_piecewise_linear', 'anchors': {'57': 0.42, '60': 0.4, '64': 0.38, '69': 0.36, '72': 0.34}, 'bounds': [0.01, 1.0], 'smoothness_weight': 0.5}, 'bridge_impedance': {'type': 'log_piecewise_linear', 'anchors': {'57': 5000.0, '60': 4200.0, '64': 3800.0, '69': 3400.0, '72': 3000.0}, 'bounds': [100.0, 50000.0], 'smoothness_weight': 0.4}, 'bridge_loss_low': {'type': 'piecewise_linear', 'anchors': {'57': 0.22, '60': 0.2, '64': 0.19, '69': 0.18, '72': 0.17}, 'bounds': [0.05, 0.45], 'smoothness_weight': 0.3}, 'bridge_loss_high': {'type': 'piecewise_linear', 'anchors': {'57': 0.24, '60': 0.22, '64': 0.21, '69': 0.2, '72': 0.19}, 'bounds': [0.05, 0.45], 'smoothness_weight': 0.3}, 'body_mix': {'type': 'piecewise_linear', 'anchors': {'57': 0.48, '60': 0.5, '64': 0.52, '69': 0.54, '72': 0.55}, 'bounds': [0.2, 0.7], 'smoothness_weight': 0.2}, 'radiation_lowpass_hz': {'type': 'piecewise_linear', 'anchors': {'57': 7500.0, '60': 8000.0, '64': 8200.0, '69': 8500.0, '72': 8800.0}, 'bounds': [500.0, 16000.0], 'smoothness_weight': 0.2}, 'bridge_loss': {'type': 'linear', 'center_note': 64, 'a0': 0.2, 'a1': -0.002, 'bounds': [0.05, 0.45], 'smoothness_weight': 0.2}, 'soundboard_mix': {'type': 'constant', 'value': 0.5, 'bounds': [0.2, 0.7], 'smoothness_weight': 0.1}, 'unison_detune_spread_cents': {'type': 'constant', 'value': 0.8, 'bounds': [0.0, 5.0], 'smoothness_weight': 0.2}}, 'body_constants': {'soundboard_modal_frequencies': [180.0, 420.0, 980.0], 'soundboard_modal_gains': [0.08, 0.05, 0.03], 'soundboard_modal_decays': [2.0, 1.5, 1.0]}, 'string_group': {'string_group_layout': {'type': 'register_based', 'regions': [{'name': 'bass', 'midi_min': 21, 'midi_max': 40, 'string_count': 1}, {'name': 'transition', 'midi_min': 41, 'midi_max': 52, 'string_count': 2}, {'name': 'mid_high', 'midi_min': 53, 'midi_max': 108, 'string_count': 3}]}, 'string_count': 3, 'use_string_groups': True, 'unison_detune_spread_cents': 0.8, 'unison_detune_pattern': 'centered_3', 'duplex_enabled': False, 'duplex_mix': 0.0, 'sympathetic_enabled': False, 'sympathetic_mix': 0.0, 'sympathetic_pedal_mode': 'off'}} |  |
+| `parameterization` | dict | {'type': 'note_family', 'notes': [59, 60, 61, 62], 'curves': {'hammer_mass_kg': {'type': 'linear', 'center_note': 60, 'a0': 0.0082, 'a1': -0.00012, 'bounds': [0.004, 0.014], 'smoothness_weight': 1.0}, 'felt_Q0': {'type': 'log_linear', 'center_note': 60, 'log_a0': 15.424948470398375, 'log_a1': 0.02, 'bounds': [10000.0, 1000000000.0], 'smoothness_weight': 0.5}, 'felt_p': {'type': 'constant', 'value': 3.2, 'bounds': [1.5, 4.5], 'smoothness_weight': 0.2}, 'felt_damping_Ns_m': {'type': 'linear', 'center_note': 60, 'a0': 80.0, 'a1': 1.5, 'bounds': [10.0, 300.0], 'smoothness_weight': 0.5}, 'string_length_m': {'type': 'anchor_interpolated', 'anchors': {'59': 0.672, '60': 0.665, '61': 0.658, '62': 0.651}, 'bounds': [0.03, 2.5], 'smoothness_weight': 1.0}, 'string_tension_N': {'type': 'log_linear', 'center_note': 60, 'log_a0': 6.579251212010101, 'log_a1': 0.015, 'bounds': [50.0, 1500.0], 'smoothness_weight': 0.5}, 'linear_density_kg_m': {'type': 'log_linear', 'center_note': 60, 'log_a0': -5.083205986931091, 'log_a1': -0.002, 'bounds': [0.0001, 0.05], 'smoothness_weight': 0.5}, 'inharmonicity_B': {'type': 'anchor_interpolated', 'anchors': {'59': 0.00028, '60': 0.0003, '61': 0.00032, '62': 0.00034}, 'bounds': [0.0, 0.01], 'smoothness_weight': 1.0}, 'strike_position_ratio': {'type': 'constant', 'value': 0.12, 'bounds': [0.05, 0.25], 'smoothness_weight': 0.1}, 'modal_loss_base': {'type': 'log_linear', 'center_note': 60, 'log_a0': -2.120263536200091, 'log_a1': 0.01, 'bounds': [0.01, 1.0], 'smoothness_weight': 0.5}, 'modal_loss_high': {'type': 'log_linear', 'center_note': 60, 'log_a0': -0.916290731874155, 'log_a1': 0.012, 'bounds': [0.01, 1.0], 'smoothness_weight': 0.5}, 'bridge_loss': {'type': 'linear', 'center_note': 60, 'a0': 0.2, 'a1': 0.002, 'bounds': [0.05, 0.45], 'smoothness_weight': 0.3}, 'soundboard_mix': {'type': 'constant', 'value': 0.5, 'bounds': [0.2, 0.7], 'smoothness_weight': 0.1}}} |  |
 | `partials` | int | 32 | count |
 | `pedal_lift_ramp_s` | float | 0.02 |  |
 | `pedal_release_ramp_s` | float | 0.02 |  |
@@ -3271,7 +4712,7 @@ Same computation as `PASPNoteFamilyModel`. Adds per-string group outputs.
 | `pedal_value` | float | 0.0 |  |
 | `radiation_lowpass_hz` | float | 8000.0 | Hz |
 | `release_noise_level` | float | 0.0 |  |
-| `seed` | int | 11 |  |
+| `seed` | int | 0 |  |
 | `soundboard_mix` | float | 0.5 | dimensionless |
 | `soundboard_modal_decays` | float | [2.0, 1.5, 1.0] |  |
 | `soundboard_modal_frequencies` | float | [180.0, 420.0, 980.0] |  |
@@ -3286,14 +4727,24 @@ Same computation as `PASPNoteFamilyModel`. Adds per-string group outputs.
 | `sympathetic_pedal_mode` | float | 'off' |  |
 | `unison_detune_pattern` | float | 'centered_3' |  |
 | `unison_detune_spread_cents` | float | 0.8 |  |
-| `use_string_groups` | float | True |  |
-| `velocity_exponent` | float | 1.9 | dimensionless |
+| `use_string_groups` | float | False |  |
+| `velocity_exponent` | float | 1.8 | dimensionless |
 | `velocity_norm` | float | 0.8 | dimensionless |
-| `velocity_scale` | float | 3.0 | m/s scale |
+| `velocity_scale` | float | 2.5 | m/s scale |
 
 #### `PASPStringLine`
 
 Stiff string modal propagation driven by contact excitation.
+
+**Explanation**
+
+**What it means:** The PASP string propagation stage driven by hammer-string contact excitation.
+
+**Why it matters:** It exposes string parameters such as frequency and inharmonicity for physically interpretable experiments.
+
+**How to think about it:** Place it after `PASPHammerStringJunction`; it renders a modal string-like response from contact excitation.
+
+**Caveat:** In a decomposed signal chain, this is not automatically coupled bidirectionally to hammer or bridge solvers.
 
 **Formula**
 
@@ -3337,6 +4788,16 @@ driven by excitation through `PASPStringLineModel.render`.
 
 Mixes string signals before body coupling.
 
+**Explanation**
+
+**What it means:** `BridgeMixer` means: Mixes string signals before body coupling. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 Mean of connected inputs, times gain:
@@ -3366,11 +4827,25 @@ $$y = 10^{\texttt{gain\_db}/20} \cdot \mathrm{mean}(x_i)$$
 
 Simple damper release envelope.
 
+**Explanation**
+
+**What it means:** `DamperReleaseEnvelope` means: Simple damper release envelope. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 $$e[n] = \exp(-t_n / \tau), \quad \tau = \texttt{release\_ms}/1000$$
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -3385,6 +4860,16 @@ $$e[n] = \exp(-t_n / \tau), \quad \tau = \texttt{release\_ms}/1000$$
 #### `FractionalStringDelay`
 
 Fractional delay tuned for string experiments.
+
+**Explanation**
+
+**What it means:** `FractionalStringDelay` means: Fractional delay tuned for string experiments. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3409,6 +4894,16 @@ $$y[n] = \text{interp}(n - d, n, x[n]), \quad d = \texttt{delay\_samples}$$
 #### `HammerExcitation`
 
 Deterministic short hammer-like excitation burst.
+
+**Explanation**
+
+**What it means:** `HammerExcitation` means: Deterministic short hammer-like excitation burst. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3440,6 +4935,16 @@ $$x[n] = v \cdot e[n] \cdot \text{LP}(\mathcal{N}(0,1)), \quad \text{peak-normal
 
 Lowpass felt softness filter for hammer excitation.
 
+**Explanation**
+
+**What it means:** `HammerFeltFilter` means: Lowpass felt softness filter for hammer excitation. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 Softness $s$ = `softness`; LP cutoff $f_c = 12000 - 10000s$:
@@ -3466,6 +4971,16 @@ $$y = \text{ButterworthLP}(x, f_c)$$
 
 Short deterministic hammer noise component.
 
+**Explanation**
+
+**What it means:** `HammerNoise` means: Short deterministic hammer noise component. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 $$x[n] = A v \mathcal{N}(0,1)_n \exp(-t_n/\tau), \quad \tau = \texttt{decay\_ms}/1000$$
@@ -3491,6 +5006,16 @@ $$x[n] = A v \mathcal{N}(0,1)_n \exp(-t_n/\tau), \quad \tau = \texttt{decay\_ms}
 #### `HammerVelocityMapper`
 
 Maps velocity to hammer force and brightness controls.
+
+**Explanation**
+
+**What it means:** `HammerVelocityMapper` means: Maps velocity to hammer force and brightness controls. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3519,6 +5044,16 @@ $$\text{force} = v^{\texttt{force\_gamma}}, \quad \text{brightness} = v^{\texttt
 #### `ModelHammerExcitation`
 
 Hammer excitation ported from model/piano_model.py.
+
+**Explanation**
+
+**What it means:** `ModelHammerExcitation` means: Hammer excitation ported from model/piano_model.py. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3550,6 +5085,16 @@ Impulse + velocity-scaled bright noise, attack envelope, one-pole smoothing with
 
 Stereo spread and normalization from model/piano_model.py.
 
+**Explanation**
+
+**What it means:** `ModelStereoOutput` means: Stereo spread and normalization from model/piano_model.py. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 Mono $m$ with delayed right channel ($\texttt{stereo\_spread\_ms}$), optional peak normalize:
@@ -3578,6 +5123,16 @@ $$L = m, \quad R = 0.97\, m[n-D] + 0.03\, m[n]$$
 
 Creates a unison-like blend with small deterministic detunes.
 
+**Explanation**
+
+**What it means:** `MultiStringUnison` means: Creates a unison-like blend with small deterministic detunes. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 For $S$ = `strings`, detune spread in samples from `detune_cents`:
@@ -3605,6 +5160,16 @@ $$y[n] = \frac{1}{S}\sum_{i=0}^{S-1} \mathrm{roll}(x, \Delta_i)$$
 
 Simple nonlinear hammer contact shaping.
 
+**Explanation**
+
+**What it means:** `NonlinearHammer` means: Simple nonlinear hammer contact shaping. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 $$y[n] = F \cdot \mathrm{sign}(x[n]) |x[n]|^{\texttt{stiffness}}$$
@@ -3628,9 +5193,57 @@ $F$ = `force` input.
 
 - `stiffness`: `1.5`
 
+#### `NotePerformanceSchedule`
+
+Expands performance events into per-buffer control trajectories.
+
+**Explanation**
+
+**What it means:** `NotePerformanceSchedule` means: Expands performance events into per-buffer control trajectories. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
+**Formula**
+
+Expands sorted performance events into per-sample control buffers: active MIDI note, frequency, velocity, and sustain-pedal state. Note frequency uses $f = a4 \cdot 2^{(m-69)/12}$.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `frequency` | control | yes |
+| `velocity` | control | yes |
+| `midi_note` | control | yes |
+| `sustain_pedal` | control | yes |
+
+**Parameters**
+
+- `a4`: `440.0`
+- `events`: `[]`
+
 #### `PianoStringBank`
 
 Piano string bank ported from model/piano_model.py.
+
+**Explanation**
+
+**What it means:** `PianoStringBank` means: Piano string bank ported from model/piano_model.py. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3679,6 +5292,16 @@ Sum of detuned `_pluck_loop` voices with register-dependent unison (2 strings lo
 
 Single piano waveguide loop ported from model/piano_model.py.
 
+**Explanation**
+
+**What it means:** `PianoWaveguideString` means: Single piano waveguide loop ported from model/piano_model.py. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 Delay-line pluck loop (`_pluck_loop`) with note-position-dependent $T_{60}$, brightness smoothing, optional dispersion, and treble shimmer. Delay $L \approx f_s/f_0 + \texttt{delay\_offset}$.
@@ -3718,9 +5341,63 @@ Delay-line pluck loop (`_pluck_loop`) with note-position-dependent $T_{60}$, bri
 - `treble_brightness_exponent`: `2.0`
 - `treble_shimmer_gain`: `0.0`
 
+#### `PolyphonicWaveguideString`
+
+Event-driven polyphonic Karplus-Strong string bank (solver-hosted).
+
+**Explanation**
+
+**What it means:** An event-driven version of the waveguide string path that can host several active notes.
+
+**Why it matters:** Phrase and overlap tests need note_on/note_off behavior instead of a single static pitch.
+
+**How to think about it:** Drive it with graph events; the solver allocates voices up to `max_polyphony` and applies note lifecycle controls.
+
+**Caveat:** Polyphony here is voice hosting for delay-line strings, not a complete piano action/damper/sympathetic model.
+
+**Formula**
+
+Solver-hosted event-driven Karplus-Strong voice bank. `note_on` events allocate delay-line voices; `note_off`/damper settings release them. The fallback block process emits silence because the physical solver owns audio generation.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `audio` | audio | yes |
+
+**Parameters**
+
+- `a4`: `440.0`
+- `brightness`: `0.55`
+- `damper_engage_delay_s`: `0.01`
+- `damper_ramp_time_s`: `0.05`
+- `decay_seconds`: `4.0`
+- `gain`: `1.0`
+- `hammer_attack_ms`: `3.0`
+- `hammer_brightness`: `0.75`
+- `hammer_decay_ms`: `30.0`
+- `hammer_seed`: `0`
+- `max_polyphony`: `8`
+
 #### `StiffStringModal`
 
 Simple stiff-string modal synthesis approximation.
+
+**Explanation**
+
+**What it means:** `StiffStringModal` means: Simple stiff-string modal synthesis approximation. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3762,6 +5439,16 @@ $\beta$ = `brightness`, $\tau$ = `decay_seconds`, $\phi_n$ random from `seed`. S
 
 Lightweight energy coupling for up to three string signals.
 
+**Explanation**
+
+**What it means:** `StringCouplingMatrix` means: Lightweight energy coupling for up to three string signals. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 With signals $x_i$, mean $\bar{x}$, coupling $c$ = `coupling`:
@@ -3790,6 +5477,16 @@ $$y = (1-c) x_0 + c \bar{x}$$
 
 Applies detune in cents to a frequency control.
 
+**Explanation**
+
+**What it means:** `StringDetune` means: Applies detune in cents to a frequency control. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 $$f_{out} = f_{in} \cdot 2^{\texttt{cents}/1200}$$
@@ -3813,6 +5510,16 @@ $$f_{out} = f_{in} \cdot 2^{\texttt{cents}/1200}$$
 #### `StringDispersion`
 
 Applies allpass-like dispersion to a string signal.
+
+**Explanation**
+
+**What it means:** `StringDispersion` means: Applies allpass-like dispersion to a string signal. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3838,6 +5545,16 @@ Same computation as `Allpass`. String dispersion via allpass coefficient.
 
 Frequency-dependent string loss lowpass.
 
+**Explanation**
+
+**What it means:** `StringLossFilter` means: Frequency-dependent string loss lowpass. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 $$y = \text{ButterworthLP}(x, \texttt{cutoff\_hz})$$
@@ -3861,6 +5578,16 @@ $$y = \text{ButterworthLP}(x, \texttt{cutoff\_hz})$$
 #### `StringModeBank`
 
 Alias-style string modal bank for piano string experiments.
+
+**Explanation**
+
+**What it means:** `StringModeBank` means: Alias-style string modal bank for piano string experiments. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3896,6 +5623,16 @@ Same computation as `StiffStringModal`.
 
 Applies terminal reflection gain to a string signal.
 
+**Explanation**
+
+**What it means:** `StringTermination` means: Applies terminal reflection gain to a string signal. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
+
 **Formula**
 
 $$y[n] = \texttt{reflection} \cdot x[n]$$
@@ -3919,6 +5656,16 @@ $$y[n] = \texttt{reflection} \cdot x[n]$$
 #### `SustainPedalDamping`
 
 Pedal-controlled sustain decay approximation.
+
+**Explanation**
+
+**What it means:** `SustainPedalDamping` means: Pedal-controlled sustain decay approximation. This block is piano-specific DSP or a legacy/model-recreation component.
+
+**Why it matters:** Piano blocks provide practical building blocks for excitation, strings, body coupling, dampers, and note scheduling.
+
+**How to think about it:** Use them when you need a controlled piano-oriented graph without necessarily exposing full PASP internals.
+
+**Caveat:** Many of these blocks are approximations. Do not infer solver-backed physics from the name alone.
 
 **Formula**
 
@@ -3950,6 +5697,16 @@ $$y[n] = x[n] \exp(-t_n/\tau)$$
 
 Single-sample impulse excitation.
 
+**Explanation**
+
+**What it means:** `Impulse` means: Single-sample impulse excitation. This block creates an audio signal without requiring an audio input.
+
+**Why it matters:** Sources are useful for tests, excitation, references, and simple synthesis graphs.
+
+**How to think about it:** Use them at the start of a graph or as controlled excitation into filters, strings, or metrics.
+
+**Caveat:** A source can prove the render path works, but it does not prove instrument realism.
+
 **Formula**
 
 Single-sample impulse at index $k = \mathrm{round}(\texttt{delay\_ms} \cdot f_s / 1000)$:
@@ -3958,7 +5715,11 @@ $$x[n] = \begin{cases} A & n = k \\ 0 & \text{otherwise} \end{cases}$$
 
 $A$ = `amplitude`.
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -3974,6 +5735,16 @@ $A$ = `amplitude`.
 #### `NoiseBurst`
 
 Deterministic decaying noise burst.
+
+**Explanation**
+
+**What it means:** `NoiseBurst` means: Deterministic decaying noise burst. This block creates an audio signal without requiring an audio input.
+
+**Why it matters:** Sources are useful for tests, excitation, references, and simple synthesis graphs.
+
+**How to think about it:** Use them at the start of a graph or as controlled excitation into filters, strings, or metrics.
+
+**Caveat:** A source can prove the render path works, but it does not prove instrument realism.
 
 **Formula**
 
@@ -4005,6 +5776,16 @@ Peak-normalized: $x = A v \cdot x_{raw} / \max|x_{raw}|$, $A$ = `amplitude`.
 
 Offline mono sample player for references or excitation.
 
+**Explanation**
+
+**What it means:** `SamplePlayer` means: Offline mono sample player for references or excitation. This block creates an audio signal without requiring an audio input.
+
+**Why it matters:** Sources are useful for tests, excitation, references, and simple synthesis graphs.
+
+**How to think about it:** Use them at the start of a graph or as controlled excitation into filters, strings, or metrics.
+
+**Caveat:** A source can prove the render path works, but it does not prove instrument realism.
+
 **Formula**
 
 Load mono WAV from `path`; resample to $f_s$ if needed; truncate or tile when `loop`; apply gain:
@@ -4013,7 +5794,11 @@ $$x[n] = 10^{\texttt{gain\_db}/20} \cdot \text{sample}[n]$$
 
 Empty path → zeros.
 
-**Inputs:** none
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| — | — | — |
 
 **Outputs**
 
@@ -4030,6 +5815,16 @@ Empty path → zeros.
 #### `SineOscillator`
 
 Whole-buffer sine oscillator.
+
+**Explanation**
+
+**What it means:** `SineOscillator` means: Whole-buffer sine oscillator. This block creates an audio signal without requiring an audio input.
+
+**Why it matters:** Sources are useful for tests, excitation, references, and simple synthesis graphs.
+
+**How to think about it:** Use them at the start of a graph or as controlled excitation into filters, strings, or metrics.
+
+**Caveat:** A source can prove the render path works, but it does not prove instrument realism.
 
 **Formula**
 
@@ -4056,4 +5851,3 @@ $$x[n] = A \sin(2\pi f t_n + \phi)$$
 | `amplitude` | float | 0.25 |  |
 | `frequency` | float | 440.0 |  |
 | `phase` | float | 0.0 |  |
-
