@@ -172,6 +172,24 @@ BLOCK_OVERRIDES: dict[str, str] = {
         how="Excitation enters the delay line, the loop length sets pitch, and loop filtering shapes brightness and decay.",
         caveat="This is Karplus-Strong-style behavior; accepted parameters such as `inharmonicity_B` may not be implemented by this solver.",
     ),
+    "BellModalBody": _section(
+        what=(
+            "A physically-informed struck bell model: the bell is represented as a family of inharmonic resonant modes "
+            "such as hum, prime, tierce, quint, nominal, and upper rim modes."
+        ),
+        why=(
+            "Real bells are not harmonic like ideal strings. Their characteristic tone comes from long-lived, "
+            "inharmonic shell modes excited by a short strike."
+        ),
+        how=(
+            "Feed a short strike into `excitation` and optionally drive `frequency`. The solver shapes modal gains "
+            "from `strike_position` and `strike_hardness`, then applies material damping, decay scaling, and radiation mix."
+        ),
+        caveat=(
+            "This is a real modal physical abstraction, not a full finite-element bronze shell simulation. It makes "
+            "bell partial structure and strike controls explicit while staying practical for offline graph rendering."
+        ),
+    ),
     "PolyphonicWaveguideString": _section(
         what="An event-driven version of the waveguide string path that can host several active notes.",
         why="Phrase and overlap tests need note_on/note_off behavior instead of a single static pitch.",

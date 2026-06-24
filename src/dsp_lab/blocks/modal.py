@@ -6,6 +6,7 @@ import numpy as np
 
 from dsp_lab.blocks.base import DSPBlock, Port
 from dsp_lab.blocks.registry import register_block
+from dsp_lab.graph.physical.bell_modal import DEFAULT_BELL_PROFILE, render_bell_modal_body
 
 
 @register_block
@@ -65,3 +66,50 @@ class ModalResonatorBank(DSPBlock):
         if peak > 0:
             out = out / peak * min(0.9, scale * 6.0)
         return {"audio": out.astype(np.float32)}
+
+
+@register_block
+class BellModalBody(DSPBlock):
+    block_type = "BellModalBody"
+    category = "Modal"
+    description = "Physically-informed struck bell modal body with inharmonic partial families."
+    input_ports = {
+        "frequency": Port("frequency", "control", required=False),
+        "excitation": Port("excitation", "audio"),
+    }
+    output_ports = {"audio": Port("audio", "audio")}
+
+    @classmethod
+    def default_params(cls) -> dict[str, object]:
+        return {
+            "nominal_hz": 660.0,
+            "profile": DEFAULT_BELL_PROFILE,
+            "strike_position": 0.35,
+            "strike_hardness": 0.55,
+            "material_damping": 0.25,
+            "size_scale": 1.0,
+            "inharmonicity_scale": 1.0,
+            "decay_scale": 1.0,
+            "radiation_mix": 0.85,
+            "output_gain": 0.9,
+        }
+
+    def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
+        excitation = np.asarray(inputs.get("excitation", np.zeros(n_frames)), dtype=np.float32)
+        nominal_hz = float(inputs.get("frequency", self.params.get("nominal_hz", 660.0)))
+        return {
+            "audio": render_bell_modal_body(
+                excitation,
+                sample_rate=self.sample_rate,
+                nominal_hz=nominal_hz,
+                profile=str(self.params.get("profile", DEFAULT_BELL_PROFILE)),
+                strike_position=float(self.params.get("strike_position", 0.35)),
+                strike_hardness=float(self.params.get("strike_hardness", 0.55)),
+                material_damping=float(self.params.get("material_damping", 0.25)),
+                size_scale=float(self.params.get("size_scale", 1.0)),
+                inharmonicity_scale=float(self.params.get("inharmonicity_scale", 1.0)),
+                decay_scale=float(self.params.get("decay_scale", 1.0)),
+                radiation_mix=float(self.params.get("radiation_mix", 0.85)),
+                output_gain=float(self.params.get("output_gain", 0.9)),
+            )
+        }

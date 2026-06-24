@@ -1,0 +1,79 @@
+{
+  "schema_version": "0.1",
+  "name": "bell_physical_modal",
+  "sample_rate": 48000,
+  "duration": 5.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 76
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "strike",
+      "type": "NoiseBurst",
+      "params": {
+        "amplitude": 0.9,
+        "decay_ms": 5.0,
+        "seed": 42
+      }
+    },
+    {
+      "id": "bell",
+      "type": "BellModalBody",
+      "params": {
+        "profile": "church_bell",
+        "strike_position": 0.32,
+        "strike_hardness": 0.62,
+        "material_damping": 0.18,
+        "decay_scale": 1.05,
+        "radiation_mix": 0.9,
+        "output_gain": 0.85
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "bell.frequency"
+    },
+    {
+      "from": "strike.audio",
+      "to": "bell.excitation"
+    },
+    {
+      "from": "bell.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "strike.audio",
+    "bell.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 80, "y": 80},
+      "strike": {"x": 80, "y": 220},
+      "bell": {"x": 380, "y": 140},
+      "out": {"x": 700, "y": 140}
+    }
+  }
+}

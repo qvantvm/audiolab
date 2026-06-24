@@ -9,6 +9,7 @@ Usage (from repo root):
 Open one of these in the Auralis DSP tab (or ``python -m dsp_lab.app.main``):
 
 - ``examples/graphs/bell_modal.json`` — dry modal bell
+- ``examples/graphs/bell_physical_modal.json`` — solver-backed physically-informed modal bell
 - ``examples/graphs/bell_echo.json`` — discrete delay taps (320 / 640 / 960 ms)
 - ``examples/graphs/bell_reverb.json`` — feedback-delay reverb + room convolution
 """
