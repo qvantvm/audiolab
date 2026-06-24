@@ -8,9 +8,20 @@ This manual explains **how the system thinks** and **how to use it end-to-end**.
 
 | Reader | Start with |
 |--------|------------|
-| **Researchers** | Part 1 (theory), then piano modeling and [roadmap](roadmap.md) |
-| **Operators** (baseline eval, autoresearch cycles) | Part 2 §6, then [dsp_lab/guide.md](dsp_lab/guide.md) |
-| **Agent authors** (Auralis consumers) | Part 1 §4–6, Part 2 §4, [agent_usage.md](agent_usage.md) |
+| **New users** | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
+| **Researchers** | Part 1 (theory), then [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) and [roadmap](roadmap.md) |
+| **Operators** (baseline eval, autoresearch cycles) | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), Part 2 §6, [dsp_lab/guide.md](dsp_lab/guide.md) |
+| **Agent authors** (Auralis consumers) | Part 1 §4–8, [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), [agent_usage.md](agent_usage.md) |
+
+## Choose your path
+
+| Level | Start |
+|-------|-------|
+| New to Audiolab | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
+| Waveguide / solver research | [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) |
+| Calibration / autoresearch | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) |
+| Theory-first readers | [Part 1](#part-1--theory) |
+| Operators (full runbook) | Part 2 §6 + [dsp_lab/guide.md](dsp_lab/guide.md) |
 
 ## What Audiolab is
 
@@ -32,11 +43,12 @@ Audiolab (`dsp_lab`) is a **standalone synthesis and research engine**:
 
 | I want to… | Go to |
 |------------|-------|
+| Follow a hands-on tutorial | [Part 3 — Tutorials](#part-3--tutorials) |
 | Understand graphs and execution tiers | Part 1 below · [architecture.md](architecture.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | See what renders today vs what is planned | [roadmap.md](roadmap.md) |
-| Render my first WAV | Part 2 §2 · [minimal_piano_note.md](minimal_piano_note.md) |
+| Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
 | Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](dsp_lab/cli.md) |
-| Calibrate parameters to a reference | Part 2 §5 · [calibration.md](dsp_lab/calibration.md) |
+| Calibrate parameters to a reference | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) · [calibration.md](dsp_lab/calibration.md) |
 | Run autoresearch (no agents) | Part 2 §6 · [dsp_lab/guide.md](dsp_lab/guide.md) |
 | Build an agent loop | [agent_usage.md](agent_usage.md) |
 | Look up block equations | [dsp_lab/pasp_block_io_reference.md](dsp_lab/pasp_block_io_reference.md) |
@@ -70,6 +82,50 @@ A minimal mental model:
 Connections use `owner.port` notation. Graph-level scalars live under `inputs` (MIDI note, velocity, frequency). Phrase-level performance uses `events` (note_on, note_off, pedal).
 
 **Deep dive:** [graph_schema.md](graph_schema.md) · [architecture.md](architecture.md)
+
+### 1.1 Whole-buffer offline execution
+
+Audiolab is an **offline** engine: `render_graph()` synthesizes the **entire** `duration` in one pass and returns a float32 buffer plus metadata. It is not a real-time callback host or VST plugin.
+
+| Property | Implication |
+|----------|-------------|
+| Whole-buffer render | Same graph + inputs → same audio (deterministic blocks) |
+| `block_size` | Scheduling hint for the executor loop; does not imply streaming I/O |
+| `graph_hash` | SHA-256 of graph content for regression and candidate tracking |
+| Golden audio tests | Scientific checks on F0, envelope, spectral centroid ([`test_golden_audio.py`](../tests/dsp_lab/test_golden_audio.py)) |
+
+Because execution is offline, research loops can replay renders exactly, compare hashes across commits, and attach objective metrics without timing jitter.
+
+### 1.2 Compilation pipeline (internals)
+
+Validation and compilation are separate stages with distinct responsibilities:
+
+```mermaid
+flowchart LR
+  json[GraphSpec JSON] --> validate[validate_graph]
+  validate --> classify[classify_connections]
+  classify --> plan[build_execution_plan]
+  plan --> guards[computation guards]
+  guards --> solvers[select PhysicalSolvers]
+  solvers --> compiled[CompiledGraph]
+  compiled --> render[render_graph]
+```
+
+After `validate_graph()` succeeds:
+
+1. **`classify_connections()`** — each edge gets a kind: `SIGNAL`, `CONTROL`, `EVENT`, `PHYSICAL_BIDIRECTIONAL`, or `WAVE_SCATTERING`
+2. **`build_execution_plan()`** — signal schedule, event schedule, physical subsystems, boundary ports
+3. **Computation guards** — reject misclassified physical ports and unsatisfied solver requirements (`UNSUPPORTED_COMPUTATION`)
+4. **Solver selection** — match subsystems to registered `PhysicalSolver` plugins
+5. **`CompiledGraph`** — carries `block_execution_roles`, warnings, `structured_warnings`
+
+| Role | Meaning |
+|------|---------|
+| `signal_scheduled` | Ordinary `DSPBlock.process()` in the signal loop |
+| `solver_hosted` | Block skipped in signal loop; physical solver owns it |
+| `subsystem_internal` | Block inside a T3 connected-component subsystem |
+
+**Deep dive:** [`compiler.py`](../src/dsp_lab/graph/compiler.py) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
 
 ## 2. Blocks and the registry
 
@@ -106,6 +162,28 @@ Runtime execution still uses legacy kinds (`audio`, `control`, `event`) on buffe
 
 **Deep dive:** [block_registry.md](block_registry.md) · [physical_ports.md](physical_ports.md)
 
+### 2.1 Object-based physical modeling (concept)
+
+Audiolab maps the object-based physical synthesis idea (Sarti, Rabenstein, Karjalainen) onto the existing block graph:
+
+| Concept | Audiolab |
+|---------|----------|
+| Physical object | Block type (`PASPStringLine`, `WaveguideString`, …) |
+| Object port | `PortSpec` on `BlockTypeSpec` |
+| Compatible connection | `validate_graph()` + `ports_compatible()` |
+| Object dynamics | `PhysicalSolver` at compile time |
+
+Two connection semantics matter:
+
+```
+Ordinary:     string.audio → body.audio          (one-way signal)
+Physical:     string.bridge ↔ body.bridge_input  (bidirectional mechanical)
+```
+
+The first is computed by the signal schedule today. The second is **valid representation** but requires a T3 solver to compute (see [roadmap](roadmap.md)).
+
+**Deep dive:** [object_based_physical_modeling.md](object_based_physical_modeling.md)
+
 ## 3. Execution model: signal schedule vs physical solvers
 
 Audiolab compiles each graph into an **execution plan** with distinct tiers:
@@ -127,6 +205,25 @@ HammerExcitation  →  WaveguideString  →  ModalBankBody  →  Output
 ```
 
 Each T2 block gets its own physical solver. The compiler does **not** auto-fuse chains unless a matching T4 solver is registered and opted in via `solver_hint`.
+
+### Karplus-Strong waveguide (T2)
+
+`ExcitedWaveguideStringSolver` implements a Karplus-Strong style string:
+
+1. **Excitation** — short burst injected at the bridge end of a delay line
+2. **Delay line** — length set by `frequency_hz` (or control input)
+3. **Loop filter** — `brightness` and `decay_seconds` shape the returning wave
+4. **Output** — `string.audio` boundary to the rest of the graph
+
+The block parameter `inharmonicity_B` is accepted for schema compatibility but **not yet applied** to the delay line. The solver emits `structured_warnings` with code `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` — check these before adding calibration tunables on that param.
+
+### Modal body (T2)
+
+`ModalBankBodySolver` filters the string output through a bank of resonators (`frequencies`, `gains`, `mix`). It is **signal-fed**: the string and body connect via an ordinary audio edge, not a bidirectional mechanical port. Two T2 solvers in one graph means two isolated-host subsystems connected by T1 signal routing between them.
+
+### Polyphonic hosting
+
+A single `WaveguideString` delay line holds **one pitch** at a time. Multiple simultaneous notes require `PolyphonicWaveguideString` hosted by `polyphonic_excited_waveguide`, driven by `graph.events` (note_on / note_off). Static scalar inputs (`inputs.midi_note`) suit calibration panels; events suit phrases and overlaps.
 
 ### Events and parameter maps
 
@@ -220,7 +317,7 @@ Research changes **graph JSON** and **calibrated parameters** inside approved te
 
 ### Feedback is objective
 
-Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include pitch error, decay, spectral shape, and a `calibration_targets` bundle for agent decisions.
+Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include pitch error, decay, spectral shape, and a `calibration_targets` bundle for agent decisions. See [§7 Metrics, bundles, and regression](#7-metrics-bundles-and-regression) for the full bundle layout.
 
 ### Authority in autoresearch
 
@@ -233,6 +330,49 @@ Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include
 Prove the engine works **without agents** (`smoke_pasp_autoresearch.py`, baseline eval) before trusting agent loops in Auralis.
 
 **Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md)
+
+## 7. Metrics, bundles, and regression
+
+Every calibration run and many eval paths write a **standard experiment bundle**:
+
+| File | Purpose |
+|------|---------|
+| `render.wav` | Synthetic audio output |
+| `render_metadata.json` | `graph_hash`, peak/RMS, `warnings`, `structured_warnings` |
+| `metrics.json` | Full `compare_audio` output + `calibration_targets` |
+| `graph_hash.txt` | Standalone hash for quick diff |
+
+### calibration_targets (agent-facing)
+
+Key fields in `metrics.json["calibration_targets"]`:
+
+| Key | Meaning |
+|-----|---------|
+| `f0_error_cents` | Pitch error vs reference |
+| `T30_error` | Decay time error |
+| `spectral_centroid_error` | Brightness / spectral balance |
+| `log_stft_distance` | Spectral shape distance |
+| `global_score` | Weighted aggregate (higher is better) |
+
+Use `compare_audio()` for single-pair checks during development. Use **panel eval** (`run_autoresearch_harness.py baseline`) when scoring a model across many conditions.
+
+### graph_hash
+
+`graph_hash` fingerprints the graph JSON (excluding UI layout). Autoresearch uses it to track candidates, detect unintended topology drift, and gate regression. Golden audio tests combine hash checks with scientific assertions (F0 ~ 440 Hz, envelope decay, determinism).
+
+**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/calibration.md](dsp_lab/calibration.md)
+
+## 8. Design principles (research safety)
+
+These principles keep automated research loops honest:
+
+1. **The graph is the artifact** — change topology and parameters in JSON, not hidden Python state
+2. **Representation ≠ computation** — valid physical wiring can fail at compile with `UNSUPPORTED_COMPUTATION`
+3. **No silent physical fallback** — never substitute `string.audio` for `string.bridge` when the research question is bidirectional coupling
+4. **Structured warnings before tuning** — read `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` before calibrating ignored params
+5. **Metrics authority** — `decision.json` and dataset regression beat planner hints
+6. **Prove the engine first** — green-path smoke and baseline eval before agents
+7. **Roadmap honesty** — see [roadmap.md](roadmap.md) for supported vs planned solvers
 
 ---
 
@@ -248,6 +388,8 @@ python examples/smoke_pasp_autoresearch.py   # green path (~2 min)
 Set `PYTHONPATH=src` when running scripts from the repo root if not using editable install entry points.
 
 ## 2. Your first render
+
+Or follow **[Tutorial 1](#tutorial-1--beginner-your-first-piano-note)** for a guided walkthrough.
 
 ### CLI
 
@@ -314,6 +456,7 @@ The GUI supports validate, render preview, and calibration (save graph to disk f
 
 | I want to… | Start here | Key doc |
 |------------|------------|---------|
+| Learn step-by-step | [Part 3 — Tutorials](#part-3--tutorials) | This manual |
 | Render one PASP note | `examples/piano/minimal_A4_note.json` | [minimal_piano_note.md](minimal_piano_note.md) |
 | Karplus string research | `examples/piano/minimal_waveguide_A4.json` | [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | Waveguide + modal body | `examples/piano/waveguide_modal_body_A4.json` | [roadmap.md](roadmap.md) |
@@ -326,7 +469,7 @@ The GUI supports validate, render preview, and calibration (save graph to disk f
 
 ## 5. Calibration and metrics
 
-Calibration searches tunable graph parameters by rendering and comparing to reference WAVs.
+Calibration searches tunable graph parameters by rendering and comparing to reference WAVs. Theory: [§7](#7-metrics-bundles-and-regression). Hands-on: [Tutorial 3 step 4](#tutorial-3--advanced-phrases-calibration-and-honest-failures).
 
 **GUI:** open a graph with a `CalibrationTask` block → Validate → Calibrate.
 
@@ -335,17 +478,6 @@ Calibration searches tunable graph parameters by rendering and comparing to refe
 ```bash
 python examples/run_calibration_example.py
 ```
-
-**Standard experiment bundle** (after calibration or eval):
-
-| File | Contents |
-|------|----------|
-| `render.wav` | Synthetic audio |
-| `render_metadata.json` | graph hash, warnings, structured_warnings |
-| `metrics.json` | Full compare metrics + `calibration_targets` |
-| `graph_hash.txt` | SHA-256 of graph content |
-
-Use `calibration_targets` keys (`f0_error_cents`, `T30_error`, `global_score`, …) for automated decisions.
 
 **Golden audio tests** (`tests/dsp_lab/test_golden_audio.py`) guard deterministic waveguide regression (F0, envelope, spectral centroid).
 
@@ -379,6 +511,312 @@ The cycle changes `candidate_graph.json` parameters inside approved templates, r
 | Param tuning has no effect | Solver ignores parameter | Read `structured_warnings` (`PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED`) |
 | `reference_missing` in eval | Reference WAVs not generated | [data/references/README.md](../data/references/README.md) |
 | Graph validates but sounds wrong | Phenomenological fit, not physics bug | Compare metrics; check modeling discipline |
+
+---
+
+# Part 3 — Tutorials
+
+Three progressive walkthroughs using graphs already in the repository. Run all commands from the **repo root** after `pip install -e ".[dev]"`.
+
+---
+
+## Tutorial 1 — Beginner: Your first piano note
+
+| | |
+|--|--|
+| **Goal** | Validate and render a decomposed PASP graph; understand graph anatomy; change one parameter |
+| **Graph** | [`examples/piano/minimal_A4_note.json`](../examples/piano/minimal_A4_note.json) |
+| **Prerequisites** | `pip install -e ".[dev]"` |
+| **Time** | ~20 min |
+
+### Step 1 — Read the graph
+
+Open `examples/piano/minimal_A4_note.json`. Identify:
+
+- **`inputs`** — `midi_note: 69` (A4), `velocity: 80`
+- **`blocks`** — hammer → junction → string → bridge → soundboard → output
+- **`connections`** — how `inputs`, `MidiToFrequency`, and block ports wire together
+- **`probes`** — tap points: `hammer.force`, `string.audio`, `soundboard.audio`
+
+Signal chain:
+
+```
+inputs → MidiToFrequency → PASPHammerFelt → PASPHammerStringJunction
+    → PASPStringLine → PASPBridgeTermination → PASPSoundboardModal → Output
+```
+
+This is a **T1 signal chain** — every block runs via `DSPBlock.process()`; no physical solver required.
+
+### Step 2 — Validate (representation check)
+
+```bash
+dsp-lab validate examples/piano/minimal_A4_note.json
+```
+
+Validation answers: do ports exist? Do kinds match? Are parameters in range? It does **not** check whether you have the latest solver — that is compile time.
+
+### Step 3 — Render
+
+```bash
+mkdir -p workspace
+dsp-lab render examples/piano/minimal_A4_note.json --out workspace/tutorial_beginner_a4.wav
+```
+
+Listen to `workspace/tutorial_beginner_a4.wav`. Sonic quality is not the goal; a non-silent, finite WAV means the pipeline works.
+
+### Step 4 — Optional: GUI
+
+```bash
+python -m dsp_lab.app.main examples/piano/minimal_A4_note.json
+```
+
+Use Validate and Render in the UI. Save the graph to disk before calibrating.
+
+### Step 5 — Python API
+
+```python
+from dsp_lab.api.render import render_graph
+
+result = render_graph(
+    graph_path="examples/piano/minimal_A4_note.json",
+    output_wav_path="workspace/tutorial_beginner_api.wav",
+    sample_rate=48000,
+    duration_seconds=3.0,
+)
+print("rms:", result.rms)
+print("graph_hash:", result.graph_hash)
+```
+
+`graph_hash` is stable for the same graph JSON — useful for regression.
+
+### Step 6 — Change a parameter
+
+Edit `examples/piano/minimal_A4_note.json` (or copy it to `workspace/my_a4.json` first). Change e.g. `blocks[3].params.bridge_loss` from `0.2` to `0.35` (the `string` block is `PASPStringLine` — adjust index if needed; or change `felt_p` on the hammer block).
+
+Re-render and compare RMS or listen for shorter decay.
+
+### Step 7 — Probes
+
+Probes listed in the graph are recorded when the render pipeline collects them. Use them to verify intermediate stages (hammer force, string audio) without adding `Output` blocks on every node.
+
+### What you learned
+
+- Graph anatomy: blocks, connections, inputs, probes
+- T1 signal-chain execution
+- `validate_graph` vs `render_graph`
+- Deterministic `graph_hash`
+
+### Next
+
+[Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) — physical solvers and mixed T1+T2 chains.
+
+---
+
+## Tutorial 2 — Intermediate: Waveguide string + modal body
+
+| | |
+|--|--|
+| **Goal** | Understand T2 physical solvers and mixed T1+T2 chains |
+| **Graphs** | `minimal_waveguide_A4.json` → `waveguide_modal_body_A4.json` → `minimal_hammer_waveguide_body_A4.json` |
+| **Prerequisites** | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
+| **Time** | ~45 min |
+
+### Step 1 — Minimal waveguide (one T2 solver)
+
+```bash
+dsp-lab render examples/piano/minimal_waveguide_A4.json --out workspace/tutorial_waveguide.wav
+```
+
+Open the graph:
+
+- `NoiseBurst` → `string.excitation` (short excitation burst)
+- `inputs.frequency_hz` → `string.frequency` (440 Hz)
+- `WaveguideString` is **solver-hosted** by `excited_waveguide_string`
+
+The `WaveguideString` block does not run ordinary `process()` — the Karplus-Strong solver owns the delay line.
+
+### Step 2 — Count subsystems mentally
+
+In `minimal_waveguide_A4.json`: **one** isolated-host subsystem (`string`).
+
+In `minimal_hammer_waveguide_body_A4.json`: **two** isolated-host subsystems (`string`, `body`) plus T1 blocks (`hammer`, `out`).
+
+### Step 3 — Waveguide + modal body
+
+```bash
+dsp-lab render examples/piano/waveguide_modal_body_A4.json --out workspace/tutorial_waveguide_body.wav
+```
+
+Two solvers: `excited_waveguide_string` then `modal_bank_body`, connected by a **signal** edge (`string.audio → body.audio`). Read any compile warnings in the console — they describe which solvers were selected.
+
+### Step 4 — Mixed T1 + T2 chain
+
+```bash
+dsp-lab render examples/piano/minimal_hammer_waveguide_body_A4.json --out workspace/tutorial_hammer_waveguide_body.wav
+```
+
+| Block | Tier |
+|-------|------|
+| `HammerExcitation` | T1 — signal schedule |
+| `WaveguideString` | T2 — `excited_waveguide_string` |
+| `ModalBankBody` | T2 — `modal_bank_body` |
+| `Output` | T1 — signal schedule |
+
+Hammer excitation is ordinary DSP; string and body are physical solvers. This is **mixed execution**, not one fused subsystem.
+
+### Step 5 — Structured warnings
+
+```python
+from dsp_lab.api.render import render_graph
+
+result = render_graph("examples/piano/minimal_waveguide_A4.json", "workspace/wg.wav")
+for w in result.structured_warnings:
+    print(w["code"], w.get("param"), w.get("message"))
+```
+
+If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for `inharmonicity_B`, do not tune that param expecting dispersion — the solver ignores it today.
+
+### Step 6 — Optional: compare to reference
+
+If you have a reference WAV under `data/`:
+
+```bash
+dsp-lab compare --real data/note_440.wav --synthetic workspace/tutorial_waveguide.wav --out workspace/metrics.json
+```
+
+Or use `compare_audio()` from `dsp_lab.api.compare`.
+
+### Step 7 — Parameter maps (preview)
+
+See `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` — same chain as step 4 but `parameter_maps` replace `MidiToFrequency` / `ParameterCurve` wiring. Details: [object_based_physical_modeling.md](object_based_physical_modeling.md) (parameter maps section).
+
+### What you learned
+
+- T2 physical solvers (`excited_waveguide_string`, `modal_bank_body`)
+- Mixed T1+T2 execution
+- `structured_warnings` and ignored parameters
+- When parameter maps simplify calibration graphs
+
+### Next
+
+[Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) — events, calibration, honest physical failures.
+
+---
+
+## Tutorial 3 — Advanced: Phrases, calibration, and honest failures
+
+| | |
+|--|--|
+| **Goal** | Event-driven polyphony, calibration bundle, representation-only topology, autoresearch entry |
+| **Graphs** | `waveguide_modal_body_A4_events.json`, bridge-coupler exercise, `calibration_minimal_c4.json` |
+| **Prerequisites** | [Tutorials 1–2](#tutorial-1--beginner-your-first-piano-note) |
+| **Time** | ~60–90 min |
+
+### Step 1 — Event-driven phrase
+
+Open `examples/piano/waveguide_modal_body_A4_events.json`. Note `graph.events`:
+
+```json
+"events": [
+  {"time_seconds": 0.0, "type": "note_on", "note": 69, "velocity": 92},
+  {"time_seconds": 1.2, "type": "note_off", "note": 69}
+]
+```
+
+```bash
+dsp-lab render examples/piano/waveguide_modal_body_A4_events.json --out workspace/tutorial_events.wav
+```
+
+Contrast with Tutorial 2 step 3: static graphs use scalar `inputs`; event graphs drive `PolyphonicWaveguideString` via `polyphonic_excited_waveguide` with sample-accurate note_on/off.
+
+Optional: `examples/piano/polyphonic_two_note_overlap.json` for overlapping notes.
+
+### Step 2 — Honest physical failure
+
+Bidirectional bridge wiring is **valid representation** but **unsupported computation** today.
+
+```python
+from dsp_lab.graph.serialization import load_graph
+from dsp_lab.graph.schema import ConnectionSpec
+from dsp_lab.graph.validator import validate_graph
+from dsp_lab.graph.compiler import compile_graph
+from dsp_lab.graph.physical.errors import UnsupportedComputationError
+
+graph = load_graph("examples/piano/minimal_waveguide_A4.json")
+graph.blocks.append({"id": "coupler", "type": "BridgeCoupler", "params": {}})
+graph.connections.append(
+    ConnectionSpec(**{"from": "string.bridge", "to": "coupler.input"})
+)
+
+assert validate_graph(graph).valid  # representation OK
+
+try:
+    compile_graph(graph)
+except UnsupportedComputationError as e:
+    print(e.code, e.representation_valid)
+    print(e)
+```
+
+**Do not** rewrite this to `string.audio → coupler.input` to “make it work” — that is a different topology and corrupts the research question.
+
+### Step 3 — Calibration
+
+```bash
+python examples/run_calibration_example.py
+```
+
+Or open `examples/graphs/calibration_minimal_c4.json` in the GUI → Validate → Calibrate.
+
+Inspect the output bundle next to the graph:
+
+| File | Look for |
+|------|----------|
+| `render.wav` | Best-trial synthetic audio |
+| `metrics.json` | `calibration_targets.global_score`, `f0_error_cents` |
+| `graph_hash.txt` | Fingerprint of calibrated graph |
+| `render_metadata.json` | `structured_warnings` |
+
+### Step 4 — Autoresearch smoke
+
+```bash
+python examples/smoke_pasp_autoresearch.py
+```
+
+This runs the green path without agents. For a full baseline scoreboard (requires reference WAVs):
+
+```bash
+python examples/run_autoresearch_harness.py baseline \
+  --out workspace/experiments/pasp_baseline_eval --workers 8
+```
+
+See [data/references/README.md](../data/references/README.md) for generating reference WAVs.
+
+### Step 5 — Read metrics for decisions
+
+```python
+import json
+from pathlib import Path
+
+metrics = json.loads(Path("workspace/metrics.json").read_text())
+targets = metrics.get("calibration_targets", {})
+print("global_score:", targets.get("global_score"))
+print("f0_error_cents:", targets.get("f0_error_cents"))
+```
+
+Tie this to [§8 Design principles](#8-design-principles-research-safety): metrics and `decision.json` are authoritative; planner hints are not.
+
+### What you learned
+
+- `graph.events` and polyphonic solvers
+- `UNSUPPORTED_COMPUTATION` discipline (no silent fallback)
+- Calibration experiment bundle
+- Autoresearch entry point (smoke → baseline)
+
+### Next
+
+- Operators: [dsp_lab/guide.md](dsp_lab/guide.md) (full runbook)
+- Agents: [agent_usage.md](agent_usage.md)
+- Solver status: [roadmap.md](roadmap.md)
 
 ---
 
@@ -425,6 +863,14 @@ The cycle changes `candidate_graph.json` parameters inside approved templates, r
 | Model governance | [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
 | All doc hub | [dsp_lab/README.md](dsp_lab/README.md) |
 
+### Tutorials (this manual)
+
+| Tutorial | Topic |
+|----------|-------|
+| [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) | First PASP note, graph anatomy |
+| [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) | Physical solvers, mixed execution |
+| [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) | Events, calibration, autoresearch |
+
 ---
 
 # Appendix B — Examples
@@ -439,6 +885,14 @@ Key graph directories:
 | Directory | Contents |
 |-----------|----------|
 | `examples/graphs/` | General and PASP performance graphs |
-| `examples/piano/` | Waveguide, minimal note, parameter-map examples |
+| `examples/piano/` | Waveguide, minimal note, parameter-map examples (tutorial graphs) |
 | `examples/calibration/` | Calibration task configs |
 | `examples/autoresearch/` | Cycle JSON configs |
+
+Tutorial graphs:
+
+| Tutorial | Graphs |
+|----------|--------|
+| 1 | `examples/piano/minimal_A4_note.json` |
+| 2 | `minimal_waveguide_A4.json`, `waveguide_modal_body_A4.json`, `minimal_hammer_waveguide_body_A4.json` |
+| 3 | `waveguide_modal_body_A4_events.json`, `examples/graphs/calibration_minimal_c4.json` |
