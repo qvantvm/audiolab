@@ -2,7 +2,9 @@
 
 Theory and practice for the Audiolab sound engine: graph-based offline DSP, physical piano modeling (PASP), calibration, and headless autoresearch.
 
-This manual explains **how the system thinks** and **how to use it end-to-end**. Detailed reference material lives in linked documents — use this page to orient yourself, then drill down.
+This manual explains **what exists, what computes, what is tested, and what remains experimental**. Detailed reference material lives in linked documents — use this page to orient yourself, then drill down.
+
+Audiolab's graph system can represent more physics than it can currently compute. A graph with physically named blocks is not automatically a physically coupled solver, and a successful render is not automatically evidence of piano realism.
 
 ## Who this is for
 
@@ -11,7 +13,7 @@ This manual explains **how the system thinks** and **how to use it end-to-end**.
 | **New users** | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
 | **Researchers** | Part 1 (theory), then [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) and [roadmap](roadmap.md) |
 | **Operators** (baseline eval, autoresearch cycles) | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), Part 2 §6, [dsp_lab/guide.md](dsp_lab/guide.md) |
-| **Agent authors** (Auralis consumers) | Part 1 §4–8, [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), [agent_usage.md](agent_usage.md) |
+| **Agent authors** (Auralis consumers) | [Agent safety contract](#agent-safety-contract), [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), [agent_usage.md](agent_usage.md) |
 
 ## Choose your path
 
@@ -25,23 +27,113 @@ This manual explains **how the system thinks** and **how to use it end-to-end**.
 
 ## What Audiolab is
 
-Audiolab (`dsp_lab`) is a **standalone synthesis and research engine**:
+Audiolab (`dsp_lab`) is a **standalone synthesis and research engine**. It provides:
 
-- **DSP graph engine** — JSON graphs, 130+ blocks, validation, offline render
+- **DSP graph engine** — JSON graphs, block registry, validation, offline render
 - **PyQt graph editor** — visual authoring and calibration UI
-- **PASP piano model** — physically interpretable hammer / string / bridge / body chains
+- **PASP piano modeling paths** — physically interpretable signal chains, composite demo blocks, and solver-backed prototypes
 - **Dataset evaluation** — manifest-scale scoring, failure clusters, regression reports
 - **Autoresearch cycle** — cluster selection → hypothesis → calibration → accept/reject decision (no LLM required)
+
+Use it as a research workbench, not as proof by vocabulary. A block named `Hammer`, `String`, `Bridge`, or `Soundboard` may be a signal-chain approximation, a composite model, a solver-hosted block, or representation-only topology depending on the graph and selected solver.
 
 ## What Audiolab is not
 
 - Agent orchestration, supervisor chat, or literature browser (see **Auralis**)
 - Real-time audio plugin or live performance host
-- A guarantee that every physically meaningful port topology can render today (see [representation vs computation](#4-representation-vs-computation))
+- A guarantee that every physically meaningful port topology can render today
+- Evidence, by itself, that a candidate sounds better than the baseline across a dataset
+
+## Current capability matrix
+
+This table is the manual's short truth table. The canonical solver status is [`roadmap.md`](roadmap.md); the machine-readable contract is [`tests/fixtures/roadmap/physical_solver_roadmap.json`](../tests/fixtures/roadmap/physical_solver_roadmap.json).
+
+| Feature | Status | Evidence | Limitations |
+|---------|--------|----------|-------------|
+| T1 signal graph render | Working | `examples/graphs/sine_test.json`, `examples/piano/minimal_A4_note.json`, CLI/API render paths | Offline only; signal routing does not imply physical coupling |
+| Block registry and validation | Working | Registry docs/tests, `dsp-lab list-blocks`, `validate_graph()` | The count of blocks is inventory, not quality evidence |
+| `WaveguideString` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay line; `inharmonicity_B` accepted but not applied |
+| `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
+| `ModalBankBody` T2 solver | Working prototype | `modal_bank_body`, `waveguide_modal_body_A4.json` | Signal-fed body filter, not bidirectional bridge/body impedance coupling |
+| Mixed hammer → waveguide → body chains | Working prototype | `minimal_hammer_waveguide_body_A4.json`, parameter-map examples | Multiple isolated solvers connected by signal edges; not fused physics |
+| Decomposed PASP hammer/string/bridge/body chain | Demo / interpretable signal chain | `minimal_A4_note.json`, PASP docs | Physically named one-way DSP blocks; not proof of physically faithful computation |
+| Composite PASP note/performance blocks | Demo / behavior model | `pasp_performance_model_base.json`, PASP example scripts | Opaque internals compared with decomposed graphs; validate with metrics before claims |
+| Bidirectional bridge coupling | Representation only | roadmap representation-only tests | Valid graph concept; default compile failure expected until T3 solver exists |
+| Hammer-string nonlinear contact solver | Planned / partial elsewhere | roadmap planned solver `nonlinear_hammer_string_contact` | No production T3 contact solver in default registry |
+| Dataset autoresearch improvement | Evidence-dependent | baseline/candidate `summary.json`, `decision.json`, regression reports | Unknown until references exist and before/after dataset eval passes |
+| Calibration quality improvement | Evidence-dependent | calibration `metrics.json`, render WAVs, panel eval | Can improve metrics without perceptual improvement or dataset generalization |
+
+## Known engineering limitations
+
+- Audiolab can represent valid physical topologies that it cannot compute yet. Compilation must fail honestly rather than substituting a convenient signal chain.
+- A block name being physical does not mean the computation is physically coupled. `PASPHammerFelt → PASPStringLine → PASPSoundboardModal` can still be a one-way DSP approximation.
+- The current waveguide string path is closer to a Karplus-Strong delay-line prototype than a high-fidelity stiff-string piano model.
+- `inharmonicity_B` is accepted for schema compatibility but ignored by the current waveguide delay line; structured warnings report this.
+- T3 bidirectional connected-component solvers and T4 fused piano solvers are not production-supported in the default registry.
+- Some PASP chains are physically interpretable without being physically faithful. Treat them as hypotheses until metrics, diagnostics, and listening checks support them.
+- Calibration can optimize objective metrics without producing perceptually better sound, and single-note improvement is not dataset improvement.
+- The autoresearch loop must prove improvement through baseline/candidate regression. A generated bundle is not the same as a better model.
+
+## Representation vs computation
+
+Audiolab separates two questions:
+
+1. **`validate_graph()`** — Is this a **valid representation**? (ports exist, domains match, no illegal cycles)
+2. **`compile_graph()`** — Can the engine **compute** it? (registered solvers, no silent fallback)
+
+If you declare bidirectional physical wiring (e.g. `WaveguideString.bridge ↔ BridgeCoupler.input`) but no bridge/scattering solver exists, validation **passes** and compilation **fails** with:
+
+- `UnsupportedComputationError`
+- code `UNSUPPORTED_COMPUTATION`
+- message prefix **"Valid representation, unsupported computation"**
+
+The engine will **not** silently rewrite `string.bridge` into `string.audio → coupler.input`. That substitution would corrupt research loops.
+
+| Status | Meaning |
+|--------|---------|
+| **Supported** | validate + compile + render |
+| **Working prototype** | supported computation with narrow tests and known limitations |
+| **Demo / approximation** | useful render path, but physical quality must be proven separately |
+| **Representation only** | validate passes; compile fails honestly |
+| **Planned** | solver named in roadmap, not in default registry |
+
+**Deep dive:** [roadmap.md](roadmap.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
+
+## Evidence dashboard
+
+Before claiming a model works, inspect the artifacts that make the claim falsifiable:
+
+| Question | Artifact |
+|----------|----------|
+| Did the graph render finite, non-silent, non-clipped audio? | `render_metadata.json`, `render.wav`, probe files |
+| Did the solver ignore any tuned parameter? | `structured_warnings` in render metadata |
+| Are references present? | dataset `summary.json`, `reference_missing` tags |
+| Did calibration improve the intended target? | calibration `metrics.json`, `calibration_targets.global_score` |
+| Did the candidate improve beyond one item? | candidate dataset `summary.json` and `regression_vs_baseline.md` |
+| Which failures remain? | `aggregate/failure_clusters.json`, `aggregate/worst_items.json` |
+| Is the candidate acceptable? | autoresearch `decision.json`; governance `promotion_decision.json` |
+
+If a local run has no baseline score, no candidate score, missing references, or no regression report, say so. Do not replace absent evidence with confident prose.
+
+## Solver gap analysis
+
+The roadmap names the next production solver classes, but piano realism needs a larger numerical layer. Missing or incomplete solver capabilities include:
+
+| Missing solver capability | Why it matters |
+|---------------------------|----------------|
+| Nonlinear hammer-string contact | Realistic attack, velocity response, repeated strikes |
+| Stiff string / dispersion | Piano-like inharmonicity and register-dependent partial spacing |
+| Multi-string unison coupling | Beating, chorus, register realism |
+| Bridge scattering / impedance coupling | Physical energy transfer from strings into body |
+| Soundboard radiation model | Body projection and acoustic radiation beyond modal filtering |
+| Damper/contact lifecycle | Note-off, release, pedal damping, repeated-note behavior |
+| Sympathetic resonance | Pedal realism, phrase behavior, undamped-string response |
+
+Treat these as solver work, not graph-authoring work. More graph structure cannot substitute for missing numerical computation.
 
 ### Relationship to Auralis
 
-Audiolab proves the synthesis, evaluation, calibration, and headless autoresearch loop. Auralis can consume Audiolab as a dependency for agent-only workflows such as journals, critique, supervisors, and literature browsing, but those concerns stay outside this repository.
+Audiolab provides the synthesis, evaluation, calibration, and headless autoresearch machinery that must be verified through the artifacts above. Auralis can consume Audiolab as a dependency for agent-only workflows such as journals, critique, supervisors, and literature browsing, but those concerns stay outside this repository.
 
 ### Repository and runtime layout
 
@@ -60,14 +152,14 @@ Audiolab proves the synthesis, evaluation, calibration, and headless autoresearc
 |------------|-------|
 | Follow a hands-on tutorial | [Part 3 — Tutorials](#part-3--tutorials) |
 | Understand graphs and execution tiers | Part 1 below · [architecture.md](architecture.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md) |
-| See what renders today vs what is planned | [roadmap.md](roadmap.md) |
+| See what renders today vs what is planned | [Current capability matrix](#current-capability-matrix) · [roadmap.md](roadmap.md) |
 | Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
 | Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](dsp_lab/cli.md) |
 | Calibrate parameters to a reference | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) · [calibration.md](dsp_lab/calibration.md) |
 | Generate local reference WAVs | Part 2 §5–6 · [data/README.md](../data/README.md) · [data/references/README.md](../data/references/README.md) |
 | Run autoresearch (no agents) | Part 2 §6 · [dsp_lab/guide.md](dsp_lab/guide.md) |
 | Register or promote a model candidate | Part 2 §6 · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
-| Build an agent loop | [agent_usage.md](agent_usage.md) |
+| Build an agent loop | [Agent safety contract](#agent-safety-contract) · [agent_usage.md](agent_usage.md) |
 | Look up block equations | [dsp_lab/pasp_block_io_reference.md](dsp_lab/pasp_block_io_reference.md) |
 | Find example scripts and graphs | [dsp_lab/examples_index.md](dsp_lab/examples_index.md) |
 
@@ -249,30 +341,7 @@ A single `WaveguideString` delay line holds **one pitch** at a time. Multiple si
 
 **Deep dive:** [object_based_physical_modeling.md](object_based_physical_modeling.md) (execution tiers, events, parameter maps, structured warnings)
 
-## 4. Representation vs computation
-
-Audiolab separates two questions:
-
-1. **`validate_graph()`** — Is this a **valid representation**? (ports exist, domains match, no illegal cycles)
-2. **`compile_graph()`** — Can the engine **compute** it? (registered solvers, no silent fallback)
-
-If you declare bidirectional physical wiring (e.g. `WaveguideString.bridge ↔ BridgeCoupler.input`) but no bridge/scattering solver exists, validation **passes** and compilation **fails** with:
-
-- `UnsupportedComputationError`
-- code `UNSUPPORTED_COMPUTATION`
-- message prefix **"Valid representation, unsupported computation"**
-
-The engine will **not** silently rewrite `string.bridge` into `string.audio → coupler.input`. That substitution would corrupt research loops.
-
-| Status | Meaning |
-|--------|---------|
-| **Supported** | validate + compile + render |
-| **Representation only** | validate passes; compile fails honestly |
-| **Planned** | solver named in roadmap, not in default registry |
-
-**Deep dive:** [roadmap.md](roadmap.md)
-
-## 5. Piano modeling in Audiolab
+## 4. Piano modeling in Audiolab
 
 The target physical chain:
 
@@ -286,11 +355,11 @@ MIDI / note event
     → radiation / output
 ```
 
-Audiolab implements this at three levels:
+Audiolab implements this through four modeling paths. The path name describes the risk boundary, not just the graph shape.
 
-### Level A — Decomposed PASP (audio signal chain)
+### Interpretable signal-chain PASP
 
-Each stage is a separate block connected by ordinary audio edges. Physically interpretable parameters; passes validation today.
+Each stage is a separate block connected by ordinary audio edges. It has physically interpretable parameters and passes validation/rendering today, but it is still a one-way signal chain unless a physical solver owns the coupling.
 
 ```
 PASPHammerFelt → PASPHammerStringJunction → PASPStringLine
@@ -299,17 +368,17 @@ PASPHammerFelt → PASPHammerStringJunction → PASPStringLine
 
 Canonical example: [`examples/piano/minimal_A4_note.json`](../examples/piano/minimal_A4_note.json)
 
-### Level B — Composite PASP blocks
+### Opaque composite model blocks
 
-Single blocks wrap full physics cores (`PASPNoteModel`, `PASPBidirectionalHammerString`, phrase-level `PASPPerformanceModel`). Faster to render; less graph visibility.
+Single blocks wrap larger model cores (`PASPNoteModel`, `PASPBidirectionalHammerString`, phrase-level `PASPPerformanceModel`). They are useful for demos, panels, and behavior matching, but they expose less graph-level evidence than decomposed chains.
 
-Run the composite C4 note demo when you want a quick Level B render rather than a decomposed tutorial graph:
+Run the composite C4 note demo when you want a quick composite render rather than a decomposed tutorial graph:
 
 ```bash
 python examples/run_pasp_note_example.py
 ```
 
-### Level C — Waveguide research path (physical solvers)
+### Solver-backed prototype physics
 
 Karplus-Strong style strings and modal bodies via T2 solvers:
 
@@ -319,9 +388,9 @@ Karplus-Strong style strings and modal bodies via T2 solvers:
 | `polyphonic_excited_waveguide` | `PolyphonicWaveguideString` | `waveguide_modal_body_A4_events.json` |
 | `modal_bank_body` | `ModalBankBody` | `waveguide_modal_body_A4.json` |
 
-Mixed chain: `HammerExcitation → WaveguideString → ModalBankBody` in `minimal_hammer_waveguide_body_A4.json`.
+Mixed chain: `HammerExcitation → WaveguideString → ModalBankBody` in `minimal_hammer_waveguide_body_A4.json`. This is prototype physical computation for isolated blocks, not a full piano solver.
 
-### Level D — model-recreation path
+### Behavior-matching / recreation path
 
 The model-recreation track uses higher-level model blocks to recreate known instrument behavior while keeping reproducible graph artifacts. Use it when the research question is "match this model path" rather than "expose every PASP subcomponent."
 
@@ -329,17 +398,17 @@ The model-recreation track uses higher-level model blocks to recreate known inst
 
 | Goal | Path |
 |------|------|
-| Physical interpretability, hypothesis testing | Level A (PASP decomposed) |
-| Quick demo, panel render | Level B (composite) |
-| String/body solver research, events, parameter maps | Level C (waveguide + modal) |
-| Recreate a known model path with graph artifacts | Level D (model recreation) |
+| Physical interpretability, hypothesis testing | Interpretable signal-chain PASP |
+| Quick demo, panel render | Opaque composite model blocks |
+| String/body solver research, events, parameter maps | Solver-backed prototype physics |
+| Recreate a known model path with graph artifacts | Behavior-matching / recreation path |
 | Fast baseline without physical params | Legacy blocks (`HammerExcitation`, `StiffStringModal`) |
 
 Beyond single notes, use the specialist PASP docs for string groups, lifecycle/damper/pedal behavior, note-family/register calibration, and phrase-level performance rendering.
 
 **Deep dive:** [minimal_piano_note.md](minimal_piano_note.md) · [piano_blocks.md](piano_blocks.md) · [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) · [dsp_lab/pasp_string_group_modeling.md](dsp_lab/pasp_string_group_modeling.md) · [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) · [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) · [dsp_lab/model_recreation.md](dsp_lab/model_recreation.md) · [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md)
 
-## 6. Research and autoresearch philosophy
+## 5. Research and autoresearch philosophy
 
 ### The artifact is the graph
 
@@ -347,7 +416,7 @@ Research changes **graph JSON** and **calibrated parameters** inside approved te
 
 ### Feedback is objective
 
-Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include pitch error, decay, spectral shape, and a `calibration_targets` bundle for agent decisions. See [§7 Metrics, bundles, and regression](#7-metrics-bundles-and-regression) for the full bundle layout.
+Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include pitch error, decay, spectral shape, and a `calibration_targets` bundle for agent decisions. See [§6 Metrics, bundles, and regression](#6-metrics-bundles-and-regression) for the full bundle layout.
 
 ### Authority in autoresearch
 
@@ -364,7 +433,7 @@ Cycle acceptance and model promotion are intentionally separate: an accepted cyc
 
 **Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md) · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md)
 
-## 7. Metrics, bundles, and regression
+## 6. Metrics, bundles, and regression
 
 Every calibration run and many eval paths write a **standard experiment bundle**:
 
@@ -397,7 +466,7 @@ Use `compare_audio()` for single-pair checks during development. Use **panel eva
 
 **Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/calibration.md](dsp_lab/calibration.md)
 
-## 8. Design principles (research safety)
+## 7. Design principles (research safety)
 
 These principles keep automated research loops honest:
 
@@ -408,6 +477,38 @@ These principles keep automated research loops honest:
 5. **Metrics authority** — `decision.json` and dataset regression beat planner hints
 6. **Prove the engine first** — green-path smoke and baseline eval before agents
 7. **Roadmap honesty** — see [roadmap.md](roadmap.md) for supported vs planned solvers
+
+## Agent safety contract
+
+Agents and automated loops may propose graph or parameter changes, but evidence remains the authority. Follow these rules before accepting any candidate:
+
+- Do not tune parameters that structured warnings say are ignored.
+- Do not replace unsupported physical edges with signal edges to make tests pass.
+- Do not treat one-note or one-phrase improvement as dataset improvement.
+- Do not accept a candidate without regression against the baseline panel or manifest.
+- Do not edit Python synthesis code unless the task is explicitly solver implementation.
+- Do not increase graph complexity without an ablation or targeted failure-cluster reason.
+- Do not trust LLM-written hypotheses, memory hints, or planner confidence unless metrics improve.
+- Do not hide model failures with arbitrary EQ, compression, global gain, or room effects inside the instrument chain.
+
+Minimal acceptance gates:
+
+```text
+A candidate may be accepted only if:
+- references are present, not missing;
+- validation and compilation pass for the intended topology;
+- no forbidden topology substitutions occurred;
+- no tuned parameter is ignored by the solver;
+- rendered audio is finite, non-silent, and non-clipped;
+- the targeted cluster or panel improves;
+- global score improves or stays within the configured regression threshold;
+- key regressions and new critical failures stay within policy limits;
+- graph hash, candidate lineage, and decision artifacts are recorded.
+```
+
+Cycle acceptance and model promotion are different gates. `decision.json` can accept a cycle candidate, but active-baseline promotion still requires governance policy checks and any required human review.
+
+**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md) · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md)
 
 ---
 
@@ -502,7 +603,7 @@ python -m dsp_lab.app.main examples/piano/minimal_A4_note.json
 
 The GUI supports graph editing, validation, render preview, and calibration. **Render** is one offline forward pass at current parameters. **Calibrate** runs many renders from a `CalibrationTask` block, compares them to reference WAVs, writes `graph_calibrated.json`, and reloads the calibrated graph. Save the graph to disk before calibrating.
 
-For a composite Level B GUI demo, open `examples/graphs/pasp_single_note_sound.json`.
+For an opaque composite model-block GUI demo, open `examples/graphs/pasp_single_note_sound.json`.
 
 **Deep dive:** [dsp_lab/cli.md](dsp_lab/cli.md) · [dsp_lab/gui.md](dsp_lab/gui.md) · [graph_schema.md](graph_schema.md)
 
@@ -530,7 +631,7 @@ For a composite Level B GUI demo, open `examples/graphs/pasp_single_note_sound.j
 
 ## 5. Calibration and metrics
 
-Calibration searches tunable graph parameters by rendering and comparing to reference WAVs. Theory: [§7](#7-metrics-bundles-and-regression). Hands-on: [Tutorial 3 step 4](#tutorial-3--advanced-phrases-calibration-and-honest-failures).
+Calibration searches tunable graph parameters by rendering and comparing to reference WAVs. Theory: [§6](#6-metrics-bundles-and-regression). Hands-on: [Tutorial 3 step 4](#tutorial-3--advanced-phrases-calibration-and-honest-failures).
 
 ### Reference data prerequisite
 
@@ -646,6 +747,21 @@ Default governance can register candidates without auto-promoting them. Do not t
 
 ## 7. Troubleshooting
 
+### First debugging checklist
+
+Use this order before calibrating or changing topology:
+
+1. Validate the graph.
+2. Compile the graph.
+3. Print or inspect the execution plan.
+4. List solver-hosted blocks and signal-scheduled blocks.
+5. Inspect structured warnings.
+6. Render with probes at excitation, string/body, and output boundaries.
+7. Check RMS, peak, clipping, NaN/Inf, and silence.
+8. Compare to a matching reference.
+9. Inspect metrics and failure tags.
+10. Only then calibrate or propose a model change.
+
 | Symptom | Likely cause | What to do |
 |---------|--------------|------------|
 | `validate_graph` errors | Invalid representation (bad ports, cycles, params) | See validation codes in [agent_usage.md](agent_usage.md) |
@@ -660,7 +776,7 @@ Default governance can register candidates without auto-promoting them. Do not t
 
 # Part 3 — Tutorials
 
-Three progressive walkthroughs using graphs already in the repository. Run all commands from the **repo root** after `pip install -e ".[dev]"`.
+Three progressive walkthroughs using graphs already in the repository. Run all commands from the **repo root** after `pip install -e ".[dev]"`. Tutorial renders prove the pipeline and selected examples run; they are not evidence of production piano quality unless you also run reference comparison and dataset regression.
 
 ---
 
@@ -959,7 +1075,7 @@ print("global_score:", targets.get("global_score"))
 print("f0_error_cents:", targets.get("f0_error_cents"))
 ```
 
-If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_metrics.json`. Tie this to [§8 Design principles](#8-design-principles-research-safety): metrics and `decision.json` are authoritative; planner hints are not.
+If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_metrics.json`. Tie this to [§7 Design principles](#7-design-principles-research-safety): metrics and `decision.json` are authoritative; planner hints are not.
 
 ### What you learned
 
