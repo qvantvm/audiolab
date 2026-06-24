@@ -307,6 +307,7 @@ class GraphView(QGraphicsView):
         if item:
             self.centerOn(item)
             item.setSelected(True)
+            self.node_selected.emit(block_id)
 
     def select_connection(self, index: int) -> None:
         for item in self.connection_items:

@@ -604,13 +604,13 @@ Adds a small bank of body resonances.
 
 **Explanation**
 
-**What it means:** A general-purpose bank of narrow resonances added to an incoming signal.
+**What it means:** `ResonanceBank` means: Adds a small bank of body resonances. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
 
-**Why it matters:** Many instruments and bodies have a few dominant ringing regions; this block adds that color cheaply.
+**Why it matters:** Body and space processing turns a direct string-like signal into something that reads more like an instrument in air.
 
-**How to think about it:** Each frequency/gain pair creates a peak filter, and the filtered responses are summed with the dry input.
+**How to think about it:** Use it downstream of excitation/string blocks and keep instrument-body choices separate from post-production effects.
 
-**Caveat:** It is tone shaping, not a physical body solver.
+**Caveat:** These blocks are practical approximations unless a dedicated physical solver owns the coupled subsystem.
 
 **Formula**
 

@@ -100,6 +100,19 @@ def connections_icon() -> QIcon:
     return _icon(draw)
 
 
+def help_icon() -> QIcon:
+    def draw(painter: QPainter, size: int) -> None:
+        pen = QPen(_ICON_COLOR, 1.6)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+        pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(3, 3, size - 6, size - 6)
+        painter.drawText(0, 1, size, size - 2, Qt.AlignmentFlag.AlignCenter, "?")
+
+    return _icon(draw)
+
+
 def waveform_icon() -> QIcon:
     return render_icon()
 

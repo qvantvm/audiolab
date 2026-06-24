@@ -31,12 +31,14 @@ from dsp_lab.app.edit_dialogs import AddBlockDialog, BlockBrowserDialog, Connect
 from dsp_lab.app.block_library import BlockLibraryWidget
 from dsp_lab.app.graph_document import GraphDocument
 from dsp_lab.app.graph_view import GraphView
+from dsp_lab.app.help_panel import HelpPanel
 from dsp_lab.app.inspector import InspectorPanel
 from dsp_lab.app.json_editor import JsonEditor
 from dsp_lab.app.metrics_panel import MetricsPanel
 from dsp_lab.app.panel_nav import PanelNav
 from dsp_lab.app.panel_nav_icons import (
     connections_icon,
+    help_icon,
     json_icon,
     logs_icon,
     render_icon,
@@ -64,6 +66,7 @@ class MainWindow(QMainWindow):
         self.audio_player = None
         self.graph_view = GraphView()
         self.inspector = InspectorPanel()
+        self.help_panel = HelpPanel()
         self.validation_panel = ValidationPanel()
         self.metrics_panel = MetricsPanel()
         self.json_editor = JsonEditor()
@@ -92,6 +95,7 @@ class MainWindow(QMainWindow):
             self.document = GraphDocument.load(path)
             self.last_render = None
             self.inspector.set_document(self.document)
+            self.help_panel.set_document(self.document)
             self._refresh_all()
             self._log(f"Loaded {path}")
         except Exception as exc:
@@ -172,6 +176,7 @@ class MainWindow(QMainWindow):
             try:
                 self.document = GraphDocument.load(calibrated_path)
                 self.inspector.set_document(self.document)
+                self.help_panel.set_document(self.document)
                 self._refresh_all()
             except Exception as exc:
                 self._error(f"Calibration succeeded but failed to load calibrated graph: {exc}")
@@ -276,6 +281,7 @@ class MainWindow(QMainWindow):
         try:
             self.document.reload()
             self.inspector.set_document(self.document)
+            self.help_panel.set_document(self.document)
             self._refresh_all()
             self._log("Reloaded from disk")
         except Exception as exc:
@@ -288,16 +294,20 @@ class MainWindow(QMainWindow):
         if dialog.exec():
             block = self.document.add_block(dialog.selected_type(), 100, 100)
             self._refresh_all()
+            self.graph_view.select_node(block.id)
             self.inspector.set_block(block.id)
+            self.help_panel.set_block(block.id)
 
     def add_block_from_library(self, block_type: str, x: float, y: float) -> None:
         if self.document is None:
             self.document = GraphDocument(GraphSpec(name="untitled"))
             self.inspector.set_document(self.document)
+            self.help_panel.set_document(self.document)
         block = self.document.add_block(block_type, x, y)
         self._refresh_all()
         self.graph_view.select_node(block.id)
         self.inspector.set_block(block.id)
+        self.help_panel.set_block(block.id)
         self._log(f"Added {block_type} at ({x:.0f}, {y:.0f})")
 
     def add_connection(self) -> None:
@@ -324,6 +334,7 @@ class MainWindow(QMainWindow):
     def _select_connection_row(self, index: int) -> None:
         if 0 <= index < self.connections.rowCount():
             self.connections.selectRow(index)
+            self.help_panel.set_connection(index)
 
     def _on_connection_table_selection(self) -> None:
         row = self.connections.currentRow()
@@ -347,6 +358,7 @@ class MainWindow(QMainWindow):
             self.document.apply_json(text)
             self.json_editor.set_error("")
             self.inspector.set_document(self.document)
+            self.help_panel.set_document(self.document)
             self._refresh_all()
         except Exception as exc:
             self.json_editor.set_error(str(exc))
@@ -369,6 +381,7 @@ class MainWindow(QMainWindow):
         bottom = PanelNav(
             [
                 (self.validation_panel, validation_icon(), "Validation"),
+                (self.help_panel, help_icon(), "Help"),
                 (self.logs, logs_icon(), "Logs"),
                 (self.metrics_panel, render_icon(), "Render"),
                 (self.json_editor, json_icon(), "JSON"),
@@ -424,15 +437,18 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self) -> None:
         self.graph_view.node_selected.connect(self.inspector.set_block)
+        self.graph_view.node_selected.connect(self.help_panel.set_block)
         self.graph_view.graph_changed.connect(self._refresh_all)
         self.graph_view.block_dropped.connect(self.add_block_from_library)
         self.graph_view.connection_selected.connect(self._select_connection_row)
+        self.graph_view.connection_selected.connect(self.help_panel.set_connection)
         self.graph_view.connection_delete_requested.connect(self._delete_connection_at)
         self.connections.itemSelectionChanged.connect(self._on_connection_table_selection)
         self.inspector.params_changed.connect(self._update_params)
         self.inspector.delete_requested.connect(self._delete_block)
         self.validation_panel.block_requested.connect(self.graph_view.select_node)
         self.validation_panel.block_requested.connect(self.inspector.set_block)
+        self.validation_panel.block_requested.connect(self.help_panel.set_block)
         self.json_editor.apply_requested.connect(self.apply_json)
 
     def _update_params(self, block_id: str, params: dict) -> None:
@@ -444,6 +460,7 @@ class MainWindow(QMainWindow):
         if self.document:
             self.document.delete_block(block_id)
             self.inspector.set_block(None)
+            self.help_panel.set_block(None)
             self._refresh_all()
 
     def _refresh_all(self) -> None:
@@ -454,6 +471,7 @@ class MainWindow(QMainWindow):
         self.graph_view.set_document(self.document, result)
         self.json_editor.set_json(self.document.to_json())
         self._refresh_connections()
+        self.help_panel.refresh_selection()
         title = self.document.graph.name
         if self.document.dirty:
             title += " *"
