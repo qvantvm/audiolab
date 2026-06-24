@@ -6,6 +6,22 @@ This manual explains **what exists, what computes, what is tested, and what rema
 
 Audiolab's graph system can represent more physics than it can currently compute. A graph with physically named blocks is not automatically a physically coupled solver, and a successful render is not automatically evidence of piano realism.
 
+## Audio synthesis context
+
+Audio synthesis is the practice of generating sound by computation. Every synthesis system trades off perceptual quality, controllability, computational cost, interpretability, and evidence: a method can sound good without explaining the instrument, expose meaningful controls without sounding realistic, or render quickly while hiding the cause of its failures.
+
+Common approaches include:
+
+| Approach | Strengths | Tradeoffs |
+|----------|-----------|-----------|
+| Sample-based synthesis | High realism when recordings cover the desired notes, velocities, articulations, and microphones | Less explanatory; limited outside captured conditions; large libraries and interpolation rules |
+| Subtractive / additive / FM / wavetable DSP | Efficient, controllable, mature for musical design | Often abstract relative to acoustic instrument physics; realism depends on careful patch design |
+| Physical modeling | Exposes causal parameters and can generalize across performance conditions | Numerically hard; solver gaps are easy to hide behind physical names |
+| Neural / data-driven synthesis | Can produce high-quality results when trained on suitable data | Opaque, data-dependent, and harder to use for causal physical research |
+| Hybrid systems | Practical combination of models, samples, effects, and learned components | Requires discipline about which layer is responsible for the sound |
+
+Audiolab takes a graph-based, offline, evidence-first physical-modeling research approach. The graph represents instrument structure explicitly; compilation separates valid representation from supported computation; renders are measured against references; and calibration/autoresearch are treated as hypothesis tests, not proof of realism. Physical modeling is not assumed to be automatically better here — it is useful because it makes assumptions, missing solvers, and failure modes visible.
+
 ## Who this is for
 
 | Reader | Start with |
