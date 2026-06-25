@@ -58,10 +58,11 @@ def test_render_loop_executes_compiled_subsystem(tmp_path: Path):
     assert result.audio.shape == (96000,)
     assert np.all(np.isfinite(result.audio))
     assert result.metadata["rms"] > 0.0
-    assert any("excited_waveguide_string" in warning for warning in result.warnings)
+    assert not any("does not yet implement dispersion" in warning for warning in result.warnings)
     state = result.physical_subsystem_states["isolated_host_string"]
     assert state["delay"] == int(round(48000 / 440.0))
     assert state["config"]["frequency_hz"] == 440.0
+    assert state["dispersion_mode"] == "stiff_string_modal_approx"
 
     wav_path = tmp_path / "minimal_waveguide_A4.wav"
     sf.write(str(wav_path), result.audio, result.sample_rate)
@@ -74,6 +75,50 @@ def test_repeated_render_is_deterministic():
     first = render_graph(graph)
     second = render_graph(graph)
     np.testing.assert_allclose(first.audio, second.audio, rtol=0.0, atol=1e-6)
+
+
+def test_zero_inharmonicity_uses_karplus_strong_loop():
+    graph = load_graph(WAVEGUIDE_GRAPH)
+    for block in graph.blocks:
+        if block.id == "string":
+            block.params["inharmonicity_B"] = 0.0
+    result = render_graph(graph, collect_block_states=True)
+    state = result.physical_subsystem_states["isolated_host_string"]
+
+    assert state["dispersion_mode"] == "karplus_strong_loop"
+    assert np.all(np.isfinite(result.audio))
+    assert result.metadata["rms"] > 0.0
+
+
+def test_inharmonicity_changes_audio_and_shifts_upper_partial():
+    harmonic_graph = load_graph(WAVEGUIDE_GRAPH)
+    dispersive_graph = load_graph(WAVEGUIDE_GRAPH)
+    for block in harmonic_graph.blocks:
+        if block.id == "string":
+            block.params["inharmonicity_B"] = 0.0
+    for block in dispersive_graph.blocks:
+        if block.id == "string":
+            block.params["inharmonicity_B"] = 0.005
+
+    harmonic = render_graph(harmonic_graph)
+    dispersive = render_graph(dispersive_graph)
+
+    assert not np.allclose(harmonic.audio, dispersive.audio)
+    expected_fifth = 5.0 * 440.0 * np.sqrt(1.0 + 0.005 * 25.0)
+    assert _local_peak_frequency(dispersive.audio, dispersive.sample_rate, 2250.0, 2420.0) == pytest.approx(
+        expected_fifth,
+        abs=35.0,
+    )
+
+
+def test_inharmonicity_no_longer_emits_ignored_param_warning():
+    result = render_graph(load_graph(WAVEGUIDE_GRAPH))
+    assert not any(
+        item.get("code") == "PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED"
+        and item.get("param") == "inharmonicity_B"
+        and item.get("solver") == "excited_waveguide_string"
+        for item in result.structured_warnings
+    )
 
 
 def test_unsupported_bidirectional_physical_graph_raises_structured_error():
@@ -98,3 +143,13 @@ def _waveguide_subsystem():
     graph = load_graph(WAVEGUIDE_GRAPH)
     compiled = compile_graph(graph)
     return compiled.physical_subsystems[0]
+
+
+def _local_peak_frequency(audio: np.ndarray, sample_rate: int, low_hz: float, high_hz: float) -> float:
+    window = np.hanning(audio.size)
+    spectrum = np.abs(np.fft.rfft(audio * window))
+    freqs = np.fft.rfftfreq(audio.size, 1.0 / sample_rate)
+    mask = (freqs >= low_hz) & (freqs <= high_hz)
+    masked_freqs = freqs[mask]
+    masked_spectrum = spectrum[mask]
+    return float(masked_freqs[int(np.argmax(masked_spectrum))])

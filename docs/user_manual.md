@@ -68,7 +68,7 @@ This table is the manual's short truth table. The canonical solver status is [`r
 |---------|--------|----------|-------------|
 | T1 signal graph render | Working | `examples/graphs/sine_test.json`, `examples/piano/minimal_A4_note.json`, CLI/API render paths | Offline only; signal routing does not imply physical coupling |
 | Block registry and validation | Working | Registry docs/tests, `dsp-lab list-blocks`, `validate_graph()` | The count of blocks is inventory, not quality evidence |
-| `WaveguideString` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay line; `inharmonicity_B` accepted but not applied |
+| `WaveguideString` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
 | `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
 | `ModalBankBody` T2 solver | Working prototype | `modal_bank_body`, `waveguide_modal_body_A4.json` | Signal-fed body filter, not bidirectional bridge/body impedance coupling |
 | Mixed hammer → waveguide → body chains | Working prototype | `minimal_hammer_waveguide_body_A4.json`, parameter-map examples | Multiple isolated solvers connected by signal edges; not fused physics |
@@ -83,8 +83,8 @@ This table is the manual's short truth table. The canonical solver status is [`r
 
 - Audiolab can represent valid physical topologies that it cannot compute yet. Compilation must fail honestly rather than substituting a convenient signal chain.
 - A block name being physical does not mean the computation is physically coupled. `PASPHammerFelt → PASPStringLine → PASPSoundboardModal` can still be a one-way DSP approximation.
-- The current waveguide string path is closer to a Karplus-Strong delay-line prototype than a high-fidelity stiff-string piano model.
-- `inharmonicity_B` is accepted for schema compatibility but ignored by the current waveguide delay line; structured warnings report this.
+- The current waveguide string path is closer to a Karplus-Strong/reduced-order modal prototype than a high-fidelity stiff-string piano model.
+- `inharmonicity_B` now affects the mono `WaveguideString` T2 solver through a reduced-order dispersion approximation; the polyphonic waveguide path still reports unsupported dispersion with structured warnings.
 - T3 bidirectional connected-component solvers and T4 fused piano solvers are not production-supported in the default registry.
 - Some PASP chains are physically interpretable without being physically faithful. Treat them as hypotheses until metrics, diagnostics, and listening checks support them.
 - Calibration can optimize objective metrics without producing perceptually better sound, and single-note improvement is not dataset improvement.
@@ -331,16 +331,16 @@ HammerExcitation  →  WaveguideString  →  ModalBankBody  →  Output
 
 Each T2 block gets its own physical solver. The compiler does **not** auto-fuse chains unless a matching T4 solver is registered and opted in via `solver_hint`.
 
-### Karplus-Strong waveguide (T2)
+### Waveguide string (T2)
 
-`ExcitedWaveguideStringSolver` implements a Karplus-Strong style string:
+`ExcitedWaveguideStringSolver` implements a prototype string solver:
 
 1. **Excitation** — short burst injected at the bridge end of a delay line
-2. **Delay line** — length set by `frequency_hz` (or control input)
-3. **Loop filter** — `brightness` and `decay_seconds` shape the returning wave
+2. **Delay line at `B=0`** — length set by `frequency_hz` (or control input)
+3. **Reduced-order dispersion at `B>0`** — `inharmonicity_B` shifts upper partials using $f_k = k f_0 \sqrt{1 + B k^2}$
 4. **Output** — `string.audio` boundary to the rest of the graph
 
-The block parameter `inharmonicity_B` is accepted for schema compatibility but **not yet applied** to the delay line. The solver emits `structured_warnings` with code `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` — check these before adding calibration tunables on that param.
+This is not a full stiff-string PDE or hammer/string/bridge solve. It is a production-safe T2 approximation that makes `inharmonicity_B` audible and measurable while keeping larger T3/T4 coupling work separate.
 
 ### Modal body (T2)
 
@@ -956,7 +956,7 @@ for w in result.structured_warnings:
     print(w["code"], w.get("param"), w.get("message"))
 ```
 
-If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for `inharmonicity_B`, do not tune that param expecting dispersion — the solver ignores it today.
+If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for a tunable, do not tune that param expecting it to affect the render. The mono `WaveguideString` solver now applies `inharmonicity_B`; the polyphonic waveguide path may still warn for unsupported dispersion.
 
 ### Step 6 — Optional: compare to reference
 

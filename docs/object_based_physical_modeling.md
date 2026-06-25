@@ -243,15 +243,15 @@ Physical solvers emit **structured warnings** when block parameters are accepted
 ```json
 {
   "warnings": [
-    "ExcitedWaveguideStringSolver accepts inharmonicity_B for schema compatibility but does not yet implement dispersion."
+    "PolyphonicWaveguideSolver accepts inharmonicity_B for schema compatibility but does not yet implement dispersion."
   ],
   "structured_warnings": [
     {
       "code": "PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED",
-      "node": "string",
+      "node": "strings",
       "param": "inharmonicity_B",
-      "solver": "excited_waveguide_string",
-      "message": "ExcitedWaveguideStringSolver accepts inharmonicity_B for schema compatibility but does not yet implement dispersion."
+      "solver": "polyphonic_excited_waveguide",
+      "message": "PolyphonicWaveguideSolver accepts inharmonicity_B for schema compatibility but does not yet implement dispersion."
     }
   ]
 }
@@ -262,4 +262,4 @@ Physical solvers emit **structured warnings** when block parameters are accepted
 | `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` | Param is on the block / in `block_params` but the selected solver ignores it |
 | `PARAM_LEGACY_MAPPED` | Legacy param remapped (e.g. `decay` → `decay_seconds`) |
 
-Phase 1 ignored params on waveguide solvers: `inharmonicity_B` on `excited_waveguide_string` and `polyphonic_excited_waveguide`.
+Phase 1 ignored params on waveguide solvers: `inharmonicity_B` on `polyphonic_excited_waveguide`. The mono `excited_waveguide_string` path applies `inharmonicity_B` with a reduced-order stiff-string modal approximation.

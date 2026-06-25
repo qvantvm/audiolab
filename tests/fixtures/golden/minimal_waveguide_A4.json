@@ -1,6 +1,6 @@
 {
   "graph": "examples/piano/minimal_waveguide_A4.json",
-  "audio_hash": "12ebb9159a325dca18dcca8c4f8e9d615f71ca65fab808c3a8c62eac56b653c6",
+  "audio_hash": "e9ccb7c562f028ec2dacd1acabb4bba6ddb8756fa9e9954cef93afe89e466c02",
   "sample_rate": 48000,
   "duration": 2.0,
   "f0_hz_expected": 440.0,

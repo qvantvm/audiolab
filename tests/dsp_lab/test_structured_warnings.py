@@ -43,13 +43,11 @@ def test_physical_warning_round_trip():
     assert "dispersion" in payload["message"]
 
 
-def test_minimal_waveguide_emits_inharmonicity_warning():
+def test_minimal_waveguide_no_longer_emits_inharmonicity_warning():
     graph = load_graph(WAVEGUIDE_GRAPH)
     result = render_graph(graph)
     warning = _find_inharmonicity_warning(result.structured_warnings)
-    assert warning is not None
-    assert warning["node"] == "string"
-    assert warning["solver"] == "excited_waveguide_string"
+    assert warning is None
 
 
 def test_zero_inharmonicity_no_warning():
@@ -61,25 +59,23 @@ def test_zero_inharmonicity_no_warning():
     assert _find_inharmonicity_warning(result.structured_warnings) is None
 
 
-def test_parameter_maps_graph_warns_inharmonicity():
+def test_parameter_maps_graph_no_longer_warns_inharmonicity_for_mono_waveguide():
     if not PARAMETER_MAPS_GRAPH.is_file():
         return
     graph = materialize_parameter_maps(load_graph(PARAMETER_MAPS_GRAPH))
     result = render_graph(graph)
     warning = _find_inharmonicity_warning(result.structured_warnings)
-    assert warning is not None
-    assert warning["node"] == "string"
+    assert warning is None
 
 
-def test_legacy_warnings_string_preserved():
+def test_legacy_warnings_string_no_longer_reports_mono_waveguide_inharmonicity():
     graph = load_graph(WAVEGUIDE_GRAPH)
     result = render_graph(graph)
-    assert any("inharmonicity_B" in message for message in result.warnings)
-    assert any("schema compatibility" in message for message in result.warnings)
+    assert not any("inharmonicity_B" in message and "schema compatibility" in message for message in result.warnings)
 
 
 def test_render_metadata_includes_structured_warnings():
     graph = load_graph(WAVEGUIDE_GRAPH)
     result = render_graph(graph)
     assert "structured_warnings" in result.metadata
-    assert _find_inharmonicity_warning(result.metadata["structured_warnings"]) is not None
+    assert _find_inharmonicity_warning(result.metadata["structured_warnings"]) is None

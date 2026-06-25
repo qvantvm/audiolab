@@ -169,8 +169,8 @@ BLOCK_OVERRIDES: dict[str, str] = {
     "WaveguideString": _section(
         what="A delay-line string approximation hosted by the `excited_waveguide_string` physical solver.",
         why="It is the current solver-backed prototype for string-like pitched decay in the object-based physical-modeling path.",
-        how="Excitation enters the delay line, the loop length sets pitch, and loop filtering shapes brightness and decay.",
-        caveat="This is Karplus-Strong-style behavior; accepted parameters such as `inharmonicity_B` may not be implemented by this solver.",
+        how="With `inharmonicity_B` at zero, excitation enters a Karplus-Strong delay loop. With `inharmonicity_B` above zero, the solver uses a reduced-order stiff-string modal approximation so upper partials shift upward.",
+        caveat="This is still a prototype T2 string solver, not a nonlinear hammer-string or bridge-coupled piano solve.",
     ),
     "BellModalBody": _section(
         what=(

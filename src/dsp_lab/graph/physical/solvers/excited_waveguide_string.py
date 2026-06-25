@@ -29,6 +29,59 @@ def _delay_length(frequency_hz: float, sample_rate: int) -> int:
     return max(2, int(round(sample_rate / max(float(frequency_hz), 1.0))))
 
 
+def _clamped_inharmonicity(value: float) -> float:
+    return float(np.clip(value, 0.0, 0.01))
+
+
+def _dispersion_mode(inharmonicity_B: float) -> str:
+    return "stiff_string_modal_approx" if _clamped_inharmonicity(inharmonicity_B) > 0.0 else "karplus_strong_loop"
+
+
+def _render_stiff_string_modal_approx(
+    excitation: np.ndarray,
+    *,
+    num_frames: int,
+    frequency_hz: float,
+    sample_rate: int,
+    decay_seconds: float,
+    brightness: float,
+    gain: float,
+    inharmonicity_B: float,
+) -> np.ndarray:
+    excitation = np.asarray(excitation, dtype=np.float32)
+    if num_frames <= 0:
+        return np.zeros(0, dtype=np.float32)
+
+    base = max(float(frequency_hz), 1.0)
+    b_value = _clamped_inharmonicity(inharmonicity_B)
+    t = np.arange(num_frames, dtype=np.float64) / float(sample_rate)
+    scale = max(float(np.sqrt(np.mean(excitation**2))) if excitation.size else 1.0, 0.001)
+    brightness = float(np.clip(brightness, 0.0, 1.0))
+    decay_seconds = max(float(decay_seconds), 0.01)
+    nyquist_limit = sample_rate * 0.48
+    max_harmonic = int(nyquist_limit // base)
+    mode_count = max(1, min(48, max_harmonic))
+
+    out = np.zeros(num_frames, dtype=np.float64)
+    for harmonic in range(1, mode_count + 1):
+        freq = base * harmonic * math.sqrt(1.0 + b_value * harmonic * harmonic)
+        if freq >= nyquist_limit:
+            continue
+        normalized_mode = 0.0 if mode_count <= 1 else (harmonic - 1) / (mode_count - 1)
+        brightness_tilt = 0.35 + 1.65 * brightness * normalized_mode
+        amplitude = (1.0 / (harmonic**0.85)) * brightness_tilt
+        # Higher modes of a stiff string lose energy faster in this reduced-order approximation.
+        high_mode_loss = (0.035 - 0.02 * brightness) * harmonic**1.4
+        modal_decay = max(decay_seconds / (1.0 + high_mode_loss), 0.01)
+        phase = 0.17 * harmonic
+        out += amplitude * np.exp(-t / modal_decay) * np.sin(2.0 * np.pi * freq * t + phase)
+
+    peak = float(np.max(np.abs(out))) if out.size else 0.0
+    if peak > 0.0:
+        out = out / peak * min(0.9, scale * 6.0)
+    return np.nan_to_num(out * float(gain)).astype(np.float32)
+
+
 @dataclass(frozen=True)
 class ExcitedWaveguideConfig:
     block_id: str
@@ -70,6 +123,9 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
             "buffer": self._buffer.astype(np.float64).tolist(),
             "delay": self._delay,
             "decay": self._decay,
+            "dispersion_mode": _dispersion_mode(self.config.inharmonicity_B),
+            "effective_delay": self._delay,
+            "inharmonicity_B_clamped": _clamped_inharmonicity(self.config.inharmonicity_B),
             "config": {
                 "frequency_hz": self.config.frequency_hz,
                 "decay_seconds": self.config.decay_seconds,
@@ -117,6 +173,20 @@ class CompiledExcitedWaveguideString(CompiledPhysicalSubsystem):
         init_len = min(self._delay, excitation.size)
         if init_len:
             self._buffer[:init_len] = excitation[:init_len]
+
+        if _clamped_inharmonicity(self.config.inharmonicity_B) > 0.0:
+            return {
+                self.config.audio_output_port: _render_stiff_string_modal_approx(
+                    excitation,
+                    num_frames=num_frames,
+                    frequency_hz=frequency_hz,
+                    sample_rate=self.sample_rate,
+                    decay_seconds=self.config.decay_seconds,
+                    brightness=self.config.brightness,
+                    gain=self.config.gain,
+                    inharmonicity_B=self.config.inharmonicity_B,
+                )
+            }
 
         brightness = float(np.clip(self.config.brightness, 0.0, 1.0))
         out = np.zeros(num_frames, dtype=np.float32)

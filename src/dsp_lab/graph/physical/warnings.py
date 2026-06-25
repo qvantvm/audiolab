@@ -9,7 +9,6 @@ PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED = "PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED"
 PARAM_LEGACY_MAPPED = "PARAM_LEGACY_MAPPED"
 
 SOLVER_IGNORED_PARAMS: dict[str, frozenset[str]] = {
-    "excited_waveguide_string": frozenset({"inharmonicity_B"}),
     "polyphonic_excited_waveguide": frozenset({"inharmonicity_B"}),
 }
 
