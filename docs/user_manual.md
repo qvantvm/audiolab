@@ -180,6 +180,7 @@ Audiolab provides the synthesis, evaluation, calibration, and headless autoresea
 | Follow a hands-on tutorial | [Part 3 — Tutorials](#part-3--tutorials) |
 | Understand graphs and execution tiers | Part 1 below · [architecture.md](architecture.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | Learn resonant coloration and `ResonanceBank` | [§3 — Resonant coloration](#resonant-coloration-and-resonancebank) |
+| Learn `String1D` and waveguide strings | [§3 — String1D](#string1d-and-excited-waveguide-string) |
 | See what renders today vs what is planned | [Current capability matrix](#current-capability-matrix) · [roadmap.md](roadmap.md) |
 | Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
 | Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](audiolab/cli.md) |
@@ -343,16 +344,287 @@ HammerExcitation  →  String1D  →  ModalBankBody  →  Output
 
 Each T2 block gets its own physical solver. The compiler does **not** auto-fuse chains unless a matching T4 solver is registered and opted in via `solver_hint`.
 
-### Waveguide string (T2)
+### String1D and excited_waveguide_string {#string1d-and-excited-waveguide-string}
 
-`ExcitedWaveguideStringSolver` implements a prototype string solver:
+`String1D` is a **simple physical-modeling block that produces the sound of a vibrating string**.
 
-1. **Excitation** — short burst injected at the bridge end of a delay line
-2. **Delay line at `B=0`** — length set by `frequency_hz` (or control input)
-3. **Reduced-order dispersion at `B>0`** — `inharmonicity_B` shifts upper partials using $f_k = k f_0 \sqrt{1 + B k^2}$
-4. **Output** — `string.audio` boundary to the rest of the graph
+It is not a full violin/guitar/piano string simulation. It is a practical T2 prototype with two modes:
 
-This is not a full stiff-string PDE or hammer/string/bridge solve. It is a production-safe T2 approximation that makes `inharmonicity_B` audible and measurable while keeping larger T3/T4 coupling work separate.
+1. **Karplus–Strong / waveguide string** when `inharmonicity_B = 0`
+2. **Reduced stiff-string modal model** when `inharmonicity_B > 0`
+
+The block takes a pitch, optionally an excitation signal, and outputs audio. In compiled graphs it is **solver-hosted** by `excited_waveguide_string` — the block declares ports and parameters; the solver performs the computation.
+
+#### What it means conceptually
+
+A real string does roughly this:
+
+```text
+pluck / hammer / bow / impulse
+        ↓
+ vibrating string
+        ↓
+ pitched decaying sound
+```
+
+For a simple string, the sound has harmonics:
+
+```text
+f0, 2f0, 3f0, 4f0, ...
+```
+
+For example, if `f0 = 110 Hz`, the partials are approximately:
+
+```text
+110, 220, 330, 440, 550, ...
+```
+
+A stiff piano string is different. Its upper partials are slightly sharp:
+
+\[
+f_k = k f_0 \sqrt{1 + B k^2}
+\]
+
+So the partials become:
+
+```text
+110, slightly above 220, more above 330, even more above 440, ...
+```
+
+That is what `inharmonicity_B` controls.
+
+#### The `inharmonicity_B = 0` case: Karplus–Strong string
+
+When `inharmonicity_B = 0`, the `excited_waveguide_string` solver uses a **delay-line feedback loop**.
+
+```text
+short burst of noise/excitation
+        ↓
+ circular delay buffer
+        ↓
+ feedback with damping/filtering
+        ↓
+ decaying pitched tone
+```
+
+Pitch is set by delay length (Audiolab implementation):
+
+\[
+L = \max\left(2,\ \mathrm{round}\!\left(\frac{f_s}{f_0}\right)\right)
+\]
+
+At `fs = 44100` and `f0 = 440`:
+
+```text
+L = round(44100 / 440) = 100 samples
+```
+
+A 100-sample loop repeats about 441 times per second, producing a pitch near 440 Hz.
+
+#### How the Karplus–Strong computation works
+
+At every audio sample the solver:
+
+```text
+y[n] = buffer[index]
+buffer[index] ← decay_coeff · (brightness · buffer[index] + (1-brightness) · avg)
+```
+
+where `avg` is the average of `buffer[index]` and `buffer[index+1]` (circular wrap).
+
+More explicitly:
+
+```python
+idx = i % L
+nxt = (idx + 1) % L
+value = buffer[idx]
+average = 0.5 * (buffer[idx] + buffer[nxt])
+buffer[idx] = decay_coeff * (brightness * buffer[idx] + (1.0 - brightness) * average)
+y[i] = value * gain
+```
+
+- `decay_coeff` comes from `decay_seconds` (see below), not the legacy `decay` parameter directly.
+- `brightness` high → sharper, more high-frequency content retained.
+- `brightness` low → stronger averaging, duller decay.
+
+At the start of each `process_block`, the solver copies the first `min(L, excitation_length)` samples of the excitation into the delay buffer.
+
+#### What the excitation does
+
+The string needs initial energy. Connect a `NoiseBurst`, hammer impulse, or other excitation to `string.excitation`. The `frequency` control port (or `frequency_hz` parameter) sets pitch.
+
+```text
+excitation[n] seeds the delay buffer (Karplus path)
+frequency_hz chooses delay length L
+decay_seconds sets feedback damping
+brightness controls high-frequency loss
+gain scales output level
+```
+
+The `excitation` port is **optional** on the block (`required=False`) so T3 graphs such as `bow_string_contact` can compile without a separate excitation source.
+
+#### `decay` vs `decay_seconds` (solver rules)
+
+The block exposes both parameters for historical compatibility, but **`excited_waveguide_string` uses `decay_seconds` as the primary control**:
+
+```python
+decay_coeff = 10 ** (-3.0 / (decay_seconds * fs))
+```
+
+This targets roughly 60 dB decay over `decay_seconds` of sustained ringing.
+
+**Legacy `decay` mapping:** if only `decay` ∈ (0, 1) is set (and neither `decay_seconds` nor `decay_t60` is present), the solver maps:
+
+```python
+decay_seconds = -3.0 / (log10(decay) * fs)
+```
+
+and emits a `param_legacy_mapped` structured warning. If `decay_seconds` is explicitly set, it wins.
+
+**T1 fallback:** when the block is not solver-hosted, `String1D.process()` in `delay.py` uses the legacy `decay` feedback multiplier directly — behavior differs from the solver path.
+
+#### The `inharmonicity_B > 0` case: reduced stiff-string modal model
+
+When `inharmonicity_B > 0` (clamped to [0, 0.01]), the solver **does not run the delay loop**. Instead it synthesizes a **whole-buffer modal approximation** per `process_block`:
+
+\[
+y[n] = \sum_k A_k \, e^{-t[n]/\tau_k} \sin(2\pi f_k t[n] + \phi_k)
+\]
+
+with
+
+\[
+f_k = k f_0 \sqrt{1 + B k^2}
+\]
+
+Up to 48 modes are summed; higher modes decay faster and are tilted by `brightness`. Excitation RMS scales the output level. This is modal synthesis, not a dispersive waveguide.
+
+#### Why this is not a full piano string model
+
+A full piano note involves hammer felt compression, nonlinear hammer–string collision, three coupled strings per note, bridge coupling, soundboard modes, radiation, sympathetic resonance, duplex scale, and pedal interactions.
+
+`String1D` approximates **the string resonator only**. It is a **T2 prototype**, useful for pitched decays and waveguide research chains, not a physically complete piano engine.
+
+#### Parameters
+
+| Parameter | Role |
+|-----------|------|
+| `frequency_hz` | Base pitch `f0`; sets delay length (KS) or modal fundamental (stiff path) |
+| `brightness` | High-frequency retention in KS averaging; mode tilt in stiff path |
+| `decay_seconds` | Primary sustain control for the solver (`decay_coeff` or modal decay) |
+| `decay` | Legacy feedback gain; mapped to `decay_seconds` when it is the only decay param |
+| `gain` | Output amplitude multiplier |
+| `inharmonicity_B` | Stiffness / inharmonic partial spacing; `0` = harmonic KS loop |
+
+#### Solver-hosted architecture
+
+```text
+graph node: String1D
+        ↓
+parameters: frequency_hz, brightness, decay_seconds, inharmonicity_B, gain
+ports: excitation (optional), frequency, audio
+        ↓
+physical solver: excited_waveguide_string
+        ↓
+audio output
+```
+
+The block's `process()` method is a T1 fallback only. Compiled graphs with `excited_waveguide_string` skip it.
+
+#### Mental model
+
+```text
+String1D = a pitch-producing resonator
+
+B = 0  → Karplus–Strong delay loop
+B > 0  → sum of damped stiff-string partials
+
+excitation in → energy circulates or rings in modes → damping removes energy
+→ brightness shapes high-frequency loss → inharmonicity_B bends partial spacing → audio out
+```
+
+Good for: plucked strings, basic piano-like decays, string resonators, physical-modeling prototypes.
+
+Not enough alone for: realistic piano, violin bowing, nonlinear brass, drum membranes, full soundboard coupling.
+
+#### Appendix: `inharmonicity_B` in detail
+
+`inharmonicity_B` controls **how much partials deviate from exact harmonic multiples**.
+
+Ideal flexible string:
+
+```text
+f1 = f0,  f2 = 2f0,  f3 = 3f0,  ...
+```
+
+Stiff string (piano-like):
+
+```text
+f_k = k f0 sqrt(1 + B k²)
+```
+
+| B | Effect |
+|---|--------|
+| `0` | Perfectly harmonic string |
+| small | Mild stiffness; natural piano/string character |
+| larger | More stretched / metallic partial spacing |
+
+Example at `f0 = 100 Hz`:
+
+```text
+B = 0:      100, 200, 300, 400, 500 Hz
+B = 0.0001: 100.005, 200.040, 300.135, 400.320, 500.624 Hz
+B = 0.001:  100.050, 200.400, 301.348, 403.175, 506.211 Hz
+```
+
+The effect grows with `k²`, so low partials barely move while high partials shift noticeably. Piano tuning compensates for this — octaves are often stretched because real piano strings are stiff.
+
+#### Appendix: pedagogical Karplus–Strong sketch
+
+```python
+import numpy as np
+
+class String1DKarplusSketch:
+  def __init__(self, sample_rate=44100, frequency_hz=440.0, brightness=0.5, decay_seconds=4.0, gain=1.0):
+    self.fs = sample_rate
+    self.L = max(2, round(self.fs / frequency_hz))
+    self.brightness = brightness
+    self.decay_coeff = 10 ** (-3.0 / (decay_seconds * self.fs))
+    self.gain = gain
+    self.buffer = np.zeros(self.L)
+    self.index = 0
+
+  def excite(self, excitation):
+    n = min(len(excitation), self.L)
+    self.buffer[:n] += excitation[:n]
+
+  def process_sample(self):
+    idx = self.index
+    nxt = (idx + 1) % self.L
+    value = self.buffer[idx]
+    avg = 0.5 * (self.buffer[idx] + self.buffer[nxt])
+    self.buffer[idx] = self.decay_coeff * (self.brightness * self.buffer[idx] + (1.0 - self.brightness) * avg)
+    self.index = nxt
+    return self.gain * value
+```
+
+#### Appendix: pedagogical stiff-modal sketch
+
+```python
+import numpy as np
+
+def stiff_string_modal_sketch(frequency_hz, sample_rate, n_samples, inharmonicity_B=0.0001, decay_seconds=4.0, gain=1.0, num_modes=32):
+    t = np.arange(n_samples) / sample_rate
+    y = np.zeros(n_samples)
+    for k in range(1, num_modes + 1):
+        fk = k * frequency_hz * np.sqrt(1.0 + inharmonicity_B * k * k)
+        if fk >= sample_rate * 0.48:
+            break
+        y += (1.0 / k) * np.exp(-t * k / decay_seconds) * np.sin(2.0 * np.pi * fk * t)
+    return gain * y
+```
+
+The production solver in `excited_waveguide_string.py` adds mode-count limits, brightness tilt, per-mode phase, and excitation-level normalization — see that file for exact behavior.
 
 ### Modal body (T2)
 

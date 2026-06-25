@@ -1896,25 +1896,25 @@ Karplus-Strong style waveguide string approximation.
 
 **Explanation**
 
-**What it means:** A delay-line string approximation hosted by the `excited_waveguide_string` physical solver.
+**What it means:** A simple physical-modeling string block that produces pitched decaying audio. At `inharmonicity_B = 0` the `excited_waveguide_string` solver runs a Karplus–Strong delay loop; at `inharmonicity_B > 0` it switches to a reduced stiff-string modal sum.
 
-**Why it matters:** It is the current solver-backed prototype for string-like pitched decay in the object-based physical-modeling path.
+**Why it matters:** It is the primary T2 prototype for string-like pitched decay in waveguide research chains (hammer → string → body, calibration panels, golden audio tests).
 
-**How to think about it:** With `inharmonicity_B` at zero, excitation enters a Karplus-Strong delay loop. With `inharmonicity_B` above zero, the solver uses a reduced-order stiff-string modal approximation so upper partials shift upward.
+**How to think about it:** Connect `excitation` (optional) and `frequency`; tune `frequency_hz`, `brightness`, `decay_seconds`, `inharmonicity_B`, and `gain`. The solver uses `decay_seconds` (legacy `decay` is mapped with a warning).
 
-**Caveat:** This is still a prototype T2 string solver, not a nonlinear hammer-string or bridge-coupled piano solve.
+**Caveat:** T2 prototype only — not nonlinear hammer-string, bridge coupling, or multi-string piano. Full theory: [user manual — String1D](../docs/user_manual.md#string1d-and-excited-waveguide-string).
 
 **Formula**
 
-With `inharmonicity_B = 0`, the `excited_waveguide_string` solver uses a Karplus–Strong loop. Loop length $L = \max(2, \lfloor f_s / f_0 \rfloor)$, decay $d$, brightness $b$:
+With `inharmonicity_B = 0`, `excited_waveguide_string` uses a Karplus–Strong loop. $L = \max(2, \mathrm{round}(f_s / f_0))$, decay from `decay_seconds`: $\text{decay\_coeff} = 10^{-3/(\text{decay\_seconds} \cdot f_s)}$:
 
-$$y[n] = \text{buffer}[n \bmod L], \quad \text{buffer} \leftarrow d \cdot (b\,\text{buffer} + (1-b)\,\text{avg})$$
+$$y[n] = \text{buffer}[n \bmod L], \quad \text{buffer} \leftarrow \text{decay\_coeff} \cdot (b\,\text{buffer} + (1-b)\,\text{avg})$$
 
-With `inharmonicity_B > 0`, the solver uses a reduced-order stiff-string modal approximation:
+With `inharmonicity_B > 0`, whole-buffer stiff-string modal approximation:
 
 $$f_k = k f_0 \sqrt{1 + B k^2}$$
 
-and sums damped modes whose upper partials decay faster. This makes `inharmonicity_B` affect partial spacing, but it is not a full finite-difference stiff-string PDE.
+Legacy `decay` alone is mapped to `decay_seconds` with a structured warning. Full pedagogy: [user_manual.md — String1D](../docs/user_manual.md#string1d-and-excited-waveguide-string).
 
 **Inputs**
 

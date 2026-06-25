@@ -61,6 +61,15 @@ def test_user_manual_documents_resonant_coloration():
     assert "{#resonant-coloration-and-resonancebank}" in text
 
 
+def test_user_manual_documents_string1d():
+    text = USER_MANUAL.read_text(encoding="utf-8")
+    assert "String1D" in text
+    assert "inharmonicity_B" in text
+    assert "excited_waveguide_string" in text
+    assert "Karplus" in text
+    assert "{#string1d-and-excited-waveguide-string}" in text
+
+
 def test_user_manual_has_three_tutorials():
     text = USER_MANUAL.read_text(encoding="utf-8")
     assert "## Tutorial 1 — Beginner" in text

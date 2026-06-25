@@ -199,10 +199,23 @@ BLOCK_OVERRIDES: dict[str, str] = {
         caveat="In the decomposed chain this is still a one-way DSP stage, not a bidirectional bridge-soundboard solve.",
     ),
     "String1D": _section(
-        what="A delay-line string approximation hosted by the `excited_waveguide_string` physical solver.",
-        why="It is the current solver-backed prototype for string-like pitched decay in the object-based physical-modeling path.",
-        how="With `inharmonicity_B` at zero, excitation enters a Karplus-Strong delay loop. With `inharmonicity_B` above zero, the solver uses a reduced-order stiff-string modal approximation so upper partials shift upward.",
-        caveat="This is still a prototype T2 string solver, not a nonlinear hammer-string or bridge-coupled piano solve.",
+        what=(
+            "A simple physical-modeling string block that produces pitched decaying audio. "
+            "At `inharmonicity_B = 0` the `excited_waveguide_string` solver runs a Karplus–Strong delay loop; "
+            "at `inharmonicity_B > 0` it switches to a reduced stiff-string modal sum."
+        ),
+        why=(
+            "It is the primary T2 prototype for string-like pitched decay in waveguide research chains "
+            "(hammer → string → body, calibration panels, golden audio tests)."
+        ),
+        how=(
+            "Connect `excitation` (optional) and `frequency`; tune `frequency_hz`, `brightness`, `decay_seconds`, "
+            "`inharmonicity_B`, and `gain`. The solver uses `decay_seconds` (legacy `decay` is mapped with a warning)."
+        ),
+        caveat=(
+            "T2 prototype only — not nonlinear hammer-string, bridge coupling, or multi-string piano. "
+            "Full theory: [user manual — String1D](../docs/user_manual.md#string1d-and-excited-waveguide-string)."
+        ),
     ),
     "BellModalBody": _section(
         what=(

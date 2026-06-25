@@ -24,6 +24,15 @@ def test_resonance_bank_help_links_to_manual():
     assert "180" in help_info.explanation_markdown
 
 
+def test_string1d_help_links_to_manual():
+    help_info = build_block_help("String1D")
+
+    assert help_info is not None
+    assert "inharmonicity_B" in help_info.explanation_markdown
+    assert "user_manual" in help_info.explanation_markdown
+    assert "excited_waveguide_string" in help_info.explanation_markdown
+
+
 def test_connection_help_resolves_audio_port_kinds():
     graph = GraphSpec(
         name="help_test",
