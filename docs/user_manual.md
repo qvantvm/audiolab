@@ -71,11 +71,12 @@ This table is the manual's short truth table. The canonical solver status is [`r
 | `WaveguideString` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
 | `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
 | `ModalBankBody` T2 solver | Working prototype | `modal_bank_body`, `waveguide_modal_body_A4.json` | Signal-fed body filter, not bidirectional bridge/body impedance coupling |
+| `PASPBidirectionalHammerString` contact solver | Working prototype | `nonlinear_hammer_string_contact`, `nonlinear_hammer_string_contact_A4.json` | Solver-hosted composite contact path; not decomposed T3 bridge/scattering or full piano solve |
 | Mixed hammer → waveguide → body chains | Working prototype | `minimal_hammer_waveguide_body_A4.json`, parameter-map examples | Multiple isolated solvers connected by signal edges; not fused physics |
 | Decomposed PASP hammer/string/bridge/body chain | Demo / interpretable signal chain | `minimal_A4_note.json`, PASP docs | Physically named one-way DSP blocks; not proof of physically faithful computation |
 | Composite PASP note/performance blocks | Demo / behavior model | `pasp_performance_model_base.json`, PASP example scripts | Opaque internals compared with decomposed graphs; validate with metrics before claims |
 | Bidirectional bridge coupling | Representation only | roadmap representation-only tests | Valid graph concept; default compile failure expected until T3 solver exists |
-| Hammer-string nonlinear contact solver | Planned / partial elsewhere | roadmap planned solver `nonlinear_hammer_string_contact` | No production T3 contact solver in default registry |
+| Decomposed hammer-string nonlinear contact solver | Planned / partial elsewhere | roadmap follow-on T3 component solver | Production solver exists for hosted `PASPBidirectionalHammerString`, but not for separate decomposed hammer/string nodes |
 | Dataset autoresearch improvement | Evidence-dependent | baseline/candidate `summary.json`, `decision.json`, regression reports | Unknown until references exist and before/after dataset eval passes |
 | Calibration quality improvement | Evidence-dependent | calibration `metrics.json`, render WAVs, panel eval | Can improve metrics without perceptual improvement or dataset generalization |
 
@@ -85,7 +86,7 @@ This table is the manual's short truth table. The canonical solver status is [`r
 - A block name being physical does not mean the computation is physically coupled. `PASPHammerFelt → PASPStringLine → PASPSoundboardModal` can still be a one-way DSP approximation.
 - The current waveguide string path is closer to a Karplus-Strong/reduced-order modal prototype than a high-fidelity stiff-string piano model.
 - `inharmonicity_B` now affects the mono `WaveguideString` T2 solver through a reduced-order dispersion approximation; the polyphonic waveguide path still reports unsupported dispersion with structured warnings.
-- T3 bidirectional connected-component solvers and T4 fused piano solvers are not production-supported in the default registry.
+- A solver-hosted nonlinear hammer-string contact path exists for `PASPBidirectionalHammerString`; T3 decomposed contact/bridge components and T4 fused piano solvers are not production-supported in the default registry.
 - Some PASP chains are physically interpretable without being physically faithful. Treat them as hypotheses until metrics, diagnostics, and listening checks support them.
 - Calibration can optimize objective metrics without producing perceptually better sound, and single-note improvement is not dataset improvement.
 - The autoresearch loop must prove improvement through baseline/candidate regression. A generated bundle is not the same as a better model.

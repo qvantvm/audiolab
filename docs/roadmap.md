@@ -28,6 +28,9 @@ Registered in `dsp_lab.graph.physical.solvers` and selected automatically at com
 | `excited_waveguide_string` | `WaveguideString` | `examples/piano/minimal_waveguide_A4.json` |
 | `polyphonic_excited_waveguide` | `PolyphonicWaveguideString` | `examples/piano/waveguide_modal_body_A4_events.json` |
 | `modal_bank_body` | `ModalBankBody` | `examples/piano/waveguide_modal_body_A4.json` |
+| `nonlinear_hammer_string_contact` | `PASPBidirectionalHammerString` | `examples/piano/nonlinear_hammer_string_contact_A4.json` |
+
+`NonlinearHammerStringContactSolver` is the first production contact solver path: it hosts one composite `PASPBidirectionalHammerString` block and reports contact/energy diagnostics. It is not yet a decomposed T3 solver for separate hammer, string, bridge, and body nodes.
 
 ### Mixed T1 + T2 chains
 
@@ -64,7 +67,7 @@ Not registered in the default solver registry. Implementing one requires a `Phys
 |--------|------|----------|
 | `SimplePianoNoteSolver` | T4 compound | Fused hammer + string + body chain (opt-in via `solver_hint`; fewer T1+T2 boundary crossings) |
 | `ScatteringJunctionSolver` | T3 | Wave/scattering adaptors, bridge junctions |
-| `NonlinearHammerStringContactSolver` | T3 | Bidirectional hammer–string contact (`PASPHammerFelt` ↔ `PASPStringLine` style) |
+| Nonlinear decomposed contact/component solver | T3 | Bidirectional hammer–string contact across decomposed `PASPHammerFelt` / `PASPStringLine` components |
 
 ### Test-only (not production roadmap)
 

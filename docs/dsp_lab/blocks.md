@@ -38,13 +38,13 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 | BiquadFilter | Filters | `audio` (audio) | `audio` (audio) | 2466 | 2506 |
 | BodyEQ | Body & Space | `audio` (audio) | `audio` (audio) | 424 | 463 |
 | BridgeCoupler | Experimental | `input` (audio) | `output` (audio) | 2005 | 2038 |
-| BridgeMixer | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 4995 | 5033 |
+| BridgeMixer | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 5004 | 5042 |
 | CabinetRadiation | Body & Space | `audio` (audio) | `audio` (audio) | 465 | 500 |
 | CalibrationTask | Calibration | — | `result` (control) | 841 | 880 |
 | Clamp | Math | `audio` (audio) | `audio` (audio) | 2725 | 2759 |
 | CompareTask | Experimental | — | `result` (control) | 2040 | 2075 |
 | Constant | Control | — | `value` (control) | 1272 | 1307 |
-| DamperReleaseEnvelope | Piano | — | `audio` (audio) | 5035 | 5068 |
+| DamperReleaseEnvelope | Piano | — | `audio` (audio) | 5044 | 5077 |
 | DecayMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3030 | 3069 |
 | Delay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1643 | 1678 |
 | DifferenceSignal | Metrics | `synthetic` (audio), `reference` (audio) | `audio` (audio) | 3071 | 3105 |
@@ -60,17 +60,17 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 | F0Metric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3186 | 3225 |
 | FeedbackDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1715 | 1752 |
 | FractionalDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1754 | 1787 |
-| FractionalStringDelay | Piano | `audio` (audio) | `audio` (audio) | 5070 | 5103 |
+| FractionalStringDelay | Piano | `audio` (audio) | `audio` (audio) | 5079 | 5112 |
 | Gain | Mixing | `audio` (audio) | `audio` (audio) | 3764 | 3799 |
 | GitCommitTask | Experimental | — | `result` (control) | 2149 | 2184 |
 | GridSearch | Calibration | — | `result` (control) | 882 | 917 |
-| HammerExcitation | Piano | `velocity` (control), `brightness` (control) | `audio` (audio) | 5105 | 5144 |
-| HammerFeltFilter | Piano | `audio` (audio) | `audio` (audio) | 5146 | 5181 |
-| HammerNoise | Piano | `velocity` (control) | `audio` (audio) | 5183 | 5218 |
-| HammerVelocityMapper | Piano | `velocity` (control) | `force` (control), `brightness` (control) | 5220 | 5257 |
+| HammerExcitation | Piano | `velocity` (control), `brightness` (control) | `audio` (audio) | 5114 | 5153 |
+| HammerFeltFilter | Piano | `audio` (audio) | `audio` (audio) | 5155 | 5190 |
+| HammerNoise | Piano | `velocity` (control) | `audio` (audio) | 5192 | 5227 |
+| HammerVelocityMapper | Piano | `velocity` (control) | `force` (control), `brightness` (control) | 5229 | 5266 |
 | Highpass | Filters | `audio` (audio) | `audio` (audio) | 2545 | 2578 |
 | HumanReviewTask | Experimental | — | `result` (control) | 2186 | 2221 |
-| Impulse | Sources | — | `audio` (audio) | 5927 | 5965 |
+| Impulse | Sources | — | `audio` (audio) | 5936 | 5974 |
 | LogSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3227 | 3266 |
 | LookupTable | Control | `index` (control) | `value` (control) | 1309 | 1346 |
 | LoopFilter | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1789 | 1824 |
@@ -83,34 +83,34 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 | ModalBankBody | Body & Space | `audio` (audio) | `audio` (audio) | 575 | 612 |
 | ModalResonator | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3931 | 3971 |
 | ModalResonatorBank | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3973 | 4015 |
-| ModelHammerExcitation | Piano | `midi_note` (control), `frequency` (control), `velocity` (control) | `audio` (audio) | 5259 | 5298 |
-| ModelStereoOutput | Piano | `audio` (audio) | `audio` (audio) | 5300 | 5337 |
+| ModelHammerExcitation | Piano | `midi_note` (control), `frequency` (control), `velocity` (control) | `audio` (audio) | 5268 | 5307 |
+| ModelStereoOutput | Piano | `audio` (audio) | `audio` (audio) | 5309 | 5346 |
 | MultiResSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3303 | 3339 |
 | MultiSegmentEnvelope | Envelopes | — | `audio` (audio) | 1966 | 2001 |
-| MultiStringUnison | Piano | `audio` (audio) | `audio` (audio) | 5339 | 5375 |
+| MultiStringUnison | Piano | `audio` (audio) | `audio` (audio) | 5348 | 5384 |
 | Multiply | Math | `audio` (audio), `factor` (control) | `audio` (audio) | 2761 | 2797 |
-| NoiseBurst | Sources | `velocity` (control) | `audio` (audio) | 5967 | 6006 |
-| NonlinearHammer | Piano | `audio` (audio), `force` (control) | `audio` (audio) | 5377 | 5413 |
+| NoiseBurst | Sources | `velocity` (control) | `audio` (audio) | 5976 | 6015 |
+| NonlinearHammer | Piano | `audio` (audio), `force` (control) | `audio` (audio) | 5386 | 5422 |
 | Normalize | Math | `audio` (audio) | `audio` (audio) | 2799 | 2834 |
 | Notch | Filters | `audio` (audio) | `audio` (audio) | 2615 | 2649 |
-| NotePerformanceSchedule | Piano | — | `frequency` (control), `velocity` (control), `midi_note` (control), `sustain_pedal` (control) | 5415 | 5452 |
+| NotePerformanceSchedule | Piano | — | `frequency` (control), `velocity` (control), `midi_note` (control), `sustain_pedal` (control) | 5424 | 5461 |
 | OnePoleHighpass | Filters | `audio` (audio) | `audio` (audio) | 2651 | 2684 |
 | OnePoleLowpass | Filters | `audio` (audio) | `audio` (audio) | 2686 | 2721 |
 | OptunaOptimizer | Calibration | — | `result` (control) | 959 | 994 |
 | Output | Mixing | `audio` (audio) | `audio` (audio) | 3841 | 3881 |
 | OverallScore | Metrics | `value1` (control), `value2` (control), `value3` (control), `value4` (control), `value5` (control), `value6` (control) | `score` (control) | 3341 | 3382 |
-| PASPBidirectionalHammerString | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 4065 | 4166 |
-| PASPBridgeSoundboard | PASP Piano | `audio` (audio) | `audio` (audio) | 4168 | 4263 |
-| PASPBridgeTermination | PASP Piano | `audio` (audio) | `audio` (audio) | 4265 | 4300 |
-| PASPEventPianoModel | PASP Piano | `events` (control), `midi_note` (control), `velocity` (control) | `audio` (audio), `bridge_audio` (audio) | 4302 | 4400 |
-| PASPHammerFelt | PASP Piano | `velocity` (control), `midi_note` (control) | `force` (audio), `compression` (audio) | 4402 | 4447 |
-| PASPHammerStringJunction | PASP Piano | `force` (audio), `compression` (audio), `string_slope` (audio) | `excitation` (audio) | 4449 | 4487 |
-| PASPNoteFamilyModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4489 | 4593 |
-| PASPNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 4595 | 4696 |
-| PASPPerformanceModel | PASP Piano | `events` (control) | `audio` (audio), `bridge_audio` (audio) | 4698 | 4794 |
-| PASPSoundboardModal | PASP Piano | `audio` (audio) | `audio` (audio) | 4796 | 4831 |
-| PASPStringGroupNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio), `string_1_audio` (audio), `string_2_audio` (audio), `string_3_audio` (audio) | 4833 | 4940 |
-| PASPStringLine | PASP Piano | `excitation` (audio), `frequency` (control), `inharmonicity_B` (control), `midi_note` (control) | `audio` (audio) | 4942 | 4991 |
+| PASPBidirectionalHammerString | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4065 | 4175 |
+| PASPBridgeSoundboard | PASP Piano | `audio` (audio) | `audio` (audio) | 4177 | 4272 |
+| PASPBridgeTermination | PASP Piano | `audio` (audio) | `audio` (audio) | 4274 | 4309 |
+| PASPEventPianoModel | PASP Piano | `events` (control), `midi_note` (control), `velocity` (control) | `audio` (audio), `bridge_audio` (audio) | 4311 | 4409 |
+| PASPHammerFelt | PASP Piano | `velocity` (control), `midi_note` (control) | `force` (audio), `compression` (audio) | 4411 | 4456 |
+| PASPHammerStringJunction | PASP Piano | `force` (audio), `compression` (audio), `string_slope` (audio) | `excitation` (audio) | 4458 | 4496 |
+| PASPNoteFamilyModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4498 | 4602 |
+| PASPNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 4604 | 4705 |
+| PASPPerformanceModel | PASP Piano | `events` (control) | `audio` (audio), `bridge_audio` (audio) | 4707 | 4803 |
+| PASPSoundboardModal | PASP Piano | `audio` (audio) | `audio` (audio) | 4805 | 4840 |
+| PASPStringGroupNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio), `string_1_audio` (audio), `string_2_audio` (audio), `string_3_audio` (audio) | 4842 | 4949 |
+| PASPStringLine | PASP Piano | `excitation` (audio), `frequency` (control), `inharmonicity_B` (control), `midi_note` (control) | `audio` (audio) | 4951 | 5000 |
 | PanelMetricsTask | Metrics | — | `result` (control) | 3384 | 3421 |
 | ParameterBinding | Calibration | `value` (control) | `value` (control), `bind_path` (control) | 996 | 1033 |
 | ParameterCurve | Control | `x` (control) | `value` (control) | 1385 | 1423 |
@@ -120,10 +120,10 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 | PedalPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 3423 | 3457 |
 | PerNoteTable | Calibration | `midi_note` (control) | `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control) | 1072 | 1111 |
 | PhysicalCouplingStub | Experimental | `audio` (audio), `coupling` (audio) | `audio` (audio), `coupling` (audio) | 2223 | 2258 |
-| PianoStringBank | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control) | `audio` (audio), `brightness` (control) | 5454 | 5510 |
-| PianoWaveguideString | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control), `brightness` (control) | `audio` (audio) | 5512 | 5564 |
+| PianoStringBank | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control) | `audio` (audio), `brightness` (control) | 5463 | 5519 |
+| PianoWaveguideString | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control), `brightness` (control) | `audio` (audio) | 5521 | 5573 |
 | PitchPartialMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3459 | 3495 |
-| PolyphonicWaveguideString | Piano | — | `audio` (audio) | 5566 | 5609 |
+| PolyphonicWaveguideString | Piano | — | `audio` (audio) | 5575 | 5618 |
 | PrintValue | Debug | `value` (control) | `value` (control) | 1571 | 1604 |
 | Probe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 278 | 312 |
 | PythonCustom | Experimental | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio), `ctrl1` (control), `ctrl2` (control), `event` (event) | `audio` (audio), `value` (control), `out2` (audio), `out3` (audio), `out4` (audio), `event` (event) | 2260 | 2315 |
@@ -135,9 +135,9 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 | ReportTask | Experimental | — | `result` (control) | 2354 | 2389 |
 | ResidualAnalyzer | Metrics | `audio` (audio) | `audio` (audio), `value` (control) | 3573 | 3607 |
 | ResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 614 | 650 |
-| SamplePlayer | Sources | — | `audio` (audio) | 6008 | 6047 |
+| SamplePlayer | Sources | — | `audio` (audio) | 6017 | 6056 |
 | ScipyOptimizer | Calibration | — | `result` (control) | 1150 | 1185 |
-| SineOscillator | Sources | `frequency` (control) | `audio` (audio) | 6049 | 6088 |
+| SineOscillator | Sources | `frequency` (control) | `audio` (audio) | 6058 | 6097 |
 | SoftClip | Math | `audio` (audio) | `audio` (audio) | 2836 | 2871 |
 | SoundboardConvolution | Body & Space | `audio` (audio) | `audio` (audio) | 652 | 688 |
 | SoundboardModalBank | Body & Space | `audio` (audio) | `audio` (audio) | 690 | 724 |
@@ -147,16 +147,16 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 | SpectrumProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 386 | 420 |
 | StateDump | Debug | — | `state` (control) | 1606 | 1639 |
 | StereoWidener | Body & Space | `audio` (audio) | `audio` (audio) | 726 | 761 |
-| StiffStringModal | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5611 | 5660 |
-| StringCouplingMatrix | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio) | `audio` (audio) | 5662 | 5699 |
-| StringDetune | Piano | `frequency` (control) | `frequency` (control) | 5701 | 5734 |
-| StringDispersion | Piano | `audio` (audio) | `audio` (audio) | 5736 | 5769 |
-| StringLossFilter | Piano | `audio` (audio) | `audio` (audio) | 5771 | 5804 |
-| StringModeBank | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5806 | 5849 |
-| StringTermination | Piano | `audio` (audio) | `audio` (audio) | 5851 | 5884 |
+| StiffStringModal | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5620 | 5669 |
+| StringCouplingMatrix | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio) | `audio` (audio) | 5671 | 5708 |
+| StringDetune | Piano | `frequency` (control) | `frequency` (control) | 5710 | 5743 |
+| StringDispersion | Piano | `audio` (audio) | `audio` (audio) | 5745 | 5778 |
+| StringLossFilter | Piano | `audio` (audio) | `audio` (audio) | 5780 | 5813 |
+| StringModeBank | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5815 | 5858 |
+| StringTermination | Piano | `audio` (audio) | `audio` (audio) | 5860 | 5893 |
 | StruckBarBody | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 4017 | 4061 |
 | Sum | Math | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio) | `audio` (audio) | 2873 | 2911 |
-| SustainPedalDamping | Piano | `audio` (audio), `pedal` (control) | `audio` (audio) | 5886 | 5923 |
+| SustainPedalDamping | Piano | `audio` (audio), `pedal` (control) | `audio` (audio) | 5895 | 5932 |
 | SympatheticResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 763 | 797 |
 | TrainableParameter | Calibration | — | `value` (control) | 1187 | 1231 |
 | ValidationSplit | Calibration | — | `result` (control) | 1233 | 1268 |
@@ -3968,17 +3968,25 @@ Bidirectional PASP hammer-string contact note model.
 
 **Explanation**
 
-**What it means:** A composite PASP note block configured around bidirectional hammer-string contact behavior.
+**What it means:** A solver-hosted PASP note block configured around nonlinear bidirectional hammer-string contact.
 
-**Why it matters:** It targets the most important nonlinear part of piano attack: the hammer and string pushing on each other.
+**Why it matters:** It targets the most important nonlinear part of piano attack: hammer compression, felt force, rebound, and string displacement at the strike point.
 
-**How to think about it:** Use it for contact-model experiments and inspect force, compression, hammer velocity, and string displacement outputs.
+**How to think about it:** Drive it with MIDI note, velocity, and optional frequency. The `nonlinear_hammer_string_contact` solver owns contact rendering and exposes force, compression, hammer velocity, string displacement, bridge audio, and diagnostics.
 
-**Caveat:** Check the implementation and evidence path; the name alone does not prove a full coupled piano solve.
+**Caveat:** This is the first hosted contact solver path, not a decomposed T3 bridge/scattering solver or full fused piano solve.
 
 **Formula**
 
-Same computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way hammer–string force exchange.
+Hosted by `nonlinear_hammer_string_contact`. Hammer/string compression is:
+
+$$c(t) = x_h(t) - x_s(t) - gap - x_{rest}$$
+
+For positive compression, nonlinear felt contact is:
+
+$$F_c = Q_0 c^p + d_f \max(v_h - v_s, 0)$$
+
+The hammer receives $-F_c$ and the modal string receives $+F_c$ at the strike point. The string state reports bridge velocity/audio, while the solver emits diagnostics for contact duration, peak force, compression, hammer rebound velocity, bridge energy, and body energy. This is a solver-hosted contact path, not yet a decomposed T3 bridge/scattering solve.
 
 **Inputs**
 
@@ -3997,6 +4005,7 @@ Same computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way h
 | `compression` | audio | yes |
 | `hammer_velocity` | audio | yes |
 | `string_displacement` | audio | yes |
+| `bridge_audio` | audio | yes |
 
 **Parameters**
 

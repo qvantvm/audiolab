@@ -344,6 +344,14 @@ class PASPBidirectionalHammerString(PASPNoteModel):
     block_type = "PASPBidirectionalHammerString"
     description = "Bidirectional PASP hammer-string contact note model."
     physical_role = "bidirectional hammer-string contact note"
+    output_ports = {
+        "audio": Port("audio", "audio"),
+        "force": Port("force", "audio"),
+        "compression": Port("compression", "audio"),
+        "hammer_velocity": Port("hammer_velocity", "audio"),
+        "string_displacement": Port("string_displacement", "audio"),
+        "bridge_audio": Port("bridge_audio", "audio"),
+    }
 
     @classmethod
     def default_params(cls) -> dict[str, Any]:

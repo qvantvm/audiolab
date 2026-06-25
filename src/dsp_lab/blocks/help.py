@@ -250,10 +250,10 @@ BLOCK_OVERRIDES: dict[str, str] = {
         caveat="Composite blocks hide internal boundaries; compare against decomposed graphs and dataset metrics before trusting changes.",
     ),
     "PASPBidirectionalHammerString": _section(
-        what="A composite PASP note block configured around bidirectional hammer-string contact behavior.",
-        why="It targets the most important nonlinear part of piano attack: the hammer and string pushing on each other.",
-        how="Use it for contact-model experiments and inspect force, compression, hammer velocity, and string displacement outputs.",
-        caveat="Check the implementation and evidence path; the name alone does not prove a full coupled piano solve.",
+        what="A solver-hosted PASP note block configured around nonlinear bidirectional hammer-string contact.",
+        why="It targets the most important nonlinear part of piano attack: hammer compression, felt force, rebound, and string displacement at the strike point.",
+        how="Drive it with MIDI note, velocity, and optional frequency. The `nonlinear_hammer_string_contact` solver owns contact rendering and exposes force, compression, hammer velocity, string displacement, bridge audio, and diagnostics.",
+        caveat="This is the first hosted contact solver path, not a decomposed T3 bridge/scattering solver or full fused piano solve.",
     ),
     "PASPNoteFamilyModel": _section(
         what="A PASP note model parameterized over a local note family rather than one isolated note.",

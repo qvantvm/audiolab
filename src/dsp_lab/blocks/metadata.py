@@ -210,6 +210,10 @@ BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
         "solver_family": "struck_bar_body",
         "physical_subsystem_host": True,
     },
+    "PASPBidirectionalHammerString": {
+        "solver_family": "nonlinear_hammer_string_contact",
+        "physical_subsystem_host": True,
+    },
     "PolyphonicWaveguideString": {
         "solver_family": "polyphonic_excited_waveguide",
         "physical_subsystem_host": True,

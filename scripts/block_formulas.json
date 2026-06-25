@@ -134,7 +134,7 @@
   "PASPSoundboardModal": "**Formula**\n\nSoundboard modal bank synthesis via `PASPSoundboardModel` (modal frequencies, decays, mix from params).",
   "PASPBridgeSoundboard": "**Formula**\n\nCouples bridge motion to soundboard excitation via `PASPBridgeSoundboardModel`.",
   "PASPNoteModel": "**Formula**\n\nSingle-note PASP chain: hammer felt $\\to$ string modal line $\\to$ bridge $\\to$ soundboard, integrated in `PASPNoteModelCore.render` per `contact_model`.",
-  "PASPBidirectionalHammerString": "**Formula**\n\nSame computation as `PASPNoteModel`. `contact_model=bidirectional` — two-way hammer–string force exchange.",
+  "PASPBidirectionalHammerString": "**Formula**\n\nHosted by `nonlinear_hammer_string_contact`. Hammer/string compression is:\n\n$$c(t) = x_h(t) - x_s(t) - gap - x_{rest}$$\n\nFor positive compression, nonlinear felt contact is:\n\n$$F_c = Q_0 c^p + d_f \\max(v_h - v_s, 0)$$\n\nThe hammer receives $-F_c$ and the modal string receives $+F_c$ at the strike point. The string state reports bridge velocity/audio, while the solver emits diagnostics for contact duration, peak force, compression, hammer rebound velocity, bridge energy, and body energy. This is a solver-hosted contact path, not yet a decomposed T3 bridge/scattering solve.",
   "PASPNoteFamilyModel": "**Formula**\n\nRegister/family parameterization + per-note PASP render via `NoteFamilyParameterSet` and note-family core.",
   "PASPStringGroupNoteModel": "**Formula**\n\nSame computation as `PASPNoteFamilyModel`. Adds per-string group outputs.",
   "PASPEventPianoModel": "**Formula**\n\nOffline event list render via `EventPianoRenderer` (phrase-level note scheduling).",

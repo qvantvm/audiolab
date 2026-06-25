@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QScrollArea,
     QSpinBox,
     QTableWidget,
     QTableWidgetItem,
@@ -45,6 +46,8 @@ def compact_params_for_save(block_type: str, values: dict[str, Any]) -> dict[str
     defaults = cls.default_params()
     compact: dict[str, Any] = {}
     for name, value in values.items():
+        if value is None:
+            continue
         if name not in defaults or value != defaults[name]:
             compact[name] = value
     return compact
@@ -72,14 +75,18 @@ class InspectorPanel(QWidget):
         self.document: GraphDocument | None = None
         self.block_id: str | None = None
         self.title = QLabel("No block selected")
-        self.form = QFormLayout()
+        self.form_widget = QWidget()
+        self.form = QFormLayout(self.form_widget)
+        self.param_scroll = QScrollArea()
+        self.param_scroll.setWidgetResizable(True)
+        self.param_scroll.setWidget(self.form_widget)
         self.ports = QTableWidget(0, 3)
         self.ports.setHorizontalHeaderLabels(["Direction", "Name", "Kind"])
         self.delete_button = QPushButton("Delete Block")
         self.delete_button.clicked.connect(self._delete)
         layout = QVBoxLayout(self)
         layout.addWidget(self.title)
-        layout.addLayout(self.form)
+        layout.addWidget(self.param_scroll, 1)
         layout.addWidget(QLabel("Ports"))
         layout.addWidget(self.ports)
         layout.addWidget(self.delete_button)

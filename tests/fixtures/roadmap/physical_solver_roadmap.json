@@ -2,12 +2,12 @@
   "supported_solvers": [
     "excited_waveguide_string",
     "polyphonic_excited_waveguide",
-    "modal_bank_body"
+    "modal_bank_body",
+    "nonlinear_hammer_string_contact"
   ],
   "planned_solvers": [
     "simple_piano_note",
-    "scattering_junction",
-    "nonlinear_hammer_string_contact"
+    "scattering_junction"
   ],
   "test_only_solvers": [
     "bidirectional_mechanical_stub"
@@ -15,7 +15,8 @@
   "supported_graphs": [
     {"path": "examples/graphs/sine_test.json", "expect": "render"},
     {"path": "examples/piano/minimal_waveguide_A4.json", "expect": "render"},
-    {"path": "examples/piano/waveguide_modal_body_A4.json", "expect": "render"}
+    {"path": "examples/piano/waveguide_modal_body_A4.json", "expect": "render"},
+    {"path": "examples/piano/nonlinear_hammer_string_contact_A4.json", "expect": "render"}
   ],
   "representation_only_graphs": [
     {"builder": "waveguide_bridge_coupler", "expect": "unsupported_computation"},
