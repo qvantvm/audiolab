@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1",
+  "name": "brass_tone_C4",
+  "description": "L4 BrassToneModel template.",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "blocks": [
+    {"id": "brass", "type": "BrassToneModel", "params": {"mouth_pressure_bias": 0.2}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "brass.audio", "to": "out.audio"}
+  ],
+  "probes": ["brass.audio", "out.audio"]
+}

@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import dsp_lab.blocks  # noqa: F401
-from dsp_lab.blocks.registry import list_blocks
+import audiolab.blocks  # noqa: F401
+from audiolab.blocks.registry import list_blocks
 
 
 def _format_ports(ports: tuple) -> str:
@@ -57,33 +57,33 @@ python3 scripts/generate_migration_audit.py
 
 | Subsystem | Paths |
 |-----------|-------|
-| Graph schema | `src/dsp_lab/graph/schema.py`, `serialization.py` |
-| Validation | `src/dsp_lab/graph/validator.py`, `src/dsp_lab/validation/graph_file.py` |
-| Compilation / render | `src/dsp_lab/graph/compiler.py`, `executor.py` |
-| Block registry | `src/dsp_lab/blocks/registry.py`, `base.py`, `__init__.py` |
-| Block library | `src/dsp_lab/blocks/*.py` (18 modules, 133 types) |
-| PASP physics | `src/dsp_lab/physics/pasp_piano/` (24 modules) |
-| Metrics | `src/dsp_lab/audio/metrics/` |
+| Graph schema | `src/audiolab/graph/schema.py`, `serialization.py` |
+| Validation | `src/audiolab/graph/validator.py`, `src/audiolab/validation/graph_file.py` |
+| Compilation / render | `src/audiolab/graph/compiler.py`, `executor.py` |
+| Block registry | `src/audiolab/blocks/registry.py`, `base.py`, `__init__.py` |
+| Block library | `src/audiolab/blocks/*.py` (18 modules, 133 types) |
+| PASP physics | `src/audiolab/physics/pasp_piano/` (24 modules) |
+| Metrics | `src/audiolab/audio/metrics/` |
 | Examples | `examples/graphs/`, `examples/calibration/`, `examples/piano/` |
-| Tests | `tests/dsp_lab/` (38 modules) |
-| Existing docs | `docs/dsp_lab/` |
+| Tests | `tests/audiolab/` (38 modules) |
+| Existing docs | `docs/audiolab/` |
 
 ### Files added or modified in this migration
 
 | Path | Purpose |
 |------|---------|
-| `src/dsp_lab/blocks/metadata.py` | `BlockTypeSpec`, `PortSpec`, physical metadata inference |
-| `src/dsp_lab/blocks/registry.py` | `list_blocks()`, `get_block_spec()`, `validate_node()` |
-| `src/dsp_lab/graph/validator.py` | Parameter + physical port validation |
-| `src/dsp_lab/api/render.py` | Agent `render_graph()` wrapper |
-| `src/dsp_lab/api/compare.py` | Agent `compare_audio()` wrapper |
+| `src/audiolab/blocks/metadata.py` | `BlockTypeSpec`, `PortSpec`, physical metadata inference |
+| `src/audiolab/blocks/registry.py` | `list_blocks()`, `get_block_spec()`, `validate_node()` |
+| `src/audiolab/graph/validator.py` | Parameter + physical port validation |
+| `src/audiolab/api/render.py` | Agent `render_graph()` wrapper |
+| `src/audiolab/api/compare.py` | Agent `compare_audio()` wrapper |
 | `examples/piano/minimal_A4_note.json` | Minimal decomposed piano-note graph |
 | `docs/*.md` | Migration-facing documentation |
-| `tests/dsp_lab/test_*_migration*.py` | Registry, validation, render, compare tests |
+| `tests/audiolab/test_*_migration*.py` | Registry, validation, render, compare tests |
 
 ## Current architecture summary
 
-- **Package:** `audiolab` (import `dsp_lab`)
+- **Package:** `audiolab` (import `audiolab`)
 - **Graph JSON:** schema version `0.1` — `GraphSpec` with `blocks`, `connections`, `inputs`, `probes`
 - **Runtime port kinds:** `audio`, `control`, `event` (unchanged for backward compatibility)
 - **Metadata port kinds:** `signal`, `control`, `event`, `physical`, `wave`
@@ -100,7 +100,7 @@ python3 scripts/generate_migration_audit.py
 |-------|--------|
 | PASP core | `PASPHammerFelt`, `PASPHammerStringJunction`, `PASPStringLine`, `PASPBridgeTermination`, `PASPSoundboardModal`, `PASPBridgeSoundboard`, `PASPNoteModel`, `PASPBidirectionalHammerString`, `PASPNoteFamilyModel`, `PASPStringGroupNoteModel`, `PASPEventPianoModel`, `PASPPerformanceModel` |
 | Piano-specific (legacy/model) | `HammerExcitation`, `PianoWaveguideString`, `PianoStringBank`, `NonlinearHammer`, `StringModeBank`, … (see table) |
-| Generic waveguide/delay | `WaveguideString`, `FractionalDelay`, `LoopFilter`, `DispersionAllpass`, … |
+| Generic waveguide/delay | `String1D`, `FractionalDelay`, `LoopFilter`, `DispersionAllpass`, … |
 | Modal / body | `ModalResonator`, `SoundboardModalBank`, `ResonanceBank`, … |
 | Analysis / metrics | `ReferenceCompare`, `LogSTFTMetric`, `ValidityGate`, … |
 | Experimental | `PythonCustom`, `EventPassThrough`, `CompareTask`, … |

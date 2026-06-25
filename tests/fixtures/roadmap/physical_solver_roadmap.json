@@ -1,0 +1,113 @@
+{
+  "supported_solvers": [
+    "excited_waveguide_string",
+    "polyphonic_excited_waveguide",
+    "modal_bank_body",
+    "nonlinear_hammer_string_contact",
+    "bell_modal_body",
+    "struck_bar_body",
+    "pasp_lifecycle_piano",
+    "string_termination_impedance",
+    "bow_string_contact",
+    "membrane_shell_modal",
+    "lip_reed_bore_coupled",
+    "hammer_string_contact_decomposed"
+  ],
+  "planned_solvers": [
+    "simple_piano_note",
+    "scattering_junction"
+  ],
+  "test_only_solvers": [
+    "bidirectional_mechanical_stub"
+  ],
+  "primitive_families": {
+    "String1D": [
+      "String1D",
+      "PolyphonicWaveguideString",
+      "PianoWaveguideString",
+      "PASPStringLine"
+    ],
+    "StiffString": [
+      "StiffStringModal"
+    ],
+    "DampedString": [
+      "StringLossFilter",
+      "LoopFilter"
+    ],
+    "HammerStringContact": [
+      "PASPBidirectionalHammerString",
+      "PASPHammerFelt",
+      "PASPHammerStringJunction"
+    ],
+    "BowStringContact": [
+      "BowStringContact"
+    ],
+    "PluckExcitation": [
+      "PluckExcitation",
+      "HammerExcitation"
+    ],
+    "ImpactContact": [
+      "ImpactContact"
+    ],
+    "CircularMembrane": [
+      "CircularMembraneModes",
+      "BellModalBody"
+    ],
+    "Plate2D": [
+      "PlateModes",
+      "StruckBarBody"
+    ],
+    "ModalBody": [
+      "ModalBankBody",
+      "PASPSoundboardModal",
+      "ResonanceBank"
+    ],
+    "CylindricalBore": [
+      "CylindricalBore"
+    ],
+    "ConicalBore": [
+      "ConicalBore"
+    ],
+    "TubeBore": [
+      "CylindricalBore",
+      "ConicalBore"
+    ],
+    "LipReed": [
+      "LipReed"
+    ],
+    "SingleReed": [
+      "SingleReed"
+    ],
+    "JetDrive": [
+      "JetDrive"
+    ],
+    "RadiationImpedance": [
+      "RadiationImpedance",
+      "CabinetRadiation"
+    ],
+    "CouplingJunction": [
+      "BridgeCoupler",
+      "PhysicalCouplingStub",
+      "StringBridgeCoupler"
+    ],
+    "ScatteringJunction": [
+      "ScatteringJunction"
+    ],
+    "ImpedanceBoundary": [
+      "ImpedanceBoundary",
+      "StringTerminationImpedance"
+    ]
+  },
+  "planned_coupled_solvers": [],
+  "supported_graphs": [
+    {"path": "examples/graphs/sine_test.json", "expect": "render"},
+    {"path": "examples/piano/minimal_waveguide_A4.json", "expect": "render"},
+    {"path": "examples/piano/waveguide_modal_body_A4.json", "expect": "render"},
+    {"path": "examples/piano/nonlinear_hammer_string_contact_A4.json", "expect": "render"},
+    {"path": "examples/piano/string_termination_impedance_A4.json", "expect": "render"}
+  ],
+  "representation_only_graphs": [
+    {"builder": "waveguide_bridge_coupler", "expect": "unsupported_computation"},
+    {"builder": "pasp_bridge_to_soundboard", "expect": "unsupported_computation"}
+  ]
+}

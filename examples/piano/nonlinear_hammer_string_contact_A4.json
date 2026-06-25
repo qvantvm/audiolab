@@ -1,0 +1,85 @@
+{
+  "schema_version": "0.1",
+  "name": "nonlinear_hammer_string_contact_A4",
+  "description": "Solver-hosted nonlinear PASP hammer-string contact note at A4 with contact and bridge diagnostics.",
+  "sample_rate": 48000,
+  "duration": 0.6,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 69,
+    "velocity": 88
+  },
+  "blocks": [
+    {
+      "id": "note_freq",
+      "type": "MidiToFrequency",
+      "params": {
+        "a4": 440.0
+      }
+    },
+    {
+      "id": "note",
+      "type": "PASPBidirectionalHammerString",
+      "params": {
+        "contact_model": "bidirectional",
+        "num_modes": 16,
+        "oversample": 1,
+        "inharmonicity_B": 0.00035,
+        "hammer_mass_kg": 0.008,
+        "felt_Q0": 120.0,
+        "felt_p": 2.7,
+        "velocity_scale": 3.0,
+        "velocity_exponent": 1.9,
+        "hammer_rest_position_m": 0.008,
+        "max_contact_force_N": 2000.0,
+        "modal_gain": 1.0,
+        "output_gain": 1.0,
+        "body_mix": 0.5
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "inputs.midi_note",
+      "to": "note_freq.midi_note"
+    },
+    {
+      "from": "inputs.midi_note",
+      "to": "note.midi_note"
+    },
+    {
+      "from": "inputs.velocity",
+      "to": "note.velocity"
+    },
+    {
+      "from": "note_freq.frequency",
+      "to": "note.frequency"
+    },
+    {
+      "from": "note.audio",
+      "to": "out.audio"
+    }
+  ],
+  "probes": [
+    "note.force",
+    "note.compression",
+    "note.hammer_velocity",
+    "note.string_displacement",
+    "note.bridge_audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 80, "y": 90},
+      "note": {"x": 360, "y": 160},
+      "out": {"x": 720, "y": 160}
+    }
+  }
+}

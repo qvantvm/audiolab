@@ -1,0 +1,60 @@
+{
+  "schema_version": "0.1",
+  "name": "polyphonic_two_note_overlap",
+  "description": "Two overlapping notes through PolyphonicWaveguideString and ModalBankBody.",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "events": [
+    {"time_seconds": 0.0, "type": "note_on", "note": 60, "velocity": 70},
+    {"time_seconds": 0.25, "type": "note_on", "note": 64, "velocity": 64},
+    {"time_seconds": 0.6, "type": "note_off", "note": 60},
+    {"time_seconds": 1.2, "type": "note_off", "note": 64}
+  ],
+  "blocks": [
+    {
+      "id": "string",
+      "type": "PolyphonicWaveguideString",
+      "params": {
+        "max_polyphony": 8,
+        "a4": 440.0,
+        "decay_seconds": 3.5,
+        "brightness": 0.55,
+        "gain": 1.0,
+        "hammer_brightness": 0.75,
+        "hammer_seed": 2
+      }
+    },
+    {
+      "id": "body",
+      "type": "ModalBankBody",
+      "params": {
+        "frequencies": [180.0, 420.0, 980.0],
+        "gains": [0.08, 0.05, 0.03],
+        "mix": 1.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "string.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "string": {"x": 200, "y": 160},
+      "body": {"x": 480, "y": 160},
+      "out": {"x": 760, "y": 160}
+    }
+  }
+}

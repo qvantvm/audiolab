@@ -6,9 +6,10 @@ Usage (from repo root):
 
     python examples/run_bell_example.py --out workspace/experiments/bell_modal.wav
 
-Open one of these in the Auralis DSP tab (or ``python -m dsp_lab.app.main``):
+Open one of these in the Auralis DSP tab (or ``python -m audiolab.app.main``):
 
 - ``examples/graphs/bell_modal.json`` — dry modal bell
+- ``examples/graphs/bell_physical_modal.json`` — solver-backed physically-informed modal bell
 - ``examples/graphs/bell_echo.json`` — discrete delay taps (320 / 640 / 960 ms)
 - ``examples/graphs/bell_reverb.json`` — feedback-delay reverb + room convolution
 """
@@ -28,7 +29,7 @@ DEFAULT_OUT = REPO_ROOT / "workspace" / "experiments" / "bell_modal.wav"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Render the bell_modal dsplab example graph.")
+    parser = argparse.ArgumentParser(description="Render the bell_modal audiolab example graph.")
     parser.add_argument("--graph", type=Path, default=DEFAULT_GRAPH, help="Bell graph JSON")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output WAV path")
     parser.add_argument("--midi-note", type=int, default=None, help="Override inputs.midi_note")
@@ -41,11 +42,11 @@ def main() -> int:
         print(f"Graph not found: {graph_path}", file=sys.stderr)
         return 1
 
-    import dsp_lab.blocks  # noqa: F401 - bootstrap registry
-    from dsp_lab.audio.io import save_wav
-    from dsp_lab.graph.executor import render_graph
-    from dsp_lab.graph.serialization import load_graph
-    from dsp_lab.graph.validator import validate_graph
+    import audiolab.blocks  # noqa: F401 - bootstrap registry
+    from audiolab.audio.io import save_wav
+    from audiolab.graph.executor import render_graph
+    from audiolab.graph.serialization import load_graph
+    from audiolab.graph.validator import validate_graph
 
     graph = load_graph(graph_path)
     if args.midi_note is not None:

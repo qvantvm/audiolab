@@ -1,0 +1,96 @@
+{
+  "schema_version": "0.1",
+  "name": "hammer_waveguide_body_parameter_maps_A4",
+  "description": "Hammer + String1D + ModalBankBody with declarative note/velocity parameter maps (no MidiToFrequency/ParameterCurve wiring).",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 69,
+    "velocity": 80
+  },
+  "parameter_maps": {
+    "string.frequency_hz": "midi_equal_temperament",
+    "string.decay_seconds": {
+      "type": "piecewise_curve",
+      "points": [[21, 5.5], [60, 3.0], [108, 0.8]]
+    },
+    "string.inharmonicity_B": {
+      "type": "piecewise_curve",
+      "points": [[21, 0.0002], [60, 0.00012], [108, 0.00005]]
+    },
+    "string.brightness": {
+      "type": "piecewise_curve",
+      "points": [[21, 0.6], [60, 0.8], [108, 0.9]]
+    },
+    "hammer.brightness": {
+      "type": "velocity_curve",
+      "curve": "quadratic",
+      "min": 0.4,
+      "max": 1.0
+    },
+    "hammer.decay_ms": {
+      "type": "velocity_curve",
+      "curve": "linear",
+      "min": 20.0,
+      "max": 45.0
+    }
+  },
+  "blocks": [
+    {
+      "id": "hammer",
+      "type": "HammerExcitation",
+      "params": {
+        "brightness": 0.75,
+        "seed": 4
+      }
+    },
+    {
+      "id": "string",
+      "type": "String1D",
+      "params": {
+        "decay_seconds": 4.0,
+        "brightness": 0.55,
+        "gain": 1.0,
+        "frequency_hz": 220.0,
+        "inharmonicity_B": 0.0001
+      }
+    },
+    {
+      "id": "body",
+      "type": "ModalBankBody",
+      "params": {
+        "frequencies": [180.0, 420.0, 980.0],
+        "gains": [0.08, 0.05, 0.03],
+        "mix": 1.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {
+        "peak_normalize_db": -1.0
+      }
+    }
+  ],
+  "connections": [
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "hammer.audio", "to": "string.excitation"},
+    {"from": "string.audio", "to": "body.audio"},
+    {"from": "body.audio", "to": "out.audio"}
+  ],
+  "probes": [
+    "hammer.audio",
+    "string.audio",
+    "body.audio",
+    "out.audio"
+  ],
+  "ui": {
+    "nodes": {
+      "hammer": {"x": 80, "y": 200},
+      "string": {"x": 360, "y": 180},
+      "body": {"x": 640, "y": 180},
+      "out": {"x": 920, "y": 180}
+    }
+  }
+}

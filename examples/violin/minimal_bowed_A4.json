@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1",
+  "name": "minimal_bowed_A4",
+  "description": "Renderable bowed A4 via bow_string_contact T3 solver.",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "inputs": {"frequency_hz": 440.0},
+  "blocks": [
+    {"id": "bow_drive", "type": "NoiseBurst", "params": {"amplitude": 0.5, "decay_ms": 1200.0, "seed": 3}},
+    {"id": "bow", "type": "BowStringContact", "params": {}},
+    {"id": "string", "type": "String1D", "params": {"decay_seconds": 3.0, "brightness": 0.55, "gain": 1.0, "frequency_hz": 440.0}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "bow_drive.audio", "to": "bow.bow_force"},
+    {"from": "inputs.frequency_hz", "to": "string.frequency"},
+    {"from": "string.bridge", "to": "bow.string_velocity"},
+    {"from": "string.audio", "to": "out.audio"}
+  ],
+  "probes": ["string.audio", "out.audio"]
+}

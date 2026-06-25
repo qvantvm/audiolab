@@ -22,19 +22,19 @@ MIDI note **69** is **A4** (440 Hz reference via `MidiToFrequency`).
 ## Validate
 
 ```bash
-dsp-lab validate examples/piano/minimal_A4_note.json
+audiolab validate examples/piano/minimal_A4_note.json
 ```
 
 ## Render
 
 ```bash
-dsp-lab render examples/piano/minimal_A4_note.json --out workspace/minimal_a4.wav
+audiolab render examples/piano/minimal_A4_note.json --out workspace/minimal_a4.wav
 ```
 
 Python agent API:
 
 ```python
-from dsp_lab.api.render import render_graph
+from audiolab.api.render import render_graph
 
 result = render_graph(
     "examples/piano/minimal_A4_note.json",

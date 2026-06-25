@@ -5,7 +5,7 @@ Standalone **DSP Lab + PASP** physical piano modeling and **headless autoresearc
 ## What this repo is
 
 - **DSP graph engine** — JSON graphs, blocks, validation, offline render
-- **PyQt graph editor** — `python -m dsp_lab.app.main`
+- **PyQt graph editor** — `python -m audiolab.app.main`
 - **PASP piano model** — phrase-level performance rendering
 - **Dataset evaluation** — manifest-scale eval, failure clusters, regression reports
 - **Autoresearch cycle** — cluster selection → hypothesis → calibration → decision (template planner, no LLM required)
@@ -25,14 +25,14 @@ python examples/smoke_pasp_autoresearch.py   # green path (~2 min)
 ### UI
 
 ```bash
-python -m dsp_lab.app.main examples/graphs/pasp_single_note_sound.json
+python -m audiolab.app.main examples/graphs/pasp_single_note_sound.json
 ```
 
 ### Headless CLI
 
 ```bash
-dsp-lab validate examples/graphs/pasp_performance_model_base.json
-dsp-lab render examples/graphs/pasp_single_note_sound.json --out /tmp/note.wav
+audiolab validate examples/graphs/pasp_performance_model_base.json
+audiolab render examples/graphs/pasp_single_note_sound.json --out /tmp/note.wav
 ```
 
 ### Autoresearch harness (no agents)
@@ -56,17 +56,17 @@ Configs: `examples/autoresearch/pasp_autoresearch_fast.json` (dev), `pasp_autore
 ## Layout
 
 ```
-src/dsp_lab/       Engine, UI, autoresearch, governance
+src/audiolab/       Engine, UI, autoresearch, governance
 examples/          Graphs, run scripts, autoresearch JSON configs
 data/              Evaluation manifests and phrase events
-docs/dsp_lab/      Operator guides
-tests/dsp_lab/     pytest suite
+docs/audiolab/      Operator guides
+tests/audiolab/     pytest suite
 workspace/         Runtime outputs (gitignored)
 ```
 
 ## Docs
 
-Start at [docs/dsp_lab/guide.md](docs/dsp_lab/guide.md) and [docs/dsp_lab/README.md](docs/dsp_lab/README.md).
+Start at [docs/user_manual.md](docs/user_manual.md) (theory and practice). Operators: [docs/audiolab/guide.md](docs/audiolab/guide.md). Full index: [docs/audiolab/README.md](docs/audiolab/README.md).
 
 ## Relationship to Auralis
 

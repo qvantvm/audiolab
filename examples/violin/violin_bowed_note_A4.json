@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1",
+  "name": "violin_bowed_note_A4",
+  "description": "L4 ViolinBowedNoteModel template (T1 fallback path).",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "inputs": {"frequency_hz": 440.0},
+  "blocks": [
+    {"id": "bow", "type": "NoiseBurst", "params": {"amplitude": 0.5, "decay_ms": 1000.0, "seed": 5}},
+    {"id": "violin", "type": "ViolinBowedNoteModel", "params": {"frequency_hz": 440.0}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "bow.audio", "to": "violin.bow_force"},
+    {"from": "inputs.frequency_hz", "to": "violin.frequency"},
+    {"from": "violin.audio", "to": "out.audio"}
+  ],
+  "probes": ["violin.audio", "out.audio"]
+}

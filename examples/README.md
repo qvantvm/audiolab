@@ -2,7 +2,7 @@
 
 Runnable scripts, graph JSON, calibration configs, and autoresearch/governance policies for DSP Lab and the PASP streamlined research system.
 
-**Documentation:** [docs/dsp_lab/examples_index.md](../docs/dsp_lab/examples_index.md) (catalog) · [docs/dsp_lab/pasp_streamlined_system.md](../docs/dsp_lab/pasp_streamlined_system.md) (full workflow)
+**Documentation:** [docs/audiolab/examples_index.md](../docs/audiolab/examples_index.md) (catalog) · [docs/audiolab/pasp_streamlined_system.md](../docs/audiolab/pasp_streamlined_system.md) (full workflow)
 
 ## Quick start
 

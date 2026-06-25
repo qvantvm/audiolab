@@ -34,7 +34,7 @@ def _print_header(title: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run dsp_lab calibration on an example graph.")
+    parser = argparse.ArgumentParser(description="Run audiolab calibration on an example graph.")
     parser.add_argument("--graph", type=Path, default=DEFAULT_GRAPH, help="Graph JSON with CalibrationTask block")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="Output directory for calibrated artifacts")
     parser.add_argument(
@@ -70,8 +70,8 @@ def main() -> int:
         print(f"Reference WAV not found: {ref_path}", file=sys.stderr)
         return 1
 
-    from dsp_lab.experiments.calibration import run_calibration_cycle
-    from dsp_lab.experiments.param_utils import get_graph_param
+    from audiolab.experiments.calibration import run_calibration_cycle
+    from audiolab.experiments.param_utils import get_graph_param
 
     _print_header("Calibration example")
     print(f"Graph:          {graph_path}")

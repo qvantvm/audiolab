@@ -91,8 +91,8 @@ def main() -> int:
     parser.add_argument("--out-root", type=Path, default=REPO_ROOT / "workspace" / "experiments")
     args = parser.parse_args()
 
-    import dsp_lab.blocks  # noqa: F401
-    from dsp_lab.experiments.performance_calibration import (
+    import audiolab.blocks  # noqa: F401
+    from audiolab.experiments.performance_calibration import (
         batch_render_phrase_panel,
         evaluate_phrase_panel,
     )

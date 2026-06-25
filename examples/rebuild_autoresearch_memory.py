@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from dsp_lab.autoresearch.memory.build import build_memory_from_cycles
-from dsp_lab.autoresearch.memory_config import MemoryPolicy
+from audiolab.autoresearch.memory.build import build_memory_from_cycles
+from audiolab.autoresearch.memory_config import MemoryPolicy
 
 
 def main(argv: list[str] | None = None) -> int:

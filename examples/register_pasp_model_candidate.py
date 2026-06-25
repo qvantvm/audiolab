@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from dsp_lab.governance.register_candidate import register_candidate_from_cycle
+from audiolab.governance.register_candidate import register_candidate_from_cycle
 
 
 def main(argv: list[str] | None = None) -> int:

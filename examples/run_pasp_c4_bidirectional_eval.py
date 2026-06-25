@@ -45,18 +45,18 @@ def main() -> int:
     renders_dir.mkdir(parents=True, exist_ok=True)
     diagnostics_dir.mkdir(parents=True, exist_ok=True)
 
-    import dsp_lab.blocks  # noqa: F401
-    from dsp_lab.audio.io import load_wav, save_wav
-    from dsp_lab.audio.metrics import compare_audio
-    from dsp_lab.audio.metrics.contact_diagnostics import (
+    import audiolab.blocks  # noqa: F401
+    from audiolab.audio.io import load_wav, save_wav
+    from audiolab.audio.metrics import compare_audio
+    from audiolab.audio.metrics.contact_diagnostics import (
         cross_velocity_monotonicity,
         summarize_contact_diagnostics,
         summarize_force_arrays,
     )
-    from dsp_lab.audio.metrics.velocity_panel import compute_velocity_panel_metrics
-    from dsp_lab.experiments.calibration import run_calibration_cycle
-    from dsp_lab.graph.executor import render_graph
-    from dsp_lab.graph.serialization import load_graph
+    from audiolab.audio.metrics.velocity_panel import compute_velocity_panel_metrics
+    from audiolab.experiments.calibration import run_calibration_cycle
+    from audiolab.graph.executor import render_graph
+    from audiolab.graph.serialization import load_graph
 
     graph_dict = json.loads(graph_path.read_text(encoding="utf-8"))
     eval_graph_path = graph_path

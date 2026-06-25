@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1",
+  "name": "minimal_brass_tone",
+  "description": "Renderable brass tone via lip_reed_bore_coupled T3 solver.",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "blocks": [
+    {"id": "pressure", "type": "SineOscillator", "params": {"frequency": 3.0, "amplitude": 0.2}},
+    {"id": "reed", "type": "LipReed", "params": {"bore_length_m": 1.4}},
+    {"id": "bore", "type": "ConicalBore", "params": {}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "pressure.audio", "to": "reed.mouth_pressure"},
+    {"from": "reed.bore_reflection", "to": "bore.wave_left"},
+    {"from": "reed.audio", "to": "out.audio"}
+  ],
+  "probes": ["reed.audio", "out.audio"]
+}

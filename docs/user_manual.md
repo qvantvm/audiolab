@@ -1,0 +1,1712 @@
+# Audiolab User Manual
+
+Theory and practice for the Audiolab sound engine: graph-based offline DSP, physical piano modeling (PASP), calibration, and headless autoresearch.
+
+This manual explains **what exists, what computes, what is tested, and what remains experimental**. Detailed reference material lives in linked documents — use this page to orient yourself, then drill down.
+
+Audiolab's graph system can represent more physics than it can currently compute. A graph with physically named blocks is not automatically a physically coupled solver, and a successful render is not automatically evidence of piano realism.
+
+## Audio synthesis context
+
+Audio synthesis is the practice of generating sound by computation. Every synthesis system trades off perceptual quality, controllability, computational cost, interpretability, and evidence: a method can sound good without explaining the instrument, expose meaningful controls without sounding realistic, or render quickly while hiding the cause of its failures.
+
+Common approaches include:
+
+| Approach | Strengths | Tradeoffs |
+|----------|-----------|-----------|
+| Sample-based synthesis | High realism when recordings cover the desired notes, velocities, articulations, and microphones | Less explanatory; limited outside captured conditions; large libraries and interpolation rules |
+| Subtractive / additive / FM / wavetable DSP | Efficient, controllable, mature for musical design | Often abstract relative to acoustic instrument physics; realism depends on careful patch design |
+| Physical modeling | Exposes causal parameters and can generalize across performance conditions | Numerically hard; solver gaps are easy to hide behind physical names |
+| Neural / data-driven synthesis | Can produce high-quality results when trained on suitable data | Opaque, data-dependent, and harder to use for causal physical research |
+| Hybrid systems | Practical combination of models, samples, effects, and learned components | Requires discipline about which layer is responsible for the sound |
+
+Audiolab takes a graph-based, offline, evidence-first physical-modeling research approach. The graph represents instrument structure explicitly; compilation separates valid representation from supported computation; renders are measured against references; and calibration/autoresearch are treated as hypothesis tests, not proof of realism. Physical modeling is not assumed to be automatically better here — it is useful because it makes assumptions, missing solvers, and failure modes visible.
+
+## Who this is for
+
+| Reader | Start with |
+|--------|------------|
+| **New users** | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
+| **Researchers** | Part 1 (theory), then [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) and [roadmap](roadmap.md) |
+| **Operators** (baseline eval, autoresearch cycles) | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), Part 2 §6, [audiolab/guide.md](audiolab/guide.md) |
+| **Agent authors** (Auralis consumers) | [Agent safety contract](#agent-safety-contract), [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), [agent_usage.md](agent_usage.md) |
+
+## Choose your path
+
+| Level | Start |
+|-------|-------|
+| New to Audiolab | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
+| Waveguide / solver research | [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) |
+| Calibration / autoresearch | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) |
+| Theory-first readers | [Part 1](#part-1--theory) |
+| Operators (full runbook) | Part 2 §6 + [audiolab/guide.md](audiolab/guide.md) |
+
+## What Audiolab is
+
+Audiolab (`audiolab`) is a **standalone synthesis and research engine**. It provides:
+
+- **DSP graph engine** — JSON graphs, block registry, validation, offline render
+- **PyQt graph editor** — visual authoring and calibration UI
+- **PASP piano modeling paths** — physically interpretable signal chains, composite demo blocks, and solver-backed prototypes
+- **Dataset evaluation** — manifest-scale scoring, failure clusters, regression reports
+- **Autoresearch cycle** — cluster selection → hypothesis → calibration → accept/reject decision (no LLM required)
+
+Use it as a research workbench, not as proof by vocabulary. A block named `Hammer`, `String`, `Bridge`, or `Soundboard` may be a signal-chain approximation, a composite model, a solver-hosted block, or representation-only topology depending on the graph and selected solver.
+
+## What Audiolab is not
+
+- Agent orchestration, supervisor chat, or literature browser (see **Auralis**)
+- Real-time audio plugin or live performance host
+- A guarantee that every physically meaningful port topology can render today
+- Evidence, by itself, that a candidate sounds better than the baseline across a dataset
+
+## Current capability matrix
+
+This table is the manual's short truth table. The canonical solver status is [`roadmap.md`](roadmap.md); the machine-readable contract is [`tests/fixtures/roadmap/physical_solver_roadmap.json`](../tests/fixtures/roadmap/physical_solver_roadmap.json).
+
+| Feature | Status | Evidence | Limitations |
+|---------|--------|----------|-------------|
+| T1 signal graph render | Working | `examples/graphs/sine_test.json`, `examples/piano/minimal_A4_note.json`, CLI/API render paths | Offline only; signal routing does not imply physical coupling |
+| Block registry and validation | Working | Registry docs/tests, `audiolab list-blocks`, `validate_graph()` | The count of blocks is inventory, not quality evidence |
+| `String1D` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
+| `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
+| `StringTerminationImpedance` boundary solver | Working prototype | `string_termination_impedance`, `string_termination_impedance_A4.json` | Solver-hosted string termination with impedance reflection/loss diagnostics; not generic bridge scattering |
+| `ModalBankBody` T2 solver | Working prototype | `modal_bank_body`, `waveguide_modal_body_A4.json` | Signal-fed body filter, not bidirectional bridge/body impedance coupling |
+| `PASPBidirectionalHammerString` contact solver | Working prototype | `nonlinear_hammer_string_contact`, `nonlinear_hammer_string_contact_A4.json`, `bridge_admittance_contact_A4.json`, `unison_hammer_string_contact_C4.json` | Solver-hosted composite contact path with reduced bridge loading, unison coupling, and radiation diagnostics; not decomposed T3 bridge/scattering or full piano solve |
+| `PASPEventPianoModel` lifecycle solver | Working prototype | `pasp_lifecycle_piano`, `piano_lifecycle_damper_pedal.json` | Hosted event path for note-off, pedal, damper, and re-strike diagnostics; not a full performance-quality piano |
+| Mixed hammer → waveguide → body chains | Working prototype | `minimal_hammer_waveguide_body_A4.json`, parameter-map examples | Multiple isolated solvers connected by signal edges; not fused physics |
+| Decomposed PASP hammer/string/bridge/body chain | Demo / interpretable signal chain | `minimal_A4_note.json`, PASP docs | Physically named one-way DSP blocks; not proof of physically faithful computation |
+| Composite PASP note/performance blocks | Demo / behavior model | `pasp_performance_model_base.json`, PASP example scripts | Opaque internals compared with decomposed graphs; validate with metrics before claims |
+| Bidirectional bridge coupling | Representation only | roadmap representation-only tests | Valid graph concept; default compile failure expected until T3 solver exists |
+| Bow-string / drum impact T3 solvers | Working prototype | `examples/violin/minimal_bowed_A4.json`, `examples/drums/minimal_membrane_impact.json`, representation topology graphs | Coupled stick-slip bow and modal membrane impact; not full body/shell models |
+| L4 instrument templates | Working prototype / modal approx | `examples/violin/violin_bowed_note_A4.json`, `examples/drums/drum_impact_note.json`, `examples/brass/brass_tone_C4.json` | Single-block note models with explicit maturity labels |
+| Decomposed hammer-string nonlinear contact | Working prototype | `hammer_string_contact_decomposed`, `decomposed_hammer_string_contact_A4.json` | T3 path across `PASPHammerFelt` ↔ `PASPStringLine`; composite `nonlinear_hammer_string_contact` remains the production L3 composite path |
+| Dataset autoresearch improvement | Evidence-dependent | baseline/candidate `summary.json`, `decision.json`, regression reports | Unknown until references exist and before/after dataset eval passes |
+| Calibration quality improvement | Evidence-dependent | calibration `metrics.json`, render WAVs, panel eval | Can improve metrics without perceptual improvement or dataset generalization |
+
+## Known engineering limitations
+
+- Audiolab can represent valid physical topologies that it cannot compute yet. Compilation must fail honestly rather than substituting a convenient signal chain.
+- A block name being physical does not mean the computation is physically coupled. `PASPHammerFelt → PASPStringLine → PASPSoundboardModal` can still be a one-way DSP approximation.
+- The current waveguide string path is closer to a Karplus-Strong/reduced-order modal prototype than a high-fidelity stiff-string piano model.
+- `inharmonicity_B` now affects the mono `String1D` T2 solver through a reduced-order dispersion approximation; the polyphonic waveguide path still reports unsupported dispersion with structured warnings.
+- A solver-hosted `StringTerminationImpedance` path exists for terminal string-boundary reflection/loss diagnostics. Generic `ImpedanceBoundary`, `BridgeCoupler`, and `StringBridgeCoupler` topologies remain representation-only unless a matching solver owns them.
+- A solver-hosted nonlinear hammer-string contact path exists for `PASPBidirectionalHammerString`, including reduced-order bridge admittance/loading, unison string exchange, and body/radiation diagnostics. T3 decomposed contact/bridge components and T4 fused piano solvers are not production-supported in the default registry.
+- A solver-hosted lifecycle path exists for `PASPEventPianoModel`; it reports note/pedal/damper transitions but should still be treated as reduced-order behavior until phrase datasets validate it.
+- Some PASP chains are physically interpretable without being physically faithful. Treat them as hypotheses until metrics, diagnostics, and listening checks support them.
+- Calibration can optimize objective metrics without producing perceptually better sound, and single-note improvement is not dataset improvement.
+- The autoresearch loop must prove improvement through baseline/candidate regression. A generated bundle is not the same as a better model.
+
+## Representation vs computation
+
+Audiolab separates two questions:
+
+1. **`validate_graph()`** — Is this a **valid representation**? (ports exist, domains match, no illegal cycles)
+2. **`compile_graph()`** — Can the engine **compute** it? (registered solvers, no silent fallback)
+
+If you declare bidirectional physical wiring (e.g. `String1D.bridge ↔ BridgeCoupler.input`) but no bridge/scattering solver exists, validation **passes** and compilation **fails** with:
+
+- `UnsupportedComputationError`
+- code `UNSUPPORTED_COMPUTATION`
+- message prefix **"Valid representation, unsupported computation"**
+
+The engine will **not** silently rewrite `string.bridge` into `string.audio → coupler.input`. That substitution would corrupt research loops.
+
+| Status | Meaning |
+|--------|---------|
+| **Supported** | validate + compile + render |
+| **Working prototype** | supported computation with narrow tests and known limitations |
+| **Demo / approximation** | useful render path, but physical quality must be proven separately |
+| **Representation only** | validate passes; compile fails honestly |
+| **Planned** | solver named in roadmap, not in default registry |
+
+**Deep dive:** [roadmap.md](roadmap.md) · [physical_framework.md](physical_framework.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
+
+## Evidence dashboard
+
+Before claiming a model works, inspect the artifacts that make the claim falsifiable:
+
+| Question | Artifact |
+|----------|----------|
+| Did the graph render finite, non-silent, non-clipped audio? | `render_metadata.json`, `render.wav`, probe files |
+| Did the solver ignore any tuned parameter? | `structured_warnings` in render metadata |
+| Are references present? | dataset `summary.json`, `reference_missing` tags |
+| Did calibration improve the intended target? | calibration `metrics.json`, `calibration_targets.global_score` |
+| Did the candidate improve beyond one item? | candidate dataset `summary.json` and `regression_vs_baseline.md` |
+| Which failures remain? | `aggregate/failure_clusters.json`, `aggregate/worst_items.json` |
+| Is the candidate acceptable? | autoresearch `decision.json`; governance `promotion_decision.json` |
+
+If a local run has no baseline score, no candidate score, missing references, or no regression report, say so. Do not replace absent evidence with confident prose.
+
+## Solver gap analysis
+
+The roadmap names the next production solver classes. Framework layers and primitive families: [physical_framework.md](physical_framework.md).
+
+| Missing solver capability | Why it matters | Status |
+|---------------------------|----------------|--------|
+| Nonlinear hammer-string contact (composite) | Realistic attack, velocity response, repeated strikes | **Addressed** — `nonlinear_hammer_string_contact` on `PASPBidirectionalHammerString` |
+| Nonlinear hammer-string contact (decomposed) | Separate hammer/string nodes with bidirectional coupling | **Addressed** — `hammer_string_contact_decomposed` |
+| Bow-string stick-slip contact | Violin, cello bowed instruments | **Addressed** — `bow_string_contact` |
+| Membrane-shell modal coupling | Drums beyond 1D strings | **Addressed** — `membrane_shell_modal` (modal approximation) |
+| Lip-reed bore feedback | Brass self-oscillation | **Addressed** — `lip_reed_bore_coupled` (minimal prototype) |
+| Stiff string / dispersion | Piano-like inharmonicity and register-dependent partial spacing | Partial — `inharmonicity_B` on mono waveguide |
+| Multi-string unison coupling | Beating, chorus, register realism | Partial — unison diagnostics in contact solver |
+| Bridge scattering / impedance coupling | Physical energy transfer from strings into body | Planned — `scattering_junction` |
+| Soundboard radiation model | Body projection beyond modal filtering | Partial — body diagnostics in contact solver |
+| Damper/contact lifecycle | Note-off, release, pedal damping | Partial — `pasp_lifecycle_piano` prototype |
+| Sympathetic resonance | Pedal realism, phrase behavior | Not started |
+
+Treat these as solver work, not graph-authoring work. More graph structure cannot substitute for missing numerical computation.
+
+### Relationship to Auralis
+
+Audiolab provides the synthesis, evaluation, calibration, and headless autoresearch machinery that must be verified through the artifacts above. Auralis can consume Audiolab as a dependency for agent-only workflows such as journals, critique, supervisors, and literature browsing, but those concerns stay outside this repository.
+
+### Repository and runtime layout
+
+| Path | What lives there |
+|------|------------------|
+| `src/audiolab/` | Engine, graph compiler/executor, UI, evaluation, autoresearch, governance |
+| `examples/` | Runnable scripts, graph JSON, calibration configs, autoresearch policies |
+| `data/` | Evaluation manifests plus local/gitreignored reference WAV generation |
+| `docs/audiolab/` | Operator and subsystem guides |
+| `tests/audiolab/` | Pytest suite and doc integrity checks |
+| `workspace/` | Runtime outputs, experiments, renders, and calibration bundles (gitignored) |
+
+## Documentation map
+
+| I want to… | Go to |
+|------------|-------|
+| Follow a hands-on tutorial | [Part 3 — Tutorials](#part-3--tutorials) |
+| Understand graphs and execution tiers | Part 1 below · [architecture.md](architecture.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md) |
+| Learn resonant coloration and `ResonanceBank` | [§3 — Resonant coloration](#resonant-coloration-and-resonancebank) |
+| Learn `String1D` and waveguide strings | [§3 — String1D](#string1d-and-excited-waveguide-string) |
+| See what renders today vs what is planned | [Current capability matrix](#current-capability-matrix) · [roadmap.md](roadmap.md) |
+| Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
+| Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](audiolab/cli.md) |
+| Calibrate parameters to a reference | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) · [calibration.md](audiolab/calibration.md) |
+| Generate local reference WAVs | Part 2 §5–6 · [data/README.md](../data/README.md) · [data/references/README.md](../data/references/README.md) |
+| Run autoresearch (no agents) | Part 2 §6 · [audiolab/guide.md](audiolab/guide.md) |
+| Register or promote a model candidate | Part 2 §6 · [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md) |
+| Build an agent loop | [Agent safety contract](#agent-safety-contract) · [agent_usage.md](agent_usage.md) |
+| Look up block equations | [audiolab/pasp_block_io_reference.md](audiolab/pasp_block_io_reference.md) |
+| Find example scripts and graphs | [audiolab/examples_index.md](audiolab/examples_index.md) |
+
+---
+
+# Part 1 — Theory
+
+## 1. Graphs as programs
+
+In Audiolab, a **graph** is the program. You describe synthesis as a JSON file (`GraphSpec`) that lists **blocks** (processing nodes), **connections** (directed edges between ports), and optional **inputs**, **events**, and **probes**.
+
+```
+graph.json
+    → validate_graph()     # Is the topology valid?
+    → compile_graph()      # Can we compute it? Build execution plan.
+    → render_graph()       # Whole-buffer offline audio + metadata
+    → WAV + probes + metrics
+```
+
+A minimal mental model:
+
+| Concept | Meaning |
+|---------|---------|
+| **Block** | One node: `{"id": "string", "type": "String1D", "params": {...}}` |
+| **Connection** | One edge: `{"from": "hammer.force", "to": "junction.force"}` |
+| **Port** | Named input or output on a block (`string.audio`, `inputs.velocity`) |
+| **Probe** | Tap point recorded during render (`"probes": ["string.audio"]`) |
+
+Connections use `owner.port` notation. Graph-level scalars live under `inputs` (MIDI note, velocity, frequency). Phrase-level performance uses `events` (note_on, note_off, pedal).
+
+**Deep dive:** [graph_schema.md](graph_schema.md) · [architecture.md](architecture.md)
+
+### 1.1 Whole-buffer offline execution
+
+Audiolab is an **offline** engine: `render_graph()` synthesizes the **entire** `duration` in one pass and returns a float32 buffer plus metadata. It is not a real-time callback host or VST plugin.
+
+| Property | Implication |
+|----------|-------------|
+| Whole-buffer render | Same graph + inputs → same audio (deterministic blocks) |
+| `block_size` | Scheduling hint for the executor loop; does not imply streaming I/O |
+| `graph_hash` | SHA-256 of graph content for regression and candidate tracking |
+| Golden audio tests | Scientific checks on F0, envelope, spectral centroid ([`test_golden_audio.py`](../tests/audiolab/test_golden_audio.py)) |
+
+Because execution is offline, research loops can replay renders exactly, compare hashes across commits, and attach objective metrics without timing jitter.
+
+### 1.2 Compilation pipeline (internals)
+
+Validation and compilation are separate stages with distinct responsibilities:
+
+```mermaid
+flowchart LR
+  json[GraphSpec JSON] --> validate[validate_graph]
+  validate --> classify[classify_connections]
+  classify --> plan[build_execution_plan]
+  plan --> guards[computation guards]
+  guards --> solvers[select PhysicalSolvers]
+  solvers --> compiled[CompiledGraph]
+  compiled --> render[render_graph]
+```
+
+After `validate_graph()` succeeds:
+
+1. **`classify_connections()`** — each edge gets a kind: `SIGNAL`, `CONTROL`, `EVENT`, `PHYSICAL_BIDIRECTIONAL`, or `WAVE_SCATTERING`
+2. **`build_execution_plan()`** — signal schedule, event schedule, physical subsystems, boundary ports
+3. **Computation guards** — reject misclassified physical ports and unsatisfied solver requirements (`UNSUPPORTED_COMPUTATION`)
+4. **Solver selection** — match subsystems to registered `PhysicalSolver` plugins
+5. **`CompiledGraph`** — carries `block_execution_roles`, warnings, `structured_warnings`
+
+| Role | Meaning |
+|------|---------|
+| `signal_scheduled` | Ordinary `DSPBlock.process()` in the signal loop |
+| `solver_hosted` | Block skipped in signal loop; physical solver owns it |
+| `subsystem_internal` | Block inside a T3 connected-component subsystem |
+
+**Deep dive:** [`compiler.py`](../src/audiolab/graph/compiler.py) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
+
+## 2. Blocks and the registry
+
+Every block type is registered with:
+
+- **Input and output ports** (runtime kinds: `audio`, `control`, `event`)
+- **Parameters** (names, types, ranges, defaults)
+- **Metadata** (physical role, PASP classification, port domains)
+
+Discover blocks programmatically:
+
+```python
+from audiolab.blocks.registry import list_blocks, get_block_spec
+
+for spec in list_blocks():
+    if spec.pasp_classification == "pasp_core":
+        print(spec.block_type, spec.physical_role)
+
+hammer = get_block_spec("PASPHammerFelt")
+print([p.name for p in hammer.input_ports], hammer.parameters)
+```
+
+### Port kinds (metadata layer)
+
+| Kind | Meaning |
+|------|---------|
+| `signal` | Ordinary audio DSP |
+| `control` | Scalar or slow control |
+| `event` | Note/MIDI-style events |
+| `physical` | Mechanical/acoustic quantity (force, velocity) |
+| `wave` | Incident/reflected wave variables (reserved) |
+
+Runtime execution still uses legacy kinds (`audio`, `control`, `event`) on buffers; metadata annotates physical meaning without breaking existing graphs.
+
+**Deep dive:** [block_registry.md](block_registry.md) · [physical_ports.md](physical_ports.md)
+
+### 2.1 Object-based physical modeling (concept)
+
+Audiolab maps the object-based physical synthesis idea (Sarti, Rabenstein, Karjalainen) onto the existing block graph:
+
+| Concept | Audiolab |
+|---------|----------|
+| Physical object | Block type (`PASPStringLine`, `String1D`, …) |
+| Object port | `PortSpec` on `BlockTypeSpec` |
+| Compatible connection | `validate_graph()` + `ports_compatible()` |
+| Object dynamics | `PhysicalSolver` at compile time |
+
+Two connection semantics matter:
+
+```
+Ordinary:     string.audio → body.audio          (one-way signal)
+Physical:     string.bridge ↔ body.bridge_input  (bidirectional mechanical)
+```
+
+The first is computed by the signal schedule today. The second is **valid representation** but requires a T3 solver to compute (see [roadmap](roadmap.md)).
+
+**Deep dive:** [object_based_physical_modeling.md](object_based_physical_modeling.md)
+
+## 3. Execution model: signal schedule vs physical solvers
+
+Audiolab compiles each graph into an **execution plan** with distinct tiers:
+
+| Tier | What runs | Example |
+|------|-----------|---------|
+| **T1 — Signal schedule** | `DSPBlock.process()` in topological order | Filters, `HammerExcitation`, `Output` |
+| **T2 — Isolated-host solver** | Registered `PhysicalSolver` owns one block | `String1D`, `ModalBankBody` |
+| **T3 — Connected component** | Solver owns a multi-block physical subsystem | Bidirectional bridge (planned) |
+| **T4 — Compound** | One solver owns a fused chain (planned) | `SimplePianoNoteSolver` |
+
+### Mixed execution
+
+A common research graph combines tiers on **signal** edges:
+
+```
+HammerExcitation  →  String1D  →  ModalBankBody  →  Output
+     (T1)                  (T2)               (T2)            (T1)
+```
+
+Each T2 block gets its own physical solver. The compiler does **not** auto-fuse chains unless a matching T4 solver is registered and opted in via `solver_hint`.
+
+### String1D and excited_waveguide_string {#string1d-and-excited-waveguide-string}
+
+`String1D` is a **simple physical-modeling block that produces the sound of a vibrating string**.
+
+It is not a full violin/guitar/piano string simulation. It is a practical T2 prototype with two modes:
+
+1. **Karplus–Strong / waveguide string** when `inharmonicity_B = 0`
+2. **Reduced stiff-string modal model** when `inharmonicity_B > 0`
+
+The block takes a pitch, optionally an excitation signal, and outputs audio. In compiled graphs it is **solver-hosted** by `excited_waveguide_string` — the block declares ports and parameters; the solver performs the computation.
+
+#### What it means conceptually
+
+A real string does roughly this:
+
+```text
+pluck / hammer / bow / impulse
+        ↓
+ vibrating string
+        ↓
+ pitched decaying sound
+```
+
+For a simple string, the sound has harmonics:
+
+```text
+f0, 2f0, 3f0, 4f0, ...
+```
+
+For example, if `f0 = 110 Hz`, the partials are approximately:
+
+```text
+110, 220, 330, 440, 550, ...
+```
+
+A stiff piano string is different. Its upper partials are slightly sharp:
+
+\[
+f_k = k f_0 \sqrt{1 + B k^2}
+\]
+
+So the partials become:
+
+```text
+110, slightly above 220, more above 330, even more above 440, ...
+```
+
+That is what `inharmonicity_B` controls.
+
+#### The `inharmonicity_B = 0` case: Karplus–Strong string
+
+When `inharmonicity_B = 0`, the `excited_waveguide_string` solver uses a **delay-line feedback loop**.
+
+```text
+short burst of noise/excitation
+        ↓
+ circular delay buffer
+        ↓
+ feedback with damping/filtering
+        ↓
+ decaying pitched tone
+```
+
+Pitch is set by delay length (Audiolab implementation):
+
+\[
+L = \max\left(2,\ \mathrm{round}\!\left(\frac{f_s}{f_0}\right)\right)
+\]
+
+At `fs = 44100` and `f0 = 440`:
+
+```text
+L = round(44100 / 440) = 100 samples
+```
+
+A 100-sample loop repeats about 441 times per second, producing a pitch near 440 Hz.
+
+#### How the Karplus–Strong computation works
+
+At every audio sample the solver:
+
+```text
+y[n] = buffer[index]
+buffer[index] ← decay_coeff · (brightness · buffer[index] + (1-brightness) · avg)
+```
+
+where `avg` is the average of `buffer[index]` and `buffer[index+1]` (circular wrap).
+
+More explicitly:
+
+```python
+idx = i % L
+nxt = (idx + 1) % L
+value = buffer[idx]
+average = 0.5 * (buffer[idx] + buffer[nxt])
+buffer[idx] = decay_coeff * (brightness * buffer[idx] + (1.0 - brightness) * average)
+y[i] = value * gain
+```
+
+- `decay_coeff` comes from `decay_seconds` (see below), not the legacy `decay` parameter directly.
+- `brightness` high → sharper, more high-frequency content retained.
+- `brightness` low → stronger averaging, duller decay.
+
+At the start of each `process_block`, the solver copies the first `min(L, excitation_length)` samples of the excitation into the delay buffer.
+
+#### What the excitation does
+
+The string needs initial energy. Connect a `NoiseBurst`, hammer impulse, or other excitation to `string.excitation`. The `frequency` control port (or `frequency_hz` parameter) sets pitch.
+
+```text
+excitation[n] seeds the delay buffer (Karplus path)
+frequency_hz chooses delay length L
+decay_seconds sets feedback damping
+brightness controls high-frequency loss
+gain scales output level
+```
+
+The `excitation` port is **optional** on the block (`required=False`) so T3 graphs such as `bow_string_contact` can compile without a separate excitation source.
+
+#### `decay` vs `decay_seconds` (solver rules)
+
+The block exposes both parameters for historical compatibility, but **`excited_waveguide_string` uses `decay_seconds` as the primary control**:
+
+```python
+decay_coeff = 10 ** (-3.0 / (decay_seconds * fs))
+```
+
+This targets roughly 60 dB decay over `decay_seconds` of sustained ringing.
+
+**Legacy `decay` mapping:** if only `decay` ∈ (0, 1) is set (and neither `decay_seconds` nor `decay_t60` is present), the solver maps:
+
+```python
+decay_seconds = -3.0 / (log10(decay) * fs)
+```
+
+and emits a `param_legacy_mapped` structured warning. If `decay_seconds` is explicitly set, it wins.
+
+**T1 fallback:** when the block is not solver-hosted, `String1D.process()` in `delay.py` uses the legacy `decay` feedback multiplier directly — behavior differs from the solver path.
+
+#### The `inharmonicity_B > 0` case: reduced stiff-string modal model
+
+When `inharmonicity_B > 0` (clamped to [0, 0.01]), the solver **does not run the delay loop**. Instead it synthesizes a **whole-buffer modal approximation** per `process_block`:
+
+\[
+y[n] = \sum_k A_k \, e^{-t[n]/\tau_k} \sin(2\pi f_k t[n] + \phi_k)
+\]
+
+with
+
+\[
+f_k = k f_0 \sqrt{1 + B k^2}
+\]
+
+Up to 48 modes are summed; higher modes decay faster and are tilted by `brightness`. Excitation RMS scales the output level. This is modal synthesis, not a dispersive waveguide.
+
+#### Why this is not a full piano string model
+
+A full piano note involves hammer felt compression, nonlinear hammer–string collision, three coupled strings per note, bridge coupling, soundboard modes, radiation, sympathetic resonance, duplex scale, and pedal interactions.
+
+`String1D` approximates **the string resonator only**. It is a **T2 prototype**, useful for pitched decays and waveguide research chains, not a physically complete piano engine.
+
+#### Parameters
+
+| Parameter | Role |
+|-----------|------|
+| `frequency_hz` | Base pitch `f0`; sets delay length (KS) or modal fundamental (stiff path) |
+| `brightness` | High-frequency retention in KS averaging; mode tilt in stiff path |
+| `decay_seconds` | Primary sustain control for the solver (`decay_coeff` or modal decay) |
+| `decay` | Legacy feedback gain; mapped to `decay_seconds` when it is the only decay param |
+| `gain` | Output amplitude multiplier |
+| `inharmonicity_B` | Stiffness / inharmonic partial spacing; `0` = harmonic KS loop |
+
+#### Solver-hosted architecture
+
+```text
+graph node: String1D
+        ↓
+parameters: frequency_hz, brightness, decay_seconds, inharmonicity_B, gain
+ports: excitation (optional), frequency, audio
+        ↓
+physical solver: excited_waveguide_string
+        ↓
+audio output
+```
+
+The block's `process()` method is a T1 fallback only. Compiled graphs with `excited_waveguide_string` skip it.
+
+#### Mental model
+
+```text
+String1D = a pitch-producing resonator
+
+B = 0  → Karplus–Strong delay loop
+B > 0  → sum of damped stiff-string partials
+
+excitation in → energy circulates or rings in modes → damping removes energy
+→ brightness shapes high-frequency loss → inharmonicity_B bends partial spacing → audio out
+```
+
+Good for: plucked strings, basic piano-like decays, string resonators, physical-modeling prototypes.
+
+Not enough alone for: realistic piano, violin bowing, nonlinear brass, drum membranes, full soundboard coupling.
+
+#### Appendix: `inharmonicity_B` in detail
+
+`inharmonicity_B` controls **how much partials deviate from exact harmonic multiples**.
+
+Ideal flexible string:
+
+```text
+f1 = f0,  f2 = 2f0,  f3 = 3f0,  ...
+```
+
+Stiff string (piano-like):
+
+```text
+f_k = k f0 sqrt(1 + B k²)
+```
+
+| B | Effect |
+|---|--------|
+| `0` | Perfectly harmonic string |
+| small | Mild stiffness; natural piano/string character |
+| larger | More stretched / metallic partial spacing |
+
+Example at `f0 = 100 Hz`:
+
+```text
+B = 0:      100, 200, 300, 400, 500 Hz
+B = 0.0001: 100.005, 200.040, 300.135, 400.320, 500.624 Hz
+B = 0.001:  100.050, 200.400, 301.348, 403.175, 506.211 Hz
+```
+
+The effect grows with `k²`, so low partials barely move while high partials shift noticeably. Piano tuning compensates for this — octaves are often stretched because real piano strings are stiff.
+
+#### Appendix: pedagogical Karplus–Strong sketch
+
+```python
+import numpy as np
+
+class String1DKarplusSketch:
+  def __init__(self, sample_rate=44100, frequency_hz=440.0, brightness=0.5, decay_seconds=4.0, gain=1.0):
+    self.fs = sample_rate
+    self.L = max(2, round(self.fs / frequency_hz))
+    self.brightness = brightness
+    self.decay_coeff = 10 ** (-3.0 / (decay_seconds * self.fs))
+    self.gain = gain
+    self.buffer = np.zeros(self.L)
+    self.index = 0
+
+  def excite(self, excitation):
+    n = min(len(excitation), self.L)
+    self.buffer[:n] += excitation[:n]
+
+  def process_sample(self):
+    idx = self.index
+    nxt = (idx + 1) % self.L
+    value = self.buffer[idx]
+    avg = 0.5 * (self.buffer[idx] + self.buffer[nxt])
+    self.buffer[idx] = self.decay_coeff * (self.brightness * self.buffer[idx] + (1.0 - self.brightness) * avg)
+    self.index = nxt
+    return self.gain * value
+```
+
+#### Appendix: pedagogical stiff-modal sketch
+
+```python
+import numpy as np
+
+def stiff_string_modal_sketch(frequency_hz, sample_rate, n_samples, inharmonicity_B=0.0001, decay_seconds=4.0, gain=1.0, num_modes=32):
+    t = np.arange(n_samples) / sample_rate
+    y = np.zeros(n_samples)
+    for k in range(1, num_modes + 1):
+        fk = k * frequency_hz * np.sqrt(1.0 + inharmonicity_B * k * k)
+        if fk >= sample_rate * 0.48:
+            break
+        y += (1.0 / k) * np.exp(-t * k / decay_seconds) * np.sin(2.0 * np.pi * fk * t)
+    return gain * y
+```
+
+The production solver in `excited_waveguide_string.py` adds mode-count limits, brightness tilt, per-mode phase, and excitation-level normalization — see that file for exact behavior.
+
+### Modal body (T2)
+
+`ModalBankBodySolver` filters the string output through a bank of resonators (`frequencies`, `gains`, `mix`). It is **signal-fed**: the string and body connect via an ordinary audio edge, not a bidirectional mechanical port. Two T2 solvers in one graph means two isolated-host subsystems connected by T1 signal routing between them.
+
+### Resonant coloration and `ResonanceBank` {#resonant-coloration-and-resonancebank}
+
+A **resonant coloration** is when a sound is changed because some frequencies are naturally emphasized more than others.
+
+Imagine you play the same string sound through different objects:
+
+```text
+bare string signal        → thin, direct, synthetic
+string through wooden box → warmer, fuller, “instrument-like”
+string through metal tube → nasal, ringing, metallic
+string in a room          → spacious, boomy, echo-like
+```
+
+The original sound may be the same, but the object it passes through has **resonances**: frequencies it likes to vibrate at.
+
+So **resonant coloration** means:
+
+> The signal keeps its identity, but its tone is shaped by added resonant peaks.
+
+For `ResonanceBank`, the block:
+
+```text
+keeps the original audio,
+then adds small resonant boosts at 180 Hz, 420 Hz, and 980 Hz (defaults).
+```
+
+That can make the sound feel more like it passed through an instrument body.
+
+A simple analogy:
+
+```text
+Voice with no coloration:
+"ah" recorded very close to the mouth
+
+Voice with resonant coloration:
+"ah" spoken inside a wooden box, bathroom, guitar body, or metal pipe
+```
+
+The words are the same, but the **tone** changes.
+
+In audio terms, resonant coloration affects things like:
+
+```text
+warmth     → often low/mid resonances
+boxiness   → often 200–500 Hz resonances
+nasality   → often 700–1200 Hz resonances
+brightness → higher-frequency resonances
+```
+
+“Coloration” here does **not** mean visual color. It means **timbre shaping**: changing the character of the sound.
+
+#### What `ResonanceBank` computes
+
+Yes: **the block amplifies the input spectrum around selected center frequencies** by adding narrow band-pass resonant copies of the signal back into the dry signal.
+
+For each resonance:
+
+\[
+y = x + g \cdot \text{BandPass}_{f_0,Q}(x)
+\]
+
+So the block is not replacing the signal. It is doing this:
+
+```text
+output = original signal
+       + small resonant version around 180 Hz
+       + small resonant version around 420 Hz
+       + small resonant version around 980 Hz
+```
+
+The **bandwidth** is controlled by `Q`. For a resonant peak:
+
+\[
+Q = \frac{f_0}{\text{bandwidth}}
+\qquad\Rightarrow\qquad
+\text{bandwidth} = \frac{f_0}{Q}
+\]
+
+In Audiolab, `ResonanceBank` uses **fixed** \(Q = 8\) via `scipy.signal.iirpeak` (not exposed as a block parameter). You tune **`frequencies`** and **`gains`** only.
+
+With defaults \(Q = 8\), approximate bandwidths are:
+
+| Center frequency | Q | Approx. bandwidth |
+| ----------------: | -: | ----------------: |
+| 180 Hz | 8 | 22.5 Hz |
+| 420 Hz | 8 | 52.5 Hz |
+| 980 Hz | 8 | 122.5 Hz |
+
+So the 180 Hz resonance is roughly active around \(180 \pm 11.25\) Hz (approximately 168.75–191.25 Hz). The 420 Hz resonance is approximately 393.75–446.25 Hz. The 980 Hz resonance is approximately 918.75–1041.25 Hz.
+
+Important nuance: that bandwidth describes the **band-pass resonator itself**, usually around its −3 dB points. Since `ResonanceBank` adds that resonant signal back to the dry signal, the final output boost is gentler than a pure filter peak.
+
+At the exact resonant frequency, assuming ideal phase alignment, the boost is roughly:
+
+\[
+20 \log_{10}(1 + g)
+\]
+
+With default gains:
+
+| Frequency | Gain `g` | Approx. max boost |
+| --------: | -------: | ----------------: |
+| 180 Hz | 0.08 | ≈ 0.67 dB |
+| 420 Hz | 0.05 | ≈ 0.42 dB |
+| 980 Hz | 0.03 | ≈ 0.26 dB |
+
+This specific `ResonanceBank` is **subtle**. It does not radically reshape the signal. It adds small body-like resonant emphasis around those frequencies.
+
+In plain terms:
+
+```text
+Q controls width (fixed at 8 in code today).
+gain controls strength (parameter: gains).
+frequency controls where the coloration happens (parameter: frequencies).
+```
+
+Lower `Q` (for example `Q = 2`) would mean broad coloration. Higher `Q` (for example `Q = 30`) would mean narrow ringing resonance.
+
+#### Signal-flow and implementation
+
+Given input \(x[n]\), `ResonanceBank` is a **parallel bank of resonant IIR filters**, then mixes their outputs back with the dry signal:
+
+\[
+y[n] = x[n] + \sum_k g_k \, r_k[n]
+\]
+
+where each \(r_k[n]\) is the output of a resonant band-pass filter centered at \(f_k\):
+
+\[
+r_k[n] = \text{IIRPeak}_{f_k,Q}(x[n])
+\]
+
+For the default example:
+
+\[
+y[n] = x[n] + 0.08\, r_{180}[n] + 0.05\, r_{420}[n] + 0.03\, r_{980}[n]
+\]
+
+A standard second-order resonator is implemented as a **biquad**:
+
+\[
+r[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 r[n-1] - a_2 r[n-2]
+\]
+
+Each resonance has its own filter state:
+
+```text
+x[n] ───────────────┬──────────────────────────────→ + ─→ y[n]
+                    │
+                    ├─ IIRPeak 180 Hz, Q=8 ─ ×0.08 ┤
+                    │
+                    ├─ IIRPeak 420 Hz, Q=8 ─ ×0.05 ┤
+                    │
+                    └─ IIRPeak 980 Hz, Q=8 ─ ×0.03 ┘
+```
+
+One common coefficient recipe:
+
+\[
+\omega_0 = 2\pi \frac{f_0}{f_s}, \quad
+\alpha = \frac{\sin(\omega_0)}{2Q}
+\]
+
+For a band-pass resonator: \(b_0 = \alpha\), \(b_1 = 0\), \(b_2 = -\alpha\), \(a_0 = 1 + \alpha\), \(a_1 = -2\cos(\omega_0)\), \(a_2 = 1 - \alpha\), then normalize \(b_i \leftarrow b_i/a_0\), \(a_1 \leftarrow a_1/a_0\), \(a_2 \leftarrow a_2/a_0\).
+
+In code, `ResonanceBank` in `src/audiolab/blocks/body.py` calls `signal.iirpeak(freq, 8.0, fs=sample_rate)` for each \((f_k, g_k)\) pair and accumulates `out += gain * lfilter(b, a, audio)`.
+
+**Related blocks** (`SoundboardModalBank`, `SympatheticResonanceBank`, `DuplexScaleResonance`) inherit the same computation with different default frequency/gain tables.
+
+**Caveats:** This is T1 DSP body coloration downstream of the string, not bidirectional bridge impedance coupling. It is a practical approximation, not a solved soundboard plate or radiation model.
+
+#### Appendix: reference Python structure
+
+Pedagogical reference (not the production implementation):
+
+```python
+import math
+
+class BiquadBandpass:
+    def __init__(self, f0, Q, fs):
+        w0 = 2 * math.pi * f0 / fs
+        alpha = math.sin(w0) / (2 * Q)
+
+        b0 = alpha
+        b1 = 0.0
+        b2 = -alpha
+        a0 = 1.0 + alpha
+        a1 = -2.0 * math.cos(w0)
+        a2 = 1.0 - alpha
+
+        self.b0 = b0 / a0
+        self.b1 = b1 / a0
+        self.b2 = b2 / a0
+        self.a1 = a1 / a0
+        self.a2 = a2 / a0
+
+        self.x1 = 0.0
+        self.x2 = 0.0
+        self.y1 = 0.0
+        self.y2 = 0.0
+
+    def process_sample(self, x):
+        y = (
+            self.b0 * x
+            + self.b1 * self.x1
+            + self.b2 * self.x2
+            - self.a1 * self.y1
+            - self.a2 * self.y2
+        )
+        self.x2 = self.x1
+        self.x1 = x
+        self.y2 = self.y1
+        self.y1 = y
+        return y
+
+
+class ResonanceBank:
+    def __init__(self, frequencies, gains, Q, fs):
+        self.filters = [BiquadBandpass(f0=f, Q=Q, fs=fs) for f in frequencies]
+        self.gains = gains
+
+    def process_sample(self, x):
+        y = x
+        for g, filt in zip(self.gains, self.filters):
+            y += g * filt.process_sample(x)
+        return y
+```
+
+That memory (\(x[n-1], x[n-2], r[n-1], r[n-2]\)) is what creates short ringing / resonance after energy appears near that frequency.
+
+### Hosted piano coupling prototypes (T2/T4-style)
+
+`NonlinearHammerStringContactSolver` hosts `PASPBidirectionalHammerString` as one composite physical computation. It now owns nonlinear contact, bridge admittance/loading, optional multi-string unison exchange, bridge-driven body/radiation projection, and diagnostics such as `bridge_admittance`, `bridge_loading_loss`, `string_to_bridge_energy`, `bridge_to_body_energy`, `energy_balance_error`, `energy_per_string`, `cross_string_transfer_energy`, `modal_participation_energy`, `radiated_energy`, and `mic_projection_energy`.
+
+`PASPLifecyclePianoSolver` hosts `PASPEventPianoModel` for event-driven note-on/note-off/pedal behavior. It reports lifecycle transitions, damper/pedal state, active voices, per-note diagnostics, and re-strike behavior. Both hosted paths are reduced-order prototypes: they compute more piano physics than signal chains, but they do not make decomposed bidirectional bridge/scattering graphs production-supported.
+
+### Polyphonic hosting
+
+A single `String1D` delay line holds **one pitch** at a time. Multiple simultaneous notes require `PolyphonicWaveguideString` hosted by `polyphonic_excited_waveguide`, driven by `graph.events` (note_on / note_off). Static scalar inputs (`inputs.midi_note`) suit calibration panels; events suit phrases and overlaps.
+
+### Events and parameter maps
+
+- **`graph.events`** — sample-accurate note_on / note_off / pedal for polyphonic solvers
+- **`parameter_maps`** — declarative MIDI note/velocity → block parameter mapping (replaces wiring `MidiToFrequency` + `ParameterCurve` for calibration)
+
+**Deep dive:** [object_based_physical_modeling.md](object_based_physical_modeling.md) (execution tiers, events, parameter maps, structured warnings)
+
+## 4. Piano modeling in Audiolab
+
+The target physical chain:
+
+```
+MIDI / note event
+    → hammer / key action
+    → nonlinear contact
+    → string object(s)
+    → bridge / coupling
+    → soundboard / modal body
+    → radiation / output
+```
+
+Audiolab implements this through four modeling paths. The path name describes the risk boundary, not just the graph shape.
+
+### Interpretable signal-chain PASP
+
+Each stage is a separate block connected by ordinary audio edges. It has physically interpretable parameters and passes validation/rendering today, but it is still a one-way signal chain unless a physical solver owns the coupling.
+
+```
+PASPHammerFelt → PASPHammerStringJunction → PASPStringLine
+    → PASPBridgeTermination → PASPSoundboardModal → Output
+```
+
+Canonical example: [`examples/piano/minimal_A4_note.json`](../examples/piano/minimal_A4_note.json)
+
+### Opaque composite model blocks
+
+Single blocks wrap larger model cores (`PASPNoteModel`, `PASPBidirectionalHammerString`, phrase-level `PASPPerformanceModel`). They are useful for demos, panels, and behavior matching, but they expose less graph-level evidence than decomposed chains.
+
+Run the composite C4 note demo when you want a quick composite render rather than a decomposed tutorial graph:
+
+```bash
+python examples/run_pasp_note_example.py
+```
+
+### Solver-backed prototype physics
+
+Karplus-Strong style strings and modal bodies via T2 solvers:
+
+| Solver | Block | Example |
+|--------|-------|---------|
+| `excited_waveguide_string` | `String1D` | `minimal_waveguide_A4.json` |
+| `polyphonic_excited_waveguide` | `PolyphonicWaveguideString` | `waveguide_modal_body_A4_events.json` |
+| `modal_bank_body` | `ModalBankBody` | `waveguide_modal_body_A4.json` |
+
+Mixed chain: `HammerExcitation → String1D → ModalBankBody` in `minimal_hammer_waveguide_body_A4.json`. This is prototype physical computation for isolated blocks, not a full piano solver.
+
+### Behavior-matching / recreation path
+
+The model-recreation track uses higher-level model blocks to recreate known instrument behavior while keeping reproducible graph artifacts. Use it when the research question is "match this model path" rather than "expose every PASP subcomponent."
+
+### When to use which
+
+| Goal | Path |
+|------|------|
+| Physical interpretability, hypothesis testing | Interpretable signal-chain PASP |
+| Quick demo, panel render | Opaque composite model blocks |
+| String/body solver research, events, parameter maps | Solver-backed prototype physics |
+| Recreate a known model path with graph artifacts | Behavior-matching / recreation path |
+| Fast baseline without physical params | Legacy blocks (`HammerExcitation`, `StiffStringModal`) |
+
+Beyond single notes, use the specialist PASP docs for string groups, lifecycle/damper/pedal behavior, note-family/register calibration, and phrase-level performance rendering.
+
+**Deep dive:** [minimal_piano_note.md](minimal_piano_note.md) · [piano_blocks.md](piano_blocks.md) · [audiolab/pasp_piano_blocks.md](audiolab/pasp_piano_blocks.md) · [audiolab/pasp_string_group_modeling.md](audiolab/pasp_string_group_modeling.md) · [audiolab/pasp_lifecycle_damper_pedal.md](audiolab/pasp_lifecycle_damper_pedal.md) · [audiolab/pasp_performance_rendering.md](audiolab/pasp_performance_rendering.md) · [audiolab/model_recreation.md](audiolab/model_recreation.md) · [audiolab/pasp_modeling_discipline.md](audiolab/pasp_modeling_discipline.md)
+
+## 5. Research and autoresearch philosophy
+
+### The artifact is the graph
+
+Research changes **graph JSON** and **calibrated parameters** inside approved templates — not Python synthesis code. Every render produces deterministic metadata including `graph_hash` for regression.
+
+### Feedback is objective
+
+Compare synthetic audio to reference WAVs via `compare_audio()`. Metrics include pitch error, decay, spectral shape, and a `calibration_targets` bundle for agent decisions. See [§6 Metrics, bundles, and regression](#6-metrics-bundles-and-regression) for the full bundle layout.
+
+### Authority in autoresearch
+
+| Layer | Can accept a model? |
+|-------|---------------------|
+| Dataset regression + `decision.json` | **Yes** (cycle authority) |
+| Governance promotion gates | **Yes** (active baseline authority; separate step) |
+| Safety scans (forbidden fixes) | Blocks bad graphs |
+| LLM planner / memory / active learning | **No** (advisory hints only) |
+
+Prove the engine works **without agents** (`smoke_pasp_autoresearch.py`, baseline eval) before trusting agent loops in Auralis.
+
+Cycle acceptance and model promotion are intentionally separate: an accepted cycle produces a candidate with evidence, but it does not become the active baseline unless governance gates and any required human review pass.
+
+**Deep dive:** [agent_usage.md](agent_usage.md) · [audiolab/pasp_streamlined_system.md](audiolab/pasp_streamlined_system.md) · [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md)
+
+## 6. Metrics, bundles, and regression
+
+Every calibration run and many eval paths write a **standard experiment bundle**:
+
+| File | Purpose |
+|------|---------|
+| `render.wav` | Synthetic audio output |
+| `render_metadata.json` | `graph_hash`, peak/RMS, `warnings`, `structured_warnings` |
+| `metrics.json` | Full `compare_audio` output + `calibration_targets` |
+| `graph_hash.txt` | Standalone hash for quick diff |
+| `probes.npz` | Optional probe taps when saved by CLI/API experiment runs |
+| `report.md` | Optional human-readable experiment summary |
+
+### calibration_targets (agent-facing)
+
+Key fields in `metrics.json["calibration_targets"]`:
+
+| Key | Meaning |
+|-----|---------|
+| `f0_error_cents` | Pitch error vs reference |
+| `T30_error` | Decay time error |
+| `spectral_centroid_error` | Brightness / spectral balance |
+| `log_stft_distance` | Spectral shape distance |
+| `global_score` | Weighted aggregate (higher is better) |
+
+Use `compare_audio()` for single-pair checks during development. Use **panel eval** (`run_autoresearch_harness.py baseline`) when scoring a model across many conditions.
+
+### graph_hash
+
+`graph_hash` fingerprints the graph JSON (excluding UI layout). Autoresearch uses it to track candidates, detect unintended topology drift, and gate regression. Golden audio tests combine hash checks with scientific assertions (F0 ~ 440 Hz, envelope decay, determinism).
+
+**Deep dive:** [agent_usage.md](agent_usage.md) · [audiolab/calibration.md](audiolab/calibration.md)
+
+## 7. Design principles (research safety)
+
+These principles keep automated research loops honest:
+
+1. **The graph is the artifact** — change topology and parameters in JSON, not hidden Python state
+2. **Representation ≠ computation** — valid physical wiring can fail at compile with `UNSUPPORTED_COMPUTATION`
+3. **No silent physical fallback** — never substitute `string.audio` for `string.bridge` when the research question is bidirectional coupling
+4. **Structured warnings before tuning** — read `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` before calibrating ignored params
+5. **Metrics authority** — `decision.json` and dataset regression beat planner hints
+6. **Prove the engine first** — green-path smoke and baseline eval before agents
+7. **Roadmap honesty** — see [roadmap.md](roadmap.md) for supported vs planned solvers
+
+## Agent safety contract
+
+Agents and automated loops may propose graph or parameter changes, but evidence remains the authority. Follow these rules before accepting any candidate:
+
+- Do not tune parameters that structured warnings say are ignored.
+- Do not replace unsupported physical edges with signal edges to make tests pass.
+- Do not treat one-note or one-phrase improvement as dataset improvement.
+- Do not accept a candidate without regression against the baseline panel or manifest.
+- Do not edit Python synthesis code unless the task is explicitly solver implementation.
+- Do not increase graph complexity without an ablation or targeted failure-cluster reason.
+- Do not trust LLM-written hypotheses, memory hints, or planner confidence unless metrics improve.
+- Do not hide model failures with arbitrary EQ, compression, global gain, or room effects inside the instrument chain.
+
+Minimal acceptance gates:
+
+```text
+A candidate may be accepted only if:
+- references are present, not missing;
+- validation and compilation pass for the intended topology;
+- no forbidden topology substitutions occurred;
+- no tuned parameter is ignored by the solver;
+- rendered audio is finite, non-silent, and non-clipped;
+- the targeted cluster or panel improves;
+- global score improves or stays within the configured regression threshold;
+- key regressions and new critical failures stay within policy limits;
+- graph hash, candidate lineage, and decision artifacts are recorded.
+```
+
+Cycle acceptance and model promotion are different gates. `decision.json` can accept a cycle candidate, but active-baseline promotion still requires governance policy checks and any required human review.
+
+**Deep dive:** [agent_usage.md](agent_usage.md) · [audiolab/pasp_modeling_discipline.md](audiolab/pasp_modeling_discipline.md) · [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md)
+
+---
+
+# Part 2 — Practice
+
+## 1. Install and verify
+
+```bash
+pip install -e ".[dev]"
+python examples/smoke_pasp_autoresearch.py   # green path (~2 min)
+```
+
+Set `PYTHONPATH=src` when running scripts from the repo root if not using editable install entry points.
+
+Reference WAVs are local assets and are not committed. Calibration, dataset eval, and autoresearch require you to generate or provide them; see [§5 Calibration and metrics](#5-calibration-and-metrics) and [§6 Autoresearch for operators](#6-autoresearch-for-operators).
+
+## 2. Your first render
+
+Or follow **[Tutorial 1](#tutorial-1--beginner-your-first-piano-note)** for a guided walkthrough.
+
+### CLI
+
+```bash
+# Sanity check
+audiolab validate examples/graphs/sine_test.json
+audiolab render examples/graphs/sine_test.json --out /tmp/sine.wav
+
+# PASP decomposed A4 note
+audiolab validate examples/piano/minimal_A4_note.json
+audiolab render examples/piano/minimal_A4_note.json --out /tmp/a4.wav
+
+# Waveguide + modal body
+audiolab render examples/piano/waveguide_modal_body_A4.json --out /tmp/waveguide_body.wav
+```
+
+### Python API
+
+```python
+from audiolab.api.render import render_graph
+
+result = render_graph(
+    graph_path="examples/piano/minimal_A4_note.json",
+    output_wav_path="workspace/a4.wav",
+    sample_rate=48000,
+    duration_seconds=3.0,
+)
+print(result.rms, result.graph_hash)
+print(result.structured_warnings)
+```
+
+The CLI uses the graph's `sample_rate` and `duration` fields. The agent-facing Python API can override `sample_rate` and `duration_seconds` for scripted renders.
+
+### Three entry paths
+
+| Goal | Example graph | Notes |
+|------|---------------|-------|
+| Sanity check | `examples/graphs/sine_test.json` | Pure T1 DSP |
+| PASP decomposed note | `examples/piano/minimal_A4_note.json` | [minimal_piano_note.md](minimal_piano_note.md) |
+| Waveguide + body | `examples/piano/waveguide_modal_body_A4.json` | T2 solvers; [roadmap.md](roadmap.md) |
+
+### Compact CLI reference
+
+| Command | Use |
+|---------|-----|
+| `audiolab list-blocks` | Browse registered block types |
+| `audiolab inspect-block String1D` | Inspect ports, params, and metadata for one block |
+| `audiolab render graph.json --out out.wav --probes probes.npz` | Render and save requested graph probes |
+| `audiolab compare --real ref.wav --synthetic out.wav --out metrics.json` | Compare one synthetic WAV to one reference WAV |
+| `audiolab run-experiment --graph graph.json --real ref.wav --out workspace/experiments/demo` | Render, optionally compare, and write a bundle |
+| `audiolab report --experiment workspace/experiments/demo` | Print a Markdown summary for an experiment bundle |
+
+There is no `audiolab calibrate` subcommand yet. Use `python examples/run_calibration_example.py` or `run_calibration_cycle()` from Python.
+
+## 3. Authoring graphs
+
+### JSON editing
+
+Graphs are plain JSON. Top-level fields: `schema_version`, `name`, `sample_rate`, `duration`, `blocks`, `connections`, optional `inputs`, `events`, `parameter_maps`, `probes`.
+
+Always **validate before render**:
+
+```bash
+audiolab validate my_graph.json --json
+audiolab inspect-block String1D
+```
+
+### GUI editor
+
+```bash
+python -m audiolab.app.main examples/piano/minimal_A4_note.json
+```
+
+The GUI supports graph editing, validation, render preview, and calibration. **Render** is one offline forward pass at current parameters. **Calibrate** runs many renders from a `CalibrationTask` block, compares them to reference WAVs, writes `graph_calibrated.json`, and reloads the calibrated graph. Save the graph to disk before calibrating.
+
+For an opaque composite model-block GUI demo, open `examples/graphs/pasp_single_note_sound.json`.
+
+**Deep dive:** [audiolab/cli.md](audiolab/cli.md) · [audiolab/gui.md](audiolab/gui.md) · [graph_schema.md](graph_schema.md)
+
+## 4. Workflow guide
+
+| I want to… | Start here | Key doc |
+|------------|------------|---------|
+| Learn step-by-step | [Part 3 — Tutorials](#part-3--tutorials) | This manual |
+| Render one PASP note | `examples/piano/minimal_A4_note.json` | [minimal_piano_note.md](minimal_piano_note.md) |
+| Render composite PASP note | `examples/graphs/pasp_note_c4.json` or `python examples/run_pasp_note_example.py` | [audiolab/pasp_piano_blocks.md](audiolab/pasp_piano_blocks.md) |
+| Karplus string research | `examples/piano/minimal_waveguide_A4.json` | [object_based_physical_modeling.md](object_based_physical_modeling.md) |
+| Waveguide + modal body | `examples/piano/waveguide_modal_body_A4.json` | [roadmap.md](roadmap.md) |
+| Phrase / polyphony | `examples/piano/waveguide_modal_body_A4_events.json` | Events in [object_based_physical_modeling.md](object_based_physical_modeling.md) |
+| Phrase-level PASP performance | `examples/graphs/pasp_performance_model_base.json` | [audiolab/pasp_performance_rendering.md](audiolab/pasp_performance_rendering.md) |
+| Damper/pedal lifecycle | `examples/graphs/pasp_lifecycle_c4_pedal_hold.json` | [audiolab/pasp_lifecycle_damper_pedal.md](audiolab/pasp_lifecycle_damper_pedal.md) |
+| Note-family calibration | `examples/graphs/pasp_family_b3_d4.json` | [audiolab/pasp_note_family_calibration.md](audiolab/pasp_note_family_calibration.md) |
+| Register A3–C5 calibration | `examples/graphs/pasp_register_a3_c5.json` | [audiolab/pasp_register_calibration.md](audiolab/pasp_register_calibration.md) |
+| Parameter maps (no MidiToFrequency wiring) | `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` | Parameter maps section in OBPM doc |
+| Calibrate to reference WAV | `examples/graphs/calibration_minimal_c4.json` | [calibration.md](audiolab/calibration.md) |
+| Generate reference WAVs | `python data/generate_references.py` | [data/README.md](../data/README.md) |
+| Score model on full panel | `run_autoresearch_harness.py baseline` | [audiolab/guide.md](audiolab/guide.md) |
+| Run one improvement cycle | `run_autoresearch_harness.py full` | [audiolab/guide.md](audiolab/guide.md) |
+| Promote accepted candidate | `run_autoresearch_harness.py promote --cycle ...` | [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md) |
+| Agent loop (from Auralis) | `audiolab.api.render` + `compare_audio` | [agent_usage.md](agent_usage.md) |
+
+## 5. Calibration and metrics
+
+Calibration searches tunable graph parameters by rendering and comparing to reference WAVs. Theory: [§6](#6-metrics-bundles-and-regression). Hands-on: [Tutorial 3 step 4](#tutorial-3--advanced-phrases-calibration-and-honest-failures).
+
+### Reference data prerequisite
+
+`examples/run_calibration_example.py` expects the graph's `CalibrationTask.params.panel[*].wav_path` to resolve under the repo root. The default C4 example uses a local, gitignored single-note reference such as `data/note_060_C4_vel_120_pedal_on.wav`.
+
+For phrase/register evaluation and autoresearch references:
+
+```bash
+pip install -e ".[pianoteq]"
+python data/generate_references.py
+```
+
+The default calibration graph still points at the legacy flat single-note location. If you do not already have `data/note_060_C4_vel_120_pedal_on.wav`, generate that local single-note reference or edit the graph panel to point at a generated `data/references/piano/*.wav` file:
+
+```bash
+python data/create_midi.py --single-notes
+python data/create_wav.py --ids note_060_C4_vel_120_pedal_on
+cp data/pianoteq_dataset/wav/note_060_C4_vel_120_pedal_on.wav data/
+```
+
+Legacy single-note calibration refs use `data/note_*.wav`; phrase and register eval refs live under `data/references/`.
+
+### CalibrationTask anatomy
+
+| Field | Meaning |
+|-------|---------|
+| `panel` | Reference items: WAV path, note, velocity, pedal, and comparison target |
+| `tunables` | Graph parameter paths plus search bounds |
+| `optimizer` | Search strategy, usually `random_search` for examples |
+| `max_iters` | Number of render/compare trials |
+
+**GUI:** open a graph with a `CalibrationTask` block → Validate → Calibrate.
+
+**Headless:**
+
+```bash
+python examples/run_calibration_example.py \
+  --graph examples/graphs/calibration_minimal_c4.json \
+  --out workspace/experiments/calibration_demo
+```
+
+Inspect `workspace/experiments/calibration_demo/` for `render.wav`, `metrics.json`, `graph_hash.txt`, calibration logs, and calibrated graph/parameter JSON. Use `audiolab run-experiment` for a single render/compare bundle that does not search parameters.
+
+**Golden audio tests** (`tests/audiolab/test_golden_audio.py`) guard deterministic waveguide regression (F0, envelope, spectral centroid).
+
+**Deep dive:** [audiolab/calibration.md](audiolab/calibration.md)
+
+## 6. Autoresearch for operators
+
+Audiolab runs the research loop **headlessly** — no agents required.
+
+| Step | Command |
+|------|---------|
+| Green path | `python examples/smoke_pasp_autoresearch.py` |
+| Baseline scoreboard | `python examples/run_autoresearch_harness.py baseline --out workspace/experiments/pasp_baseline_eval` |
+| Plan only | `python examples/run_autoresearch_harness.py plan --baseline workspace/experiments/pasp_baseline_eval` |
+| Full cycle | `python examples/run_autoresearch_harness.py full --baseline workspace/experiments/pasp_baseline_eval` |
+| Register/promote candidate | `python examples/run_autoresearch_harness.py promote --cycle workspace/experiments/autoresearch/pasp_cycle_NNN` |
+
+**Prerequisites:** reference WAVs (`data/references/`), baseline graph (`examples/graphs/pasp_performance_model_base.json`), and a cycle config. The harness defaults to the fast dev config (`examples/autoresearch/pasp_autoresearch_fast.json`); pass `--config examples/autoresearch/pasp_autoresearch_production.json` for production-sized runs.
+
+Generate phrase/register references:
+
+```bash
+pip install -e ".[pianoteq]"
+python data/generate_references.py
+python examples/bootstrap_piano_phrase_references.py --check
+```
+
+The cycle changes `candidate_graph.json` parameters inside approved templates, runs calibration trials, and writes `decision.json` (accept/reject). Planner and memory layers are advisory only.
+
+### Baseline artifacts
+
+After `baseline`, inspect:
+
+| File | Meaning |
+|------|---------|
+| `summary.json` | Aggregate dataset score |
+| `aggregate/failure_clusters.json` | Failure clusters used for cycle selection |
+| `agent_regression_report.json` | Agent/operator-oriented regression summary |
+
+If these files report `reference_missing`, generate references before trusting the scoreboard.
+
+### Cycle artifacts
+
+Full cycles write `workspace/experiments/autoresearch/pasp_cycle_NNN/`:
+
+| File | Read for |
+|------|----------|
+| `agent_cycle_report.json` | Compact cycle summary; start here |
+| `selected_cluster.json` | Targeted failure cluster |
+| `hypothesis.json` | Chosen hypothesis and allowed params |
+| `targeted_calibration.json` | Tunables, panel, objective weights |
+| `candidate_graph.json` | Candidate model graph |
+| `candidate_dataset_eval/` | Full candidate eval |
+| `regression_vs_baseline.md` | Baseline-vs-candidate deltas |
+| `decision.json` | Accept/reject/needs review/incomplete |
+
+Use `--no-memory` to disable experiment memory and `--no-planner` for deterministic hypotheses. Smoke supports skip flags such as `--skip-pytest`, `--skip-render`, `--skip-dataset-eval`, and `--skip-cycle`.
+
+### Governance boundary
+
+`decision.json` accepts or rejects a cycle candidate. Promotion to active baseline is a separate governance step with gates, lineage, rollback metadata, and optional human review:
+
+```bash
+python examples/run_autoresearch_harness.py promote \
+  --cycle workspace/experiments/autoresearch/pasp_cycle_NNN
+```
+
+Default governance can register candidates without auto-promoting them. Do not treat a calibrated graph or accepted cycle as the active model until promotion gates pass.
+
+**Full operator runbook:** [audiolab/guide.md](audiolab/guide.md)
+
+## 7. Troubleshooting
+
+### First debugging checklist
+
+Use this order before calibrating or changing topology:
+
+1. Validate the graph.
+2. Compile the graph.
+3. Print or inspect the execution plan.
+4. List solver-hosted blocks and signal-scheduled blocks.
+5. Inspect structured warnings.
+6. Render with probes at excitation, string/body, and output boundaries.
+7. Check RMS, peak, clipping, NaN/Inf, and silence.
+8. Compare to a matching reference.
+9. Inspect metrics and failure tags.
+10. Only then calibrate or propose a model change.
+
+| Symptom | Likely cause | What to do |
+|---------|--------------|------------|
+| `validate_graph` errors | Invalid representation (bad ports, cycles, params) | See validation codes in [agent_usage.md](agent_usage.md) |
+| `UNSUPPORTED_COMPUTATION` at compile | Physical topology without solver | [roadmap.md](roadmap.md); do **not** rewrite to signal chain |
+| `string.audio → coupler.input` rejected | Signal substitute for physical port | Use `string.bridge → coupler.input` or pick supported topology |
+| Silent or near-zero audio | Missing excitation, wrong graph tier | Check probes; verify excitation / events wired |
+| Param tuning has no effect | Solver ignores parameter | Read `structured_warnings` (`PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED`) |
+| `reference_missing` in eval | Reference WAVs not generated or path mismatch | Run `python data/generate_references.py`; verify [data/references/README.md](../data/references/README.md) |
+| Graph validates but sounds wrong | Phenomenological fit, not physics bug | Compare metrics; check modeling discipline |
+
+---
+
+# Part 3 — Tutorials
+
+Three progressive walkthroughs using graphs already in the repository. Run all commands from the **repo root** after `pip install -e ".[dev]"`. Tutorial renders prove the pipeline and selected examples run; they are not evidence of production piano quality unless you also run reference comparison and dataset regression.
+
+---
+
+## Tutorial 1 — Beginner: Your first piano note
+
+| | |
+|--|--|
+| **Goal** | Validate and render a decomposed PASP graph; understand graph anatomy; change one parameter |
+| **Graph** | [`examples/piano/minimal_A4_note.json`](../examples/piano/minimal_A4_note.json) |
+| **Prerequisites** | `pip install -e ".[dev]"` |
+| **Time** | ~20 min |
+
+### Step 1 — Read the graph
+
+Open `examples/piano/minimal_A4_note.json`. Identify:
+
+- **`inputs`** — `midi_note: 69` (A4), `velocity: 80`
+- **`blocks`** — hammer → junction → string → bridge → soundboard → output
+- **`connections`** — how `inputs`, `MidiToFrequency`, and block ports wire together
+- **`probes`** — tap points: `hammer.force`, `string.audio`, `soundboard.audio`
+
+Signal chain:
+
+```
+inputs → MidiToFrequency → PASPHammerFelt → PASPHammerStringJunction
+    → PASPStringLine → PASPBridgeTermination → PASPSoundboardModal → Output
+```
+
+This is a **T1 signal chain** — every block runs via `DSPBlock.process()`; no physical solver required.
+
+### Step 2 — Validate (representation check)
+
+```bash
+audiolab validate examples/piano/minimal_A4_note.json
+```
+
+Validation answers: do ports exist? Do kinds match? Are parameters in range? It does **not** check whether you have the latest solver — that is compile time.
+
+### Step 3 — Render
+
+```bash
+mkdir -p workspace
+audiolab render examples/piano/minimal_A4_note.json --out workspace/tutorial_beginner_a4.wav
+```
+
+Listen to `workspace/tutorial_beginner_a4.wav`. Sonic quality is not the goal; a non-silent, finite WAV means the pipeline works.
+
+### Step 4 — Optional: GUI
+
+```bash
+python -m audiolab.app.main examples/piano/minimal_A4_note.json
+```
+
+Use Validate and Render in the UI. Save the graph to disk before calibrating.
+
+### Step 5 — Python API
+
+```python
+from audiolab.api.render import render_graph
+
+result = render_graph(
+    graph_path="examples/piano/minimal_A4_note.json",
+    output_wav_path="workspace/tutorial_beginner_api.wav",
+    sample_rate=48000,
+    duration_seconds=3.0,
+)
+print("rms:", result.rms)
+print("graph_hash:", result.graph_hash)
+```
+
+`graph_hash` is stable for the same graph JSON — useful for regression.
+
+### Step 6 — Change a parameter
+
+Edit `examples/piano/minimal_A4_note.json` (or copy it to `workspace/my_a4.json` first). Change e.g. `blocks[3].params.bridge_loss` from `0.2` to `0.35` (the `string` block is `PASPStringLine` — adjust index if needed; or change `felt_p` on the hammer block).
+
+Re-render and compare RMS or listen for shorter decay.
+
+### Step 7 — Probes
+
+Probes listed in the graph are recorded when the render pipeline collects them. Use them to verify intermediate stages (hammer force, string audio) without adding `Output` blocks on every node.
+
+```bash
+audiolab render examples/piano/minimal_A4_note.json \
+  --out workspace/tutorial_beginner_a4.wav \
+  --probes workspace/tutorial_beginner_probes.npz
+```
+
+### What you learned
+
+- Graph anatomy: blocks, connections, inputs, probes
+- T1 signal-chain execution
+- `validate_graph` vs `render_graph`
+- Deterministic `graph_hash`
+
+### Next
+
+[Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) — physical solvers and mixed T1+T2 chains.
+
+---
+
+## Tutorial 2 — Intermediate: Waveguide string + modal body
+
+| | |
+|--|--|
+| **Goal** | Understand T2 physical solvers and mixed T1+T2 chains |
+| **Graphs** | `minimal_waveguide_A4.json` → `waveguide_modal_body_A4.json` → `minimal_hammer_waveguide_body_A4.json` |
+| **Prerequisites** | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
+| **Time** | ~45 min |
+
+### Step 1 — Minimal waveguide (one T2 solver)
+
+```bash
+audiolab render examples/piano/minimal_waveguide_A4.json --out workspace/tutorial_waveguide.wav
+```
+
+Open the graph:
+
+- `NoiseBurst` → `string.excitation` (short excitation burst)
+- `inputs.frequency_hz` → `string.frequency` (440 Hz)
+- `String1D` is **solver-hosted** by `excited_waveguide_string`
+
+The `String1D` block does not run ordinary `process()` — the Karplus-Strong solver owns the delay line.
+
+### Step 2 — Count subsystems mentally
+
+In `minimal_waveguide_A4.json`: **one** isolated-host subsystem (`string`).
+
+In `minimal_hammer_waveguide_body_A4.json`: **two** isolated-host subsystems (`string`, `body`) plus T1 blocks (`hammer`, `out`).
+
+### Step 3 — Waveguide + modal body
+
+```bash
+audiolab render examples/piano/waveguide_modal_body_A4.json --out workspace/tutorial_waveguide_body.wav
+```
+
+Two solvers: `excited_waveguide_string` then `modal_bank_body`, connected by a **signal** edge (`string.audio → body.audio`). Read any compile warnings in the console — they describe which solvers were selected.
+
+### Step 4 — Mixed T1 + T2 chain
+
+```bash
+audiolab render examples/piano/minimal_hammer_waveguide_body_A4.json --out workspace/tutorial_hammer_waveguide_body.wav
+```
+
+| Block | Tier |
+|-------|------|
+| `HammerExcitation` | T1 — signal schedule |
+| `String1D` | T2 — `excited_waveguide_string` |
+| `ModalBankBody` | T2 — `modal_bank_body` |
+| `Output` | T1 — signal schedule |
+
+Hammer excitation is ordinary DSP; string and body are physical solvers. This is **mixed execution**, not one fused subsystem.
+
+### Step 5 — Structured warnings
+
+```python
+from audiolab.api.render import render_graph
+
+result = render_graph("examples/piano/minimal_waveguide_A4.json", "workspace/wg.wav")
+for w in result.structured_warnings:
+    print(w["code"], w.get("param"), w.get("message"))
+```
+
+If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for a tunable, do not tune that param expecting it to affect the render. The mono `String1D` solver now applies `inharmonicity_B`; the polyphonic waveguide path may still warn for unsupported dispersion.
+
+### Step 6 — Optional: compare to reference
+
+If you have generated a matching local reference WAV under `data/` or `data/references/`:
+
+```bash
+audiolab compare \
+  --real data/references/piano/A4_v100.wav \
+  --synthetic workspace/tutorial_waveguide.wav \
+  --out workspace/tutorial_waveguide_metrics.json
+```
+
+Pick a reference that matches the rendered note/event. The path above is a local, gitignored A4 register reference produced by `python data/generate_references.py`; it is not shipped in git. Or use `compare_audio()` from `audiolab.api.compare`.
+
+### Step 7 — Parameter maps (preview)
+
+See `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` — same chain as step 4 but `parameter_maps` replace `MidiToFrequency` / `ParameterCurve` wiring. Details: [object_based_physical_modeling.md](object_based_physical_modeling.md) (parameter maps section).
+
+### What you learned
+
+- T2 physical solvers (`excited_waveguide_string`, `modal_bank_body`)
+- Mixed T1+T2 execution
+- `structured_warnings` and ignored parameters
+- When parameter maps simplify calibration graphs
+
+### Next
+
+[Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) — events, calibration, honest physical failures.
+
+---
+
+## Tutorial 3 — Advanced: Phrases, calibration, and honest failures
+
+| | |
+|--|--|
+| **Goal** | Event-driven polyphony, calibration bundle, representation-only topology, autoresearch entry |
+| **Graphs** | `waveguide_modal_body_A4_events.json`, bridge-coupler exercise, `calibration_minimal_c4.json` |
+| **Prerequisites** | [Tutorials 1–2](#tutorial-1--beginner-your-first-piano-note) |
+| **Time** | ~60–90 min |
+
+### Step 1 — Event-driven phrase
+
+Open `examples/piano/waveguide_modal_body_A4_events.json`. Note `graph.events`:
+
+```json
+"events": [
+  {"time_seconds": 0.0, "type": "note_on", "note": 69, "velocity": 92},
+  {"time_seconds": 1.2, "type": "note_off", "note": 69}
+]
+```
+
+```bash
+audiolab render examples/piano/waveguide_modal_body_A4_events.json --out workspace/tutorial_events.wav
+```
+
+Contrast with Tutorial 2 step 3: static graphs use scalar `inputs`; event graphs drive `PolyphonicWaveguideString` via `polyphonic_excited_waveguide` with sample-accurate note_on/off.
+
+Optional: `examples/piano/polyphonic_two_note_overlap.json` for overlapping notes.
+
+### Step 2 — Honest physical failure
+
+Bidirectional bridge wiring is **valid representation** but **unsupported computation** today.
+
+```python
+from audiolab.graph.serialization import load_graph
+from audiolab.graph.schema import ConnectionSpec
+from audiolab.graph.validator import validate_graph
+from audiolab.graph.compiler import compile_graph
+from audiolab.graph.physical.errors import UnsupportedComputationError
+
+graph = load_graph("examples/piano/minimal_waveguide_A4.json")
+graph.blocks.append({"id": "coupler", "type": "BridgeCoupler", "params": {}})
+graph.connections.append(
+    ConnectionSpec(**{"from": "string.bridge", "to": "coupler.input"})
+)
+
+assert validate_graph(graph).valid  # representation OK
+
+try:
+    compile_graph(graph)
+except UnsupportedComputationError as e:
+    print(e.code, e.representation_valid)
+    print(e)
+```
+
+**Do not** rewrite this to `string.audio → coupler.input` to “make it work” — that is a different topology and corrupts the research question.
+
+### Step 3 — Calibration
+
+```bash
+python examples/run_calibration_example.py \
+  --out workspace/experiments/calibration_demo
+```
+
+Or open `examples/graphs/calibration_minimal_c4.json` in the GUI → Validate → Calibrate.
+
+This requires the C4 reference WAV named in the graph's `CalibrationTask` panel, typically `data/note_060_C4_vel_120_pedal_on.wav`. Generate or provide that flat single-note reference first if the script reports "Reference WAV not found."
+
+Inspect the output bundle in `workspace/experiments/calibration_demo/`:
+
+| File | Look for |
+|------|----------|
+| `render.wav` | Best-trial synthetic audio |
+| `metrics.json` | `calibration_targets.global_score`, `f0_error_cents` |
+| `graph_hash.txt` | Fingerprint of calibrated graph |
+| `render_metadata.json` | `structured_warnings` |
+
+### Step 4 — Autoresearch smoke
+
+```bash
+python examples/smoke_pasp_autoresearch.py
+```
+
+This runs the green path without agents. For a full baseline scoreboard (requires reference WAVs):
+
+```bash
+python examples/run_autoresearch_harness.py baseline \
+  --out workspace/experiments/pasp_baseline_eval --workers 8
+```
+
+See [data/references/README.md](../data/references/README.md) for generating reference WAVs.
+
+### Step 5 — Read metrics for decisions
+
+```python
+import json
+from pathlib import Path
+
+metrics = json.loads(Path("workspace/experiments/calibration_demo/metrics.json").read_text())
+targets = metrics.get("calibration_targets", {})
+print("global_score:", targets.get("global_score"))
+print("f0_error_cents:", targets.get("f0_error_cents"))
+```
+
+If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_metrics.json`. Tie this to [§7 Design principles](#7-design-principles-research-safety): metrics and `decision.json` are authoritative; planner hints are not.
+
+### What you learned
+
+- `graph.events` and polyphonic solvers
+- `UNSUPPORTED_COMPUTATION` discipline (no silent fallback)
+- Calibration experiment bundle
+- Autoresearch entry point (smoke → baseline)
+
+### Next
+
+- Operators: [audiolab/guide.md](audiolab/guide.md) (full runbook)
+- Agents: [agent_usage.md](agent_usage.md)
+- Solver status: [roadmap.md](roadmap.md)
+
+---
+
+# Appendix A — Documentation index
+
+### Platform
+
+| Topic | Document |
+|-------|----------|
+| Architecture | [architecture.md](architecture.md) |
+| Graph schema | [graph_schema.md](graph_schema.md) |
+| Block registry | [block_registry.md](block_registry.md) |
+| Physical ports | [physical_ports.md](physical_ports.md) |
+| Object-based physical modeling | [object_based_physical_modeling.md](object_based_physical_modeling.md) |
+| Solver roadmap | [roadmap.md](roadmap.md) |
+| Agent API | [agent_usage.md](agent_usage.md) |
+| Blocks (generated list) | [audiolab/blocks.md](audiolab/blocks.md) |
+| Block API | [audiolab/block_api.md](audiolab/block_api.md) |
+| CLI | [audiolab/cli.md](audiolab/cli.md) |
+| GUI | [audiolab/gui.md](audiolab/gui.md) |
+| Calibration | [audiolab/calibration.md](audiolab/calibration.md) |
+| Experiments | [audiolab/experiments.md](audiolab/experiments.md) |
+| Model recreation | [audiolab/model_recreation.md](audiolab/model_recreation.md) |
+
+### PASP modeling
+
+| Topic | Document |
+|-------|----------|
+| PASP blocks | [audiolab/pasp_piano_blocks.md](audiolab/pasp_piano_blocks.md) |
+| Piano block inventory | [piano_blocks.md](piano_blocks.md) |
+| Block I/O and equations | [audiolab/pasp_block_io_reference.md](audiolab/pasp_block_io_reference.md) |
+| Modeling discipline | [audiolab/pasp_modeling_discipline.md](audiolab/pasp_modeling_discipline.md) |
+| Minimal piano note | [minimal_piano_note.md](minimal_piano_note.md) |
+| String-group modeling | [audiolab/pasp_string_group_modeling.md](audiolab/pasp_string_group_modeling.md) |
+| Lifecycle, damper, pedal | [audiolab/pasp_lifecycle_damper_pedal.md](audiolab/pasp_lifecycle_damper_pedal.md) |
+| Note-family calibration | [audiolab/pasp_note_family_calibration.md](audiolab/pasp_note_family_calibration.md) |
+| Register A3–C5 | [audiolab/pasp_register_calibration.md](audiolab/pasp_register_calibration.md) |
+| Performance rendering | [audiolab/pasp_performance_rendering.md](audiolab/pasp_performance_rendering.md) |
+
+### Autoresearch
+
+| Topic | Document |
+|-------|----------|
+| Operator guide (runbook) | [audiolab/guide.md](audiolab/guide.md) |
+| System overview | [audiolab/pasp_streamlined_system.md](audiolab/pasp_streamlined_system.md) |
+| Dataset evaluation | [audiolab/pasp_dataset_evaluation.md](audiolab/pasp_dataset_evaluation.md) |
+| Autoresearch loop | [audiolab/pasp_autoresearch_loop.md](audiolab/pasp_autoresearch_loop.md) |
+| LLM planner | [audiolab/pasp_llm_planner.md](audiolab/pasp_llm_planner.md) |
+| Active learning | [audiolab/pasp_active_learning.md](audiolab/pasp_active_learning.md) |
+| Model governance | [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md) |
+| All doc hub | [audiolab/README.md](audiolab/README.md) |
+
+### Tutorials (this manual)
+
+| Tutorial | Topic |
+|----------|-------|
+| [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) | First PASP note, graph anatomy |
+| [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) | Physical solvers, mixed execution |
+| [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) | Events, calibration, autoresearch |
+
+---
+
+# Appendix B — Examples
+
+Runnable scripts, graph JSON, calibration configs, and autoresearch policies:
+
+- Catalog: [audiolab/examples_index.md](audiolab/examples_index.md)
+- Layout: [examples/README.md](../examples/README.md)
+
+Key graph directories:
+
+| Directory | Contents |
+|-----------|----------|
+| `examples/graphs/` | General and PASP performance graphs |
+| `examples/piano/` | Waveguide, minimal note, parameter-map examples (tutorial graphs) |
+| `examples/calibration/` | Calibration task configs |
+| `examples/autoresearch/` | Cycle JSON configs |
+
+Tutorial graphs:
+
+| Tutorial | Graphs |
+|----------|--------|
+| 1 | `examples/piano/minimal_A4_note.json` |
+| 2 | `examples/piano/minimal_waveguide_A4.json`, `examples/piano/waveguide_modal_body_A4.json`, `examples/piano/minimal_hammer_waveguide_body_A4.json`, `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` |
+| 3 | `examples/piano/waveguide_modal_body_A4_events.json`, `examples/piano/polyphonic_two_note_overlap.json`, `examples/graphs/calibration_minimal_c4.json` |
