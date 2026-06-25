@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.1",
+  "name": "string_termination_impedance_A4",
+  "description": "Solver-hosted string termination impedance boundary with reflection and absorption diagnostics.",
+  "sample_rate": 48000,
+  "duration": 0.35,
+  "block_size": 64,
+  "inputs": {
+    "midi_note": 69
+  },
+  "blocks": [
+    {"id": "note_freq", "type": "MidiToFrequency", "params": {"a4": 440.0}},
+    {"id": "excitation", "type": "NoiseBurst", "params": {"amplitude": 0.8, "decay_ms": 4.0, "seed": 7}},
+    {
+      "id": "string",
+      "type": "StringTerminationImpedance",
+      "params": {
+        "frequency_hz": 440.0,
+        "decay_seconds": 3.5,
+        "brightness": 0.58,
+        "gain": 0.8,
+        "termination_impedance": 7200.0,
+        "reference_impedance": 4200.0,
+        "loss_low": 0.12,
+        "loss_high": 0.38,
+        "frequency_tilt": 0.45
+      }
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "inputs.midi_note", "to": "note_freq.midi_note"},
+    {"from": "excitation.audio", "to": "string.excitation"},
+    {"from": "note_freq.frequency", "to": "string.frequency"},
+    {"from": "string.audio", "to": "out.audio"}
+  ],
+  "probes": ["string.audio", "string.reflected", "string.absorbed", "out.audio"],
+  "ui": {
+    "nodes": {
+      "note_freq": {"x": 80, "y": 90},
+      "excitation": {"x": 80, "y": 210},
+      "string": {"x": 360, "y": 160},
+      "out": {"x": 720, "y": 160}
+    }
+  }
+}

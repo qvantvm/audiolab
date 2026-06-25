@@ -20,7 +20,7 @@
     },
     {
       "id": "string",
-      "type": "WaveguideString",
+      "type": "String1D",
       "params": {
         "decay_seconds": 4.0,
         "brightness": 0.55,

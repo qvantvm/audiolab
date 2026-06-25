@@ -68,8 +68,9 @@ This table is the manual's short truth table. The canonical solver status is [`r
 |---------|--------|----------|-------------|
 | T1 signal graph render | Working | `examples/graphs/sine_test.json`, `examples/piano/minimal_A4_note.json`, CLI/API render paths | Offline only; signal routing does not imply physical coupling |
 | Block registry and validation | Working | Registry docs/tests, `dsp-lab list-blocks`, `validate_graph()` | The count of blocks is inventory, not quality evidence |
-| `WaveguideString` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
+| `String1D` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
 | `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
+| `StringTerminationImpedance` boundary solver | Working prototype | `string_termination_impedance`, `string_termination_impedance_A4.json` | Solver-hosted string termination with impedance reflection/loss diagnostics; not generic bridge scattering |
 | `ModalBankBody` T2 solver | Working prototype | `modal_bank_body`, `waveguide_modal_body_A4.json` | Signal-fed body filter, not bidirectional bridge/body impedance coupling |
 | `PASPBidirectionalHammerString` contact solver | Working prototype | `nonlinear_hammer_string_contact`, `nonlinear_hammer_string_contact_A4.json`, `bridge_admittance_contact_A4.json`, `unison_hammer_string_contact_C4.json` | Solver-hosted composite contact path with reduced bridge loading, unison coupling, and radiation diagnostics; not decomposed T3 bridge/scattering or full piano solve |
 | `PASPEventPianoModel` lifecycle solver | Working prototype | `pasp_lifecycle_piano`, `piano_lifecycle_damper_pedal.json` | Hosted event path for note-off, pedal, damper, and re-strike diagnostics; not a full performance-quality piano |
@@ -77,8 +78,9 @@ This table is the manual's short truth table. The canonical solver status is [`r
 | Decomposed PASP hammer/string/bridge/body chain | Demo / interpretable signal chain | `minimal_A4_note.json`, PASP docs | Physically named one-way DSP blocks; not proof of physically faithful computation |
 | Composite PASP note/performance blocks | Demo / behavior model | `pasp_performance_model_base.json`, PASP example scripts | Opaque internals compared with decomposed graphs; validate with metrics before claims |
 | Bidirectional bridge coupling | Representation only | roadmap representation-only tests | Valid graph concept; default compile failure expected until T3 solver exists |
-| Bow-string / drum impact primitives | Representation only | `examples/violin/bow_string_representation.json`, `examples/drums/membrane_impact_representation.json` | L2 stubs; compile fails until coupled solvers exist |
-| Decomposed hammer-string nonlinear contact | Planned | `hammer_string_contact_decomposed` in roadmap | Production solver exists for hosted `PASPBidirectionalHammerString`, not decomposed nodes |
+| Bow-string / drum impact T3 solvers | Working prototype | `examples/violin/minimal_bowed_A4.json`, `examples/drums/minimal_membrane_impact.json`, representation topology graphs | Coupled stick-slip bow and modal membrane impact; not full body/shell models |
+| L4 instrument templates | Working prototype / modal approx | `examples/violin/violin_bowed_note_A4.json`, `examples/drums/drum_impact_note.json`, `examples/brass/brass_tone_C4.json` | Single-block note models with explicit maturity labels |
+| Decomposed hammer-string nonlinear contact | Working prototype | `hammer_string_contact_decomposed`, `decomposed_hammer_string_contact_A4.json` | T3 path across `PASPHammerFelt` ↔ `PASPStringLine`; composite `nonlinear_hammer_string_contact` remains the production L3 composite path |
 | Dataset autoresearch improvement | Evidence-dependent | baseline/candidate `summary.json`, `decision.json`, regression reports | Unknown until references exist and before/after dataset eval passes |
 | Calibration quality improvement | Evidence-dependent | calibration `metrics.json`, render WAVs, panel eval | Can improve metrics without perceptual improvement or dataset generalization |
 
@@ -87,7 +89,8 @@ This table is the manual's short truth table. The canonical solver status is [`r
 - Audiolab can represent valid physical topologies that it cannot compute yet. Compilation must fail honestly rather than substituting a convenient signal chain.
 - A block name being physical does not mean the computation is physically coupled. `PASPHammerFelt → PASPStringLine → PASPSoundboardModal` can still be a one-way DSP approximation.
 - The current waveguide string path is closer to a Karplus-Strong/reduced-order modal prototype than a high-fidelity stiff-string piano model.
-- `inharmonicity_B` now affects the mono `WaveguideString` T2 solver through a reduced-order dispersion approximation; the polyphonic waveguide path still reports unsupported dispersion with structured warnings.
+- `inharmonicity_B` now affects the mono `String1D` T2 solver through a reduced-order dispersion approximation; the polyphonic waveguide path still reports unsupported dispersion with structured warnings.
+- A solver-hosted `StringTerminationImpedance` path exists for terminal string-boundary reflection/loss diagnostics. Generic `ImpedanceBoundary`, `BridgeCoupler`, and `StringBridgeCoupler` topologies remain representation-only unless a matching solver owns them.
 - A solver-hosted nonlinear hammer-string contact path exists for `PASPBidirectionalHammerString`, including reduced-order bridge admittance/loading, unison string exchange, and body/radiation diagnostics. T3 decomposed contact/bridge components and T4 fused piano solvers are not production-supported in the default registry.
 - A solver-hosted lifecycle path exists for `PASPEventPianoModel`; it reports note/pedal/damper transitions but should still be treated as reduced-order behavior until phrase datasets validate it.
 - Some PASP chains are physically interpretable without being physically faithful. Treat them as hypotheses until metrics, diagnostics, and listening checks support them.
@@ -101,7 +104,7 @@ Audiolab separates two questions:
 1. **`validate_graph()`** — Is this a **valid representation**? (ports exist, domains match, no illegal cycles)
 2. **`compile_graph()`** — Can the engine **compute** it? (registered solvers, no silent fallback)
 
-If you declare bidirectional physical wiring (e.g. `WaveguideString.bridge ↔ BridgeCoupler.input`) but no bridge/scattering solver exists, validation **passes** and compilation **fails** with:
+If you declare bidirectional physical wiring (e.g. `String1D.bridge ↔ BridgeCoupler.input`) but no bridge/scattering solver exists, validation **passes** and compilation **fails** with:
 
 - `UnsupportedComputationError`
 - code `UNSUPPORTED_COMPUTATION`
@@ -142,10 +145,10 @@ The roadmap names the next production solver classes. Framework layers and primi
 | Missing solver capability | Why it matters | Status |
 |---------------------------|----------------|--------|
 | Nonlinear hammer-string contact (composite) | Realistic attack, velocity response, repeated strikes | **Addressed** — `nonlinear_hammer_string_contact` on `PASPBidirectionalHammerString` |
-| Nonlinear hammer-string contact (decomposed) | Separate hammer/string nodes with bidirectional coupling | Planned — `hammer_string_contact_decomposed` |
-| Bow-string stick-slip contact | Violin, cello bowed instruments | Planned — `bow_string_contact` |
-| Membrane-shell modal coupling | Drums beyond 1D strings | Planned — `membrane_shell_modal` (modal approximation) |
-| Lip-reed bore feedback | Brass self-oscillation | Planned — `lip_reed_bore_coupled` |
+| Nonlinear hammer-string contact (decomposed) | Separate hammer/string nodes with bidirectional coupling | **Addressed** — `hammer_string_contact_decomposed` |
+| Bow-string stick-slip contact | Violin, cello bowed instruments | **Addressed** — `bow_string_contact` |
+| Membrane-shell modal coupling | Drums beyond 1D strings | **Addressed** — `membrane_shell_modal` (modal approximation) |
+| Lip-reed bore feedback | Brass self-oscillation | **Addressed** — `lip_reed_bore_coupled` (minimal prototype) |
 | Stiff string / dispersion | Piano-like inharmonicity and register-dependent partial spacing | Partial — `inharmonicity_B` on mono waveguide |
 | Multi-string unison coupling | Beating, chorus, register realism | Partial — unison diagnostics in contact solver |
 | Bridge scattering / impedance coupling | Physical energy transfer from strings into body | Planned — `scattering_junction` |
@@ -207,7 +210,7 @@ A minimal mental model:
 
 | Concept | Meaning |
 |---------|---------|
-| **Block** | One node: `{"id": "string", "type": "WaveguideString", "params": {...}}` |
+| **Block** | One node: `{"id": "string", "type": "String1D", "params": {...}}` |
 | **Connection** | One edge: `{"from": "hammer.force", "to": "junction.force"}` |
 | **Port** | Named input or output on a block (`string.audio`, `inputs.velocity`) |
 | **Probe** | Tap point recorded during render (`"probes": ["string.audio"]`) |
@@ -301,7 +304,7 @@ Audiolab maps the object-based physical synthesis idea (Sarti, Rabenstein, Karja
 
 | Concept | Audiolab |
 |---------|----------|
-| Physical object | Block type (`PASPStringLine`, `WaveguideString`, …) |
+| Physical object | Block type (`PASPStringLine`, `String1D`, …) |
 | Object port | `PortSpec` on `BlockTypeSpec` |
 | Compatible connection | `validate_graph()` + `ports_compatible()` |
 | Object dynamics | `PhysicalSolver` at compile time |
@@ -324,7 +327,7 @@ Audiolab compiles each graph into an **execution plan** with distinct tiers:
 | Tier | What runs | Example |
 |------|-----------|---------|
 | **T1 — Signal schedule** | `DSPBlock.process()` in topological order | Filters, `HammerExcitation`, `Output` |
-| **T2 — Isolated-host solver** | Registered `PhysicalSolver` owns one block | `WaveguideString`, `ModalBankBody` |
+| **T2 — Isolated-host solver** | Registered `PhysicalSolver` owns one block | `String1D`, `ModalBankBody` |
 | **T3 — Connected component** | Solver owns a multi-block physical subsystem | Bidirectional bridge (planned) |
 | **T4 — Compound** | One solver owns a fused chain (planned) | `SimplePianoNoteSolver` |
 
@@ -333,7 +336,7 @@ Audiolab compiles each graph into an **execution plan** with distinct tiers:
 A common research graph combines tiers on **signal** edges:
 
 ```
-HammerExcitation  →  WaveguideString  →  ModalBankBody  →  Output
+HammerExcitation  →  String1D  →  ModalBankBody  →  Output
      (T1)                  (T2)               (T2)            (T1)
 ```
 
@@ -362,7 +365,7 @@ This is not a full stiff-string PDE or hammer/string/bridge solve. It is a produ
 
 ### Polyphonic hosting
 
-A single `WaveguideString` delay line holds **one pitch** at a time. Multiple simultaneous notes require `PolyphonicWaveguideString` hosted by `polyphonic_excited_waveguide`, driven by `graph.events` (note_on / note_off). Static scalar inputs (`inputs.midi_note`) suit calibration panels; events suit phrases and overlaps.
+A single `String1D` delay line holds **one pitch** at a time. Multiple simultaneous notes require `PolyphonicWaveguideString` hosted by `polyphonic_excited_waveguide`, driven by `graph.events` (note_on / note_off). Static scalar inputs (`inputs.midi_note`) suit calibration panels; events suit phrases and overlaps.
 
 ### Events and parameter maps
 
@@ -414,11 +417,11 @@ Karplus-Strong style strings and modal bodies via T2 solvers:
 
 | Solver | Block | Example |
 |--------|-------|---------|
-| `excited_waveguide_string` | `WaveguideString` | `minimal_waveguide_A4.json` |
+| `excited_waveguide_string` | `String1D` | `minimal_waveguide_A4.json` |
 | `polyphonic_excited_waveguide` | `PolyphonicWaveguideString` | `waveguide_modal_body_A4_events.json` |
 | `modal_bank_body` | `ModalBankBody` | `waveguide_modal_body_A4.json` |
 
-Mixed chain: `HammerExcitation → WaveguideString → ModalBankBody` in `minimal_hammer_waveguide_body_A4.json`. This is prototype physical computation for isolated blocks, not a full piano solver.
+Mixed chain: `HammerExcitation → String1D → ModalBankBody` in `minimal_hammer_waveguide_body_A4.json`. This is prototype physical computation for isolated blocks, not a full piano solver.
 
 ### Behavior-matching / recreation path
 
@@ -604,7 +607,7 @@ The CLI uses the graph's `sample_rate` and `duration` fields. The agent-facing P
 | Command | Use |
 |---------|-----|
 | `dsp-lab list-blocks` | Browse registered block types |
-| `dsp-lab inspect-block WaveguideString` | Inspect ports, params, and metadata for one block |
+| `dsp-lab inspect-block String1D` | Inspect ports, params, and metadata for one block |
 | `dsp-lab render graph.json --out out.wav --probes probes.npz` | Render and save requested graph probes |
 | `dsp-lab compare --real ref.wav --synthetic out.wav --out metrics.json` | Compare one synthetic WAV to one reference WAV |
 | `dsp-lab run-experiment --graph graph.json --real ref.wav --out workspace/experiments/demo` | Render, optionally compare, and write a bundle |
@@ -622,7 +625,7 @@ Always **validate before render**:
 
 ```bash
 dsp-lab validate my_graph.json --json
-dsp-lab inspect-block WaveguideString
+dsp-lab inspect-block String1D
 ```
 
 ### GUI editor
@@ -927,9 +930,9 @@ Open the graph:
 
 - `NoiseBurst` → `string.excitation` (short excitation burst)
 - `inputs.frequency_hz` → `string.frequency` (440 Hz)
-- `WaveguideString` is **solver-hosted** by `excited_waveguide_string`
+- `String1D` is **solver-hosted** by `excited_waveguide_string`
 
-The `WaveguideString` block does not run ordinary `process()` — the Karplus-Strong solver owns the delay line.
+The `String1D` block does not run ordinary `process()` — the Karplus-Strong solver owns the delay line.
 
 ### Step 2 — Count subsystems mentally
 
@@ -954,7 +957,7 @@ dsp-lab render examples/piano/minimal_hammer_waveguide_body_A4.json --out worksp
 | Block | Tier |
 |-------|------|
 | `HammerExcitation` | T1 — signal schedule |
-| `WaveguideString` | T2 — `excited_waveguide_string` |
+| `String1D` | T2 — `excited_waveguide_string` |
 | `ModalBankBody` | T2 — `modal_bank_body` |
 | `Output` | T1 — signal schedule |
 
@@ -970,7 +973,7 @@ for w in result.structured_warnings:
     print(w["code"], w.get("param"), w.get("message"))
 ```
 
-If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for a tunable, do not tune that param expecting it to affect the render. The mono `WaveguideString` solver now applies `inharmonicity_B`; the polyphonic waveguide path may still warn for unsupported dispersion.
+If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for a tunable, do not tune that param expecting it to affect the render. The mono `String1D` solver now applies `inharmonicity_B`; the polyphonic waveguide path may still warn for unsupported dispersion.
 
 ### Step 6 — Optional: compare to reference
 

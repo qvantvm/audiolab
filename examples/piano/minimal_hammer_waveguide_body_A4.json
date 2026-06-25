@@ -1,7 +1,7 @@
 {
   "schema_version": "0.1",
   "name": "minimal_hammer_waveguide_body_A4",
-  "description": "A4 piano note via HammerExcitation into WaveguideString and ModalBankBody (mixed T1+T2 execution, not fused).",
+  "description": "A4 piano note via HammerExcitation into String1D and ModalBankBody (mixed T1+T2 execution, not fused).",
   "sample_rate": 48000,
   "duration": 2.0,
   "block_size": 64,
@@ -25,7 +25,7 @@
     },
     {
       "id": "string",
-      "type": "WaveguideString",
+      "type": "String1D",
       "params": {
         "decay_seconds": 4.0,
         "brightness": 0.55,

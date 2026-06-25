@@ -21,7 +21,7 @@ Room/mic rendering remains **downstream** (Tier 4) — do not couple into hammer
 
 - `MidiToFrequency` for note-to-frequency conversion.
 - `HammerVelocityMapper`, `HammerExcitation`, `HammerFeltFilter`, and `NonlinearHammer` for the velocity-shaped strike.
-- Two `StringDetune` + `WaveguideString` paths for cent-detuned string components.
+- Two `StringDetune` + `String1D` paths for cent-detuned string components.
 - `Mixer` and delayed `Gain` taps to approximate the model body taps at 4.1, 7.7, 12.8, and 19.6 ms.
 - `ResonanceBank`, `SoftClip`, `StereoWidener`, and `Output` for body color, saturation, and final level.
 - `CalibrationTask` metadata for the same representative notes used by the standalone model: MIDI 24, 40, 57, 76, and 96 at velocity 104, pedal off.

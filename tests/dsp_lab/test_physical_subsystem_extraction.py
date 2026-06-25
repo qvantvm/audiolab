@@ -83,7 +83,7 @@ def test_infer_solver_family_for_isolated_host_from_block_metadata():
         topology="isolated_host",
         kind="excited_waveguide",
         block_ids=("string",),
-        block_types={"string": "WaveguideString"},
+        block_types={"string": "String1D"},
         internal_connections=(),
         boundary_inputs=(),
         boundary_outputs=(),

@@ -14,7 +14,7 @@ from dsp_lab.physics.parameter_curves import evaluate_curve
 
 MapAxis = Literal["note", "velocity"]
 
-STRING_BLOCK_TYPES = frozenset({"WaveguideString", "PolyphonicWaveguideString", "StiffStringModal"})
+STRING_BLOCK_TYPES = frozenset({"String1D", "PolyphonicWaveguideString", "StiffStringModal"})
 HAMMER_BLOCK_TYPES = frozenset({"HammerExcitation"})
 
 PARAM_ALIASES: dict[str, tuple[str, str]] = {

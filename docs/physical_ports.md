@@ -66,7 +66,7 @@ Validated as compatible `signal`/`audio` ports.
 
 ```
 string.bridge ↔ soundboard.bridge_input
-WaveguideString.bridge ↔ BridgeCoupler.input
+String1D.bridge ↔ BridgeCoupler.input
 ```
 
 Metadata declares bidirectional mechanical ports. `validate_graph()` accepts compatible physical connections as **valid representation**.

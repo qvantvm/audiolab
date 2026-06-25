@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1",
+  "name": "drum_impact_note",
+  "description": "L4 DrumImpactNoteModel template.",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "blocks": [
+    {"id": "drum", "type": "DrumImpactNoteModel", "params": {}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "drum.audio", "to": "out.audio"}
+  ],
+  "probes": ["drum.audio", "out.audio"]
+}

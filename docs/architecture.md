@@ -34,7 +34,7 @@ block registry
 2. **Tier 3 (PASP):** 14 `PASP*` blocks wrapping `physics/pasp_piano/`
 3. **Tier 4 (room/mic):** `ResonanceBank`, `SoundboardConvolution`, `MicPositionFilter` in `blocks/body.py`
 
-PASP strings are **modal approximations** (`PASPStringLine`), not delay-line waveguides. Legacy `WaveguideString` remains available for Karplus-Strong style graphs.
+PASP strings are **modal approximations** (`PASPStringLine`), not delay-line waveguides. Legacy `String1D` remains available for Karplus-Strong style graphs.
 
 ## Agent loop
 

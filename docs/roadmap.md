@@ -29,15 +29,33 @@ Registered in `dsp_lab.graph.physical.solvers` and selected automatically at com
 
 | Solver | Block(s) | Example graph |
 |--------|----------|---------------|
-| `excited_waveguide_string` | `WaveguideString` | `examples/piano/minimal_waveguide_A4.json` |
+| `excited_waveguide_string` | `String1D` | `examples/piano/minimal_waveguide_A4.json` |
 | `polyphonic_excited_waveguide` | `PolyphonicWaveguideString` | `examples/piano/waveguide_modal_body_A4_events.json` |
 | `modal_bank_body` | `ModalBankBody` | `examples/piano/waveguide_modal_body_A4.json` |
 | `nonlinear_hammer_string_contact` | `PASPBidirectionalHammerString` | `examples/piano/nonlinear_hammer_string_contact_A4.json` |
 | `bell_modal_body` | `BellModalBody` | `examples/graphs/bell_physical_modal.json` |
 | `struck_bar_body` | `StruckBarBody` | `examples/graphs/struck_bar_physical.json` |
 | `pasp_lifecycle_piano` | `PASPEventPianoModel` | `examples/piano/piano_lifecycle_damper_pedal.json` |
+| `string_termination_impedance` | `StringTerminationImpedance` | `examples/piano/string_termination_impedance_A4.json` |
 
 `NonlinearHammerStringContactSolver` is the first **L3 coupled-physics** production path: it hosts one composite `PASPBidirectionalHammerString` block (execution T2 isolated host) and reports contact, bridge admittance, body radiation, and optional unison diagnostics. It is **not** a decomposed execution T3 solver for separate hammer, string, bridge, and body nodes.
+
+`StringTerminationImpedanceSolver` is a hosted boundary prototype: it owns a delay-line string loop plus terminal impedance reflection/loss, and reports reflection, absorbed energy, reflected energy, and balance diagnostics. It does not make generic bridge/scattering topologies supported.
+
+Additional registered **execution T3** coupled prototypes (connected components with bidirectional physical or wave edges):
+
+| Solver | Blocks | Example graph |
+|--------|--------|---------------|
+| `hammer_string_contact_decomposed` | `PASPHammerFelt` ↔ `PASPStringLine` | `examples/piano/decomposed_hammer_string_contact_A4.json` |
+| `bow_string_contact` | `BowStringContact` ↔ `String1D` | `examples/violin/minimal_bowed_A4.json` |
+| `membrane_shell_modal` | `ImpactContact` ↔ `CircularMembraneModes` | `examples/drums/minimal_membrane_impact.json` |
+| `lip_reed_bore_coupled` | `LipReed` ↔ `ConicalBore` | `examples/brass/minimal_brass_tone.json` |
+
+Treat these as narrow solver paths with their own tests and limitations, not as proof that arbitrary decomposed physical graphs are supported.
+
+### Execution T4 — L4 instrument templates
+
+Category **Instrument Templates** (`ViolinBowedNoteModel`, `DrumImpactNoteModel`, `BrassToneModel`) are single-block note models with explicit `computation_status` labels. They render via T1 `process()` fallbacks using the same reduced physics as the T3 solvers; they do not fuse arbitrary subgraphs.
 
 ### Mixed T1 + T2 chains
 
@@ -59,12 +77,13 @@ Primitive families are metadata tags on blocks (`PHYSICAL_PRIMITIVE_FAMILIES` in
 
 | Family | Representative blocks | Maturity |
 |--------|----------------------|----------|
-| String1D | `WaveguideString`, `PASPStringLine` | working_prototype / modal_approx |
+| String1D | `String1D`, `PASPStringLine` | working_prototype / modal_approx |
 | HammerStringContact | `PASPBidirectionalHammerString` | production_solver |
-| BowStringContact | `BowStringContact` | representation_only |
-| CircularMembrane / Plate2D | `CircularMembraneModes`, `PlateModes`, `BellModalBody` | representation_only / modal_approx |
-| TubeBore / reeds | `CylindricalBore`, `LipReed`, `SingleReed`, `JetDrive` | representation_only |
+| BowStringContact | `BowStringContact` | working_prototype (`bow_string_contact`) |
+| CircularMembrane / Plate2D | `CircularMembraneModes`, `PlateModes`, `BellModalBody` | modal_approximation / representation_only |
+| TubeBore / reeds | `CylindricalBore`, `LipReed`, `SingleReed`, `JetDrive` | working_prototype (hosted brass) / representation_only |
 | CouplingJunction | `ScatteringJunction`, `StringBridgeCoupler` | representation_only |
+| ImpedanceBoundary | `ImpedanceBoundary`, `StringTerminationImpedance` | representation_only / working_prototype |
 
 ## Valid Representation, Compile-Fails
 
@@ -72,14 +91,12 @@ Port metadata and `validate_graph()` accept these topologies as **valid represen
 
 | Topology | Notes | Failure |
 |----------|-------|---------|
-| `WaveguideString.bridge ↔ BridgeCoupler.input` | Bidirectional mechanical bridge | `UNSUPPORTED_COMPUTATION` |
-| `BowStringContact` ↔ `WaveguideString.bridge` | Bow stick-slip contact | `UNSUPPORTED_COMPUTATION` |
-| `ImpactContact` → `CircularMembraneModes` | Drum impact → membrane modal | `UNSUPPORTED_COMPUTATION` |
+| `String1D.bridge ↔ BridgeCoupler.input` | Bidirectional mechanical bridge | `UNSUPPORTED_COMPUTATION` |
 | `PASPStringLine.bridge ↔ PASPSoundboardModal.bridge_input` | PASP decomposed bidirectional ports | `UNSUPPORTED_COMPUTATION` |
 | `string.audio → BridgeCoupler.input` | Signal substitute for physical port | `UNSUPPORTED_COMPUTATION` (`misclassified_edge`) |
-| Wave / scattering junctions | Reserved `wave` port metadata | `UNSUPPORTED_COMPUTATION` |
+| Wave / scattering junctions (generic) | Reserved `wave` port metadata without matching solver | `UNSUPPORTED_COMPUTATION` |
 
-**Anti-pattern:** `WaveguideString.audio → BridgeCoupler.input` is **not** equivalent to `WaveguideString.bridge ↔ BridgeCoupler.input`. Do not rewrite graphs this way in research loops.
+**Anti-pattern:** `String1D.audio → BridgeCoupler.input` is **not** equivalent to `String1D.bridge ↔ BridgeCoupler.input`. Do not rewrite graphs this way in research loops.
 
 ## Planned Solvers
 
@@ -87,20 +104,24 @@ Not registered in the default solver registry. Each requires a `PhysicalSolver` 
 
 | Solver ID | Execution tier | Will own |
 |-----------|----------------|----------|
-| `hammer_string_contact_decomposed` | T3 | Bidirectional contact across decomposed `PASPHammerFelt` / `PASPStringLine` |
-| `bow_string_contact` | T3 | `BowStringContact` ↔ string bow friction dynamics |
-| `membrane_shell_modal` | T3 | `ImpactContact` → `CircularMembraneModes` (modal approximation) |
-| `lip_reed_bore_coupled` | T3 | `LipReed` ↔ `ConicalBore` self-oscillating feedback |
 | `scattering_junction` | T3 | Wave/scattering adaptors, bridge junctions |
+| `simple_piano_note` | T4 compound | Fused hammer + string + body chain (opt-in via `solver_hint`) |
 
 Class name when implemented: `ScatteringJunctionSolver`.
-| `simple_piano_note` | T4 compound | Fused hammer + string + body chain (opt-in via `solver_hint`) |
 
 Class name when implemented: `SimplePianoNoteSolver`.
 
 ## L4 instrument templates
 
-**Not adding yet.** Blocks such as `ViolinPhysicalModel`, `TrumpetPhysicalModel`, or `RealisticDrumKit` require an explicit maturity label (`representation_only`, `prototype`, `approximation`, or `production_solver`) and must not ship without a real computation path.
+Category **Instrument Templates** ships three honestly labeled blocks:
+
+| Block | `computation_status` | Example |
+|-------|---------------------|---------|
+| `ViolinBowedNoteModel` | `working_prototype` | `examples/violin/violin_bowed_note_A4.json` |
+| `DrumImpactNoteModel` | `modal_approximation` | `examples/drums/drum_impact_note.json` |
+| `BrassToneModel` | `working_prototype` | `examples/brass/brass_tone_C4.json` |
+
+Each template states what is **not** modeled (violin body, drum shell, brass valve network). They are not `production_solver` without dataset evidence.
 
 ### Test-only (not production roadmap)
 

@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1",
+  "name": "minimal_membrane_impact",
+  "description": "Renderable drum impact via membrane_shell_modal T3 solver.",
+  "sample_rate": 48000,
+  "duration": 1.5,
+  "block_size": 64,
+  "blocks": [
+    {"id": "mallet", "type": "NoiseBurst", "params": {"amplitude": 1.0, "decay_ms": 2.0, "seed": 4}},
+    {"id": "impact", "type": "ImpactContact", "params": {}},
+    {"id": "membrane", "type": "CircularMembraneModes", "params": {"radius_m": 0.18, "tension_n_per_m": 3000.0, "num_modes": 8}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "mallet.audio", "to": "impact.mallet_velocity"},
+    {"from": "impact.surface_velocity", "to": "membrane.surface"},
+    {"from": "membrane.radiated_audio", "to": "out.audio"}
+  ],
+  "probes": ["membrane.radiated_audio", "out.audio"]
+}

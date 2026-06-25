@@ -99,7 +99,7 @@ def test_three_hosted_blocks_in_line_yield_three_subsystems():
             {"id": "excitation", "type": "NoiseBurst", "params": {"amplitude": 0.8, "decay_ms": 3.0, "seed": 0}},
             {
                 "id": "string",
-                "type": "WaveguideString",
+                "type": "String1D",
                 "params": {
                     "decay_seconds": 4.0,
                     "brightness": 0.55,

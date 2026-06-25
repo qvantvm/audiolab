@@ -154,7 +154,7 @@
     },
     {
       "id": "string_low",
-      "type": "WaveguideString",
+      "type": "String1D",
       "params": {
         "decay": 0.9974,
         "brightness": 0.68
@@ -162,7 +162,7 @@
     },
     {
       "id": "string_high",
-      "type": "WaveguideString",
+      "type": "String1D",
       "params": {
         "decay": 0.9970,
         "brightness": 0.72

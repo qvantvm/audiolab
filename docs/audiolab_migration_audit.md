@@ -55,7 +55,7 @@ python3 scripts/generate_migration_audit.py
 |-------|--------|
 | PASP core | `PASPHammerFelt`, `PASPHammerStringJunction`, `PASPStringLine`, `PASPBridgeTermination`, `PASPSoundboardModal`, `PASPBridgeSoundboard`, `PASPNoteModel`, `PASPBidirectionalHammerString`, `PASPNoteFamilyModel`, `PASPStringGroupNoteModel`, `PASPEventPianoModel`, `PASPPerformanceModel` |
 | Piano-specific (legacy/model) | `HammerExcitation`, `PianoWaveguideString`, `PianoStringBank`, `NonlinearHammer`, `StringModeBank`, … (see table) |
-| Generic waveguide/delay | `WaveguideString`, `FractionalDelay`, `LoopFilter`, `DispersionAllpass`, … |
+| Generic waveguide/delay | `String1D`, `FractionalDelay`, `LoopFilter`, `DispersionAllpass`, … |
 | Modal / body | `ModalResonator`, `SoundboardModalBank`, `ResonanceBank`, … |
 | Analysis / metrics | `ReferenceCompare`, `LogSTFTMetric`, `ValidityGate`, … |
 | Experimental | `PythonCustom`, `EventPassThrough`, `CompareTask`, … |
@@ -209,4 +209,4 @@ python3 scripts/generate_migration_audit.py
 | ValidityGate | analysis | in [reference:signal, synthetic:signal, midi_note:control] out [valid:control, reasons:control] | in [reference:signal, synthetic:signal, midi_note:control] out [valid:control, reasons:control] | yes | no | no |
 | VelocityCurve | control | in [velocity:control] out [value:control] | in [velocity:control] out [value:control] | yes | no | no |
 | VelocityPanelMetric | analysis | in [panel_rows:control] out [value:control, details:control] | in [panel_rows:control] out [value:control, details:control] | yes | no | no |
-| WaveguideString | delay/waveguide | in [frequency:control, excitation:signal/mechanical] out [audio:signal/mechanical, bridge:physical/mechanical[force,velocity]*] | in [frequency:control, excitation:signal/mechanical] out [audio:signal/mechanical, bridge:physical/mechanical[force,velocity]*] | no | no | yes |
+| String1D | delay/waveguide | in [frequency:control, excitation:signal/mechanical] out [audio:signal/mechanical, bridge:physical/mechanical[force,velocity]*] | in [frequency:control, excitation:signal/mechanical] out [audio:signal/mechanical, bridge:physical/mechanical[force,velocity]*] | no | no | yes |

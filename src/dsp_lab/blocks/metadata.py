@@ -43,6 +43,7 @@ CATEGORY_MAP: dict[str, str] = {
     "Calibration": "utility",
     "Experimental": "utility",
     "Physical Primitives": "physical/primitive",
+    "Instrument Templates": "instrument/template",
     "Debug": "utility",
     "Core": "utility",
 }
@@ -54,6 +55,12 @@ ComputationStatus = Literal[
     "production_solver",
     "dsp",
 ]
+
+INSTRUMENT_TEMPLATE_BLOCKS: set[str] = {
+    "ViolinBowedNoteModel",
+    "DrumImpactNoteModel",
+    "BrassToneModel",
+}
 
 PHYSICAL_PRIMITIVE_BLOCKS: set[str] = {
     "BowStringContact",
@@ -69,12 +76,13 @@ PHYSICAL_PRIMITIVE_BLOCKS: set[str] = {
     "RadiationImpedance",
     "ScatteringJunction",
     "ImpedanceBoundary",
+    "StringTerminationImpedance",
     "StringBridgeCoupler",
 }
 
 PHYSICAL_PRIMITIVE_FAMILIES: dict[str, list[str]] = {
     "String1D": [
-        "WaveguideString",
+        "String1D",
         "PolyphonicWaveguideString",
         "PianoWaveguideString",
         "PASPStringLine",
@@ -97,7 +105,7 @@ PHYSICAL_PRIMITIVE_FAMILIES: dict[str, list[str]] = {
     "RadiationImpedance": ["RadiationImpedance", "CabinetRadiation"],
     "CouplingJunction": ["BridgeCoupler", "PhysicalCouplingStub", "StringBridgeCoupler"],
     "ScatteringJunction": ["ScatteringJunction"],
-    "ImpedanceBoundary": ["ImpedanceBoundary"],
+    "ImpedanceBoundary": ["ImpedanceBoundary", "StringTerminationImpedance"],
 }
 
 BLOCK_PRIMITIVE_FAMILY: dict[str, str] = {}
@@ -106,7 +114,7 @@ for _family, _block_types in PHYSICAL_PRIMITIVE_FAMILIES.items():
         BLOCK_PRIMITIVE_FAMILY.setdefault(_block_type, _family)
 
 BLOCK_COMPUTATION_STATUS: dict[str, ComputationStatus] = {
-    "WaveguideString": "working_prototype",
+    "String1D": "working_prototype",
     "PolyphonicWaveguideString": "working_prototype",
     "PianoWaveguideString": "working_prototype",
     "PASPStringLine": "modal_approximation",
@@ -125,20 +133,24 @@ BLOCK_COMPUTATION_STATUS: dict[str, ComputationStatus] = {
     "CabinetRadiation": "dsp",
     "BridgeCoupler": "representation_only",
     "PhysicalCouplingStub": "representation_only",
-    "BowStringContact": "representation_only",
+    "BowStringContact": "working_prototype",
     "PluckExcitation": "representation_only",
-    "ImpactContact": "representation_only",
-    "CircularMembraneModes": "representation_only",
+    "ImpactContact": "modal_approximation",
+    "CircularMembraneModes": "modal_approximation",
     "PlateModes": "representation_only",
     "CylindricalBore": "representation_only",
-    "ConicalBore": "representation_only",
-    "LipReed": "representation_only",
+    "ConicalBore": "working_prototype",
+    "LipReed": "working_prototype",
     "SingleReed": "representation_only",
     "JetDrive": "representation_only",
     "RadiationImpedance": "representation_only",
     "ScatteringJunction": "representation_only",
     "ImpedanceBoundary": "representation_only",
+    "StringTerminationImpedance": "working_prototype",
     "StringBridgeCoupler": "representation_only",
+    "ViolinBowedNoteModel": "working_prototype",
+    "DrumImpactNoteModel": "modal_approximation",
+    "BrassToneModel": "working_prototype",
 }
 
 PASP_CORE_BLOCKS: set[str] = {
@@ -266,7 +278,7 @@ PHYSICAL_ACOUSTIC_BLOCKS: set[str] = {
 }
 
 WAVEGUIDE_BLOCKS: set[str] = {
-    "WaveguideString",
+    "String1D",
     "PolyphonicWaveguideString",
     "PianoWaveguideString",
     "PASPStringLine",
@@ -281,7 +293,7 @@ WAVEGUIDE_BLOCKS: set[str] = {
 }
 
 BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
-    "WaveguideString": {
+    "String1D": {
         "solver_family": "excited_waveguide_string",
         "physical_subsystem_host": True,
     },
@@ -317,6 +329,10 @@ BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
         "solver_family": "polyphonic_excited_waveguide",
         "physical_subsystem_host": True,
     },
+    "StringTerminationImpedance": {
+        "solver_family": "string_termination_impedance",
+        "physical_subsystem_host": True,
+    },
 }
 
 STATEFUL_BLOCK_TYPES: set[str] = (
@@ -349,7 +365,7 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "rate": "audio",
             "domain": "mechanical",
             "variables": ["force", "velocity"],
-            "direction": "output",
+            "direction": "bidirectional",
             "legacy_kind": "audio",
         },
         "output:compression": {
@@ -379,6 +395,14 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
     },
     "PASPStringLine": {
         "input:excitation": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
+        "input:contact": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
         "output:audio": {
             "kind": "signal",
             "rate": "audio",
@@ -422,7 +446,7 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
         "input:audio": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
         "output:audio": {"kind": "signal", "rate": "audio", "domain": "acoustic"},
     },
-    "WaveguideString": {
+    "String1D": {
         "input:excitation": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
         "output:audio": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
         "output:bridge": {
@@ -487,11 +511,10 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
     },
     "BowStringContact": {
         "input:bow_force": {
-            "kind": "physical",
+            "kind": "signal",
             "rate": "audio",
             "domain": "mechanical",
             "variables": ["force"],
-            "direction": "bidirectional",
             "legacy_kind": "audio",
         },
         "input:string_velocity": {
@@ -526,11 +549,10 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
     },
     "ImpactContact": {
         "input:mallet_velocity": {
-            "kind": "physical",
+            "kind": "signal",
             "rate": "audio",
             "domain": "mechanical",
             "variables": ["velocity"],
-            "direction": "bidirectional",
             "legacy_kind": "audio",
         },
         "input:surface_velocity": {
@@ -672,6 +694,15 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
         },
         "output:volume_flow": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["flow"]},
         "output:reed_state": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
+        "output:audio": {"kind": "signal", "rate": "audio", "domain": "acoustic"},
+        "output:bore_reflection": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
     },
     "SingleReed": {
         "input:mouth_pressure": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["pressure"]},
@@ -911,6 +942,8 @@ def _infer_category(block_type: str, legacy_category: str) -> str:
         return "physical acoustic"
     if block_type in PHYSICAL_PRIMITIVE_BLOCKS:
         return "physical/primitive"
+    if block_type in INSTRUMENT_TEMPLATE_BLOCKS:
+        return "instrument/template"
     if block_type in NONLINEAR_BLOCKS:
         return "nonlinear"
     if block_type == "Output" or block_type == "ModelStereoOutput":
@@ -1069,7 +1102,7 @@ def build_block_type_spec(cls: type[DSPBlock]) -> BlockTypeSpec:
         "PASPStringLine",
         "PASPBridgeTermination",
         "PASPSoundboardModal",
-        "WaveguideString",
+        "String1D",
     }
 
     subsystem_metadata = BLOCK_PHYSICAL_SUBSYSTEM_METADATA.get(block_type, {})

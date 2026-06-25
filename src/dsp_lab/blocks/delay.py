@@ -98,11 +98,11 @@ class DispersionAllpass(DSPBlock):
 
 
 @register_block
-class WaveguideString(DSPBlock):
-    block_type = "WaveguideString"
+class String1D(DSPBlock):
+    block_type = "String1D"
     category = "Delay & Waveguide"
     description = "Karplus-Strong style waveguide string approximation."
-    input_ports = {"frequency": Port("frequency", "control"), "excitation": Port("excitation", "audio")}
+    input_ports = {"frequency": Port("frequency", "control"), "excitation": Port("excitation", "audio", required=False)}
     output_ports = {"audio": Port("audio", "audio")}
 
     @classmethod
@@ -129,7 +129,7 @@ class WaveguideString(DSPBlock):
 
     def process(self, inputs: dict[str, object], n_frames: int) -> dict[str, object]:
         freq = max(float(inputs["frequency"]), 1.0)
-        excitation = np.asarray(inputs["excitation"], dtype=np.float32)
+        excitation = np.asarray(inputs.get("excitation", np.zeros(n_frames, dtype=np.float32)), dtype=np.float32)
         delay = max(2, int(self.sample_rate / freq))
         buffer = np.zeros(delay, dtype=np.float32)
         buffer[: min(delay, excitation.size)] = excitation[:delay]

@@ -86,6 +86,9 @@ def infer_solver_family(subsystem: PhysicalSubsystem) -> str | None:
         return block_solver_family(block_type)
 
     if subsystem.edge_kind == "wave_scattering":
+        family = _infer_typed_connected_family(frozenset(subsystem.block_types.values()))
+        if family is not None:
+            return family
         return "wave_scattering"
 
     if subsystem.edge_kind == "bidirectional_physical":
@@ -93,9 +96,25 @@ def infer_solver_family(subsystem: PhysicalSubsystem) -> str | None:
         declared.discard(None)
         if declared == {"bidirectional_mechanical_stub"}:
             return "bidirectional_mechanical_stub"
+        family = _infer_typed_connected_family(frozenset(subsystem.block_types.values()))
+        if family is not None:
+            return family
         return "bidirectional_mechanical"
 
     return None
+
+
+_TYPED_CONNECTED_FAMILIES: dict[frozenset[str], str] = {
+    frozenset({"BowStringContact", "String1D"}): "bow_string_contact",
+    frozenset({"ImpactContact", "CircularMembraneModes"}): "membrane_shell_modal",
+    frozenset({"LipReed", "ConicalBore"}): "lip_reed_bore_coupled",
+    frozenset({"LipReed", "CylindricalBore"}): "lip_reed_bore_coupled",
+    frozenset({"PASPHammerFelt", "PASPStringLine"}): "hammer_string_contact_decomposed",
+}
+
+
+def _infer_typed_connected_family(block_types: frozenset[str]) -> str | None:
+    return _TYPED_CONNECTED_FAMILIES.get(block_types)
 
 
 def subsystem_trigger_block(

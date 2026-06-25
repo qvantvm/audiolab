@@ -126,9 +126,15 @@ CATEGORY_EXPLANATIONS: dict[str, tuple[str, str, str, str | None]] = {
     ),
     "Physical Primitives": (
         "This block declares reusable physical topology for future instrument families (strings, membranes, bores, contacts, junctions).",
-        "Physical primitives future-proof Audiolab beyond piano without shipping fake instrument templates.",
+        "Physical primitives future-proof Audiolab beyond piano without shipping opaque instrument templates.",
         "Use them to author valid graphs for violin, drums, or brass research; check `computation_status` before claiming audio fidelity.",
-        "Representation-only primitives validate but compile fails honestly until a coupled solver exists. They never synthesize bow friction, membrane modes, or lip oscillation.",
+        "Some primitives are solver-backed (`bow_string_contact`, `membrane_shell_modal`, `lip_reed_bore_coupled`); others remain representation-only until a coupled solver exists.",
+    ),
+    "Instrument Templates": (
+        "This block is an L4 single-note instrument model with an explicit maturity label.",
+        "Templates package reduced physics into one block for quick renders and pedagogy without hiding limitations.",
+        "Use them when a full decomposed T3 graph is unnecessary; prefer T3 graphs when topology education matters.",
+        "Templates are not production_solver quality without dataset evidence; body, shell, and radiation networks are omitted by design.",
     ),
     "Sources": (
         "This block creates an audio signal without requiring an audio input.",
@@ -172,7 +178,7 @@ BLOCK_OVERRIDES: dict[str, str] = {
         how="Place it after `PASPBridgeTermination`. The `soundboard_mix` parameter controls how much modal/radiation coloration is applied.",
         caveat="In the decomposed chain this is still a one-way DSP stage, not a bidirectional bridge-soundboard solve.",
     ),
-    "WaveguideString": _section(
+    "String1D": _section(
         what="A delay-line string approximation hosted by the `excited_waveguide_string` physical solver.",
         why="It is the current solver-backed prototype for string-like pitched decay in the object-based physical-modeling path.",
         how="With `inharmonicity_B` at zero, excitation enters a Karplus-Strong delay loop. With `inharmonicity_B` above zero, the solver uses a reduced-order stiff-string modal approximation so upper partials shift upward.",
@@ -294,8 +300,8 @@ BLOCK_OVERRIDES: dict[str, str] = {
     "BowStringContact": _section(
         what="A bidirectional bow-string stick-slip contact interface for bowed instruments.",
         why="Violin and cello require nonlinear bow friction, not a filtered sawtooth exciter.",
-        how="Wire `bow_force` and `string_velocity` as bidirectional mechanical ports between bow and string blocks.",
-        caveat="Representation only. `compile_graph()` fails until `bow_string_contact` coupled solver exists.",
+        how="Wire `bow_force` (signal drive) and `string_velocity` (bidirectional mechanical) between bow and `String1D.bridge` in a T3 graph, or use `ViolinBowedNoteModel` for a single-block prototype.",
+        caveat="`bow_string_contact` is a working prototype, not a full violin body or fingerboard model.",
     ),
     "PluckExcitation": _section(
         what="Plucked-string excitation at a position along a string.",
@@ -306,14 +312,14 @@ BLOCK_OVERRIDES: dict[str, str] = {
     "ImpactContact": _section(
         what="Nonlinear mallet-head impact against a drum membrane or plate surface.",
         why="Drums begin with stick/mallet impact, not sustained bow or breath excitation.",
-        how="Connect bidirectional `mallet_velocity` and `surface_velocity` ports between impact and membrane/plate primitives.",
-        caveat="Representation only. `compile_graph()` fails on bidirectional impact topologies until `membrane_shell_modal` exists.",
+        how="Drive `mallet_velocity` (signal) into impact and couple `surface_velocity` bidirectionally to `CircularMembraneModes`, or use `DrumImpactNoteModel`.",
+        caveat="`membrane_shell_modal` is modal approximation only, not FEM shell simulation.",
     ),
     "CircularMembraneModes": _section(
         what="Circular membrane modal synthesis target (drum head, bell-like shells).",
         why="Drums force Audiolab beyond 1D strings into 2D modal objects.",
-        how="First honest version is modal approximation: impact excites a bank of membrane modes, then radiation.",
-        caveat="Representation only. Not finite-difference membrane simulation.",
+        how="Couple to `ImpactContact` for T3 rendering or feed excitation force into modal parameters.",
+        caveat="Modal approximation via `membrane_shell_modal`; not finite-difference membrane simulation.",
     ),
     "PlateModes": _section(
         what="Rectangular plate modal synthesis target for cymbals and soundboards.",
@@ -330,14 +336,14 @@ BLOCK_OVERRIDES: dict[str, str] = {
     "ConicalBore": _section(
         what="Conical acoustic bore segment with flare (trumpet, horn, clarinet bell).",
         why="Conical geometry changes impedance and partial spacing versus cylindrical tubes.",
-        how="Chain conical segments with scattering junctions and radiation boundaries.",
-        caveat="Representation only.",
+        how="Couple to `LipReed` via wave ports for `lip_reed_bore_coupled`, or chain with scattering junctions when available.",
+        caveat="Hosted brass prototype only; no valve network or multi-segment bell.",
     ),
     "LipReed": _section(
         what="Brass lip-reed nonlinear oscillator coupled to bore reflection.",
         why="Trumpet and trombone are self-oscillating feedback systems, not oscillator-plus-filter chains.",
-        how="Close the loop: mouth pressure and bore reflection drive `volume_flow` back into the bore.",
-        caveat="Representation only. `lip_reed_bore_coupled` solver is planned, not registered.",
+        how="Close the loop with `ConicalBore` wave ports or use `BrassToneModel` for a single-block prototype.",
+        caveat="`lip_reed_bore_coupled` is a minimal working prototype, not a full brass bore network.",
     ),
     "SingleReed": _section(
         what="Single-reed mouthpiece beating against a lay (clarinet, saxophone).",
@@ -369,11 +375,35 @@ BLOCK_OVERRIDES: dict[str, str] = {
         how="Terminate bore or body wave ports with reflected wave output.",
         caveat="Representation only.",
     ),
+    "StringTerminationImpedance": _section(
+        what="A solver-hosted string with an explicit terminal impedance boundary.",
+        why="String decay and brightness depend strongly on how the endpoint reflects, absorbs, or transmits energy; a boundary condition is more honest than a generic loss filter.",
+        how="Drive it with excitation and frequency. The `string_termination_impedance` solver computes reflection, boundary loss, reflected audio, absorbed audio, and energy diagnostics inside the string loop.",
+        caveat="This is a hosted terminal-boundary prototype. It does not make generic bridge, body, or scattering-junction topologies supported.",
+    ),
     "StringBridgeCoupler": _section(
         what="String-to-body bridge mechanical coupler for violin and guitar topology.",
         why="Energy leaves the string through bridge impedance into body modes.",
         how="Connect bidirectional `string_bridge` and `body_input` between string and modal body primitives.",
         caveat="Representation only. Not a production bridge scattering solver.",
+    ),
+    "ViolinBowedNoteModel": _section(
+        what="L4 single-note bowed violin prototype using reduced stick-slip string physics.",
+        why="Quick render path without authoring a full bow-string T3 graph.",
+        how="Optionally drive `bow_force` and `frequency`; defaults produce a sustained bowed tone at `frequency_hz`.",
+        caveat="No violin body, fingerboard, or bow-hair detail; `working_prototype` only.",
+    ),
+    "DrumImpactNoteModel": _section(
+        what="L4 single drum hit via impact force and circular membrane modal synthesis.",
+        why="Quick render path for membrane impact without shell or air cavity modeling.",
+        how="Optionally drive `mallet_velocity`; default applies a short strike impulse.",
+        caveat="Modal approximation only (`modal_approximation`); not FEM shell or kit routing.",
+    ),
+    "BrassToneModel": _section(
+        what="L4 sustained brass tone via lip-reed and bore feedback prototype.",
+        why="Quick render path without wiring `LipReed` and `ConicalBore` in a T3 graph.",
+        how="Optionally drive `mouth_pressure`; `mouth_pressure_bias` sustains oscillation when input is absent.",
+        caveat="No valves, bell network, or radiation impedance; `working_prototype` only.",
     ),
     "PhysicalCouplingStub": _section(
         what="A minimal block for testing bidirectional physical coupling contracts.",

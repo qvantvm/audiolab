@@ -6,22 +6,23 @@
     "nonlinear_hammer_string_contact",
     "bell_modal_body",
     "struck_bar_body",
-    "pasp_lifecycle_piano"
-  ],
-  "planned_solvers": [
-    "simple_piano_note",
-    "scattering_junction",
+    "pasp_lifecycle_piano",
+    "string_termination_impedance",
     "bow_string_contact",
     "membrane_shell_modal",
     "lip_reed_bore_coupled",
     "hammer_string_contact_decomposed"
+  ],
+  "planned_solvers": [
+    "simple_piano_note",
+    "scattering_junction"
   ],
   "test_only_solvers": [
     "bidirectional_mechanical_stub"
   ],
   "primitive_families": {
     "String1D": [
-      "WaveguideString",
+      "String1D",
       "PolyphonicWaveguideString",
       "PianoWaveguideString",
       "PASPStringLine"
@@ -93,46 +94,20 @@
       "ScatteringJunction"
     ],
     "ImpedanceBoundary": [
-      "ImpedanceBoundary"
+      "ImpedanceBoundary",
+      "StringTerminationImpedance"
     ]
   },
-  "planned_coupled_solvers": [
-    {
-      "id": "bow_string_contact",
-      "blocks": ["BowStringContact", "WaveguideString"],
-      "target": "violin",
-      "status": "planned"
-    },
-    {
-      "id": "membrane_shell_modal",
-      "blocks": ["ImpactContact", "CircularMembraneModes"],
-      "target": "drums",
-      "status": "planned",
-      "note": "modal approximation"
-    },
-    {
-      "id": "lip_reed_bore_coupled",
-      "blocks": ["LipReed", "ConicalBore"],
-      "target": "brass",
-      "status": "planned"
-    },
-    {
-      "id": "hammer_string_contact_decomposed",
-      "blocks": ["PASPHammerFelt", "PASPStringLine"],
-      "target": "piano",
-      "status": "planned"
-    }
-  ],
+  "planned_coupled_solvers": [],
   "supported_graphs": [
     {"path": "examples/graphs/sine_test.json", "expect": "render"},
     {"path": "examples/piano/minimal_waveguide_A4.json", "expect": "render"},
     {"path": "examples/piano/waveguide_modal_body_A4.json", "expect": "render"},
-    {"path": "examples/piano/nonlinear_hammer_string_contact_A4.json", "expect": "render"}
+    {"path": "examples/piano/nonlinear_hammer_string_contact_A4.json", "expect": "render"},
+    {"path": "examples/piano/string_termination_impedance_A4.json", "expect": "render"}
   ],
   "representation_only_graphs": [
     {"builder": "waveguide_bridge_coupler", "expect": "unsupported_computation"},
-    {"builder": "pasp_bridge_to_soundboard", "expect": "unsupported_computation"},
-    {"builder": "bow_string_contact_topology", "expect": "unsupported_computation"},
-    {"builder": "membrane_impact_topology", "expect": "unsupported_computation"}
+    {"builder": "pasp_bridge_to_soundboard", "expect": "unsupported_computation"}
   ]
 }

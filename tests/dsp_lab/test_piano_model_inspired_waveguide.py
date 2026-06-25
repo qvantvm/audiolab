@@ -18,7 +18,7 @@ def test_model_inspired_waveguide_validates_and_renders() -> None:
 
     graph = load_graph(graph_path)
     block_types = {block.type for block in graph.blocks}
-    assert "WaveguideString" in block_types
+    assert "String1D" in block_types
     assert "StringDetune" in block_types
     assert "HammerVelocityMapper" in block_types
     assert "CalibrationTask" in block_types

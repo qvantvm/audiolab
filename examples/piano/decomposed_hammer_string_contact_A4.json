@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1",
+  "name": "decomposed_hammer_string_contact_A4",
+  "description": "Decomposed PASP hammer-string contact via hammer_string_contact_decomposed T3 solver.",
+  "sample_rate": 48000,
+  "duration": 2.0,
+  "block_size": 64,
+  "inputs": {"midi_note": 69, "velocity": 80, "frequency_hz": 440.0},
+  "blocks": [
+    {"id": "hammer", "type": "PASPHammerFelt", "params": {}},
+    {"id": "string", "type": "PASPStringLine", "params": {}},
+    {"id": "out", "type": "Output", "params": {}}
+  ],
+  "connections": [
+    {"from": "inputs.velocity", "to": "hammer.velocity"},
+    {"from": "inputs.midi_note", "to": "string.midi_note"},
+    {"from": "inputs.frequency_hz", "to": "string.frequency"},
+    {"from": "hammer.force", "to": "string.contact"},
+    {"from": "string.audio", "to": "out.audio"}
+  ],
+  "probes": ["string.audio", "out.audio"]
+}

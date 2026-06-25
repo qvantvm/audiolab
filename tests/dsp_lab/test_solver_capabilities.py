@@ -31,7 +31,7 @@ WAVEGUIDE_GRAPH = ROOT / "examples/piano/minimal_waveguide_A4.json"
 class SimpleWaveguideTestSolver(PhysicalSolver):
     name = "simple_waveguide_test"
     capabilities = SolverCapabilities(
-        allowed_node_types=frozenset({"WaveguideString"}),
+        allowed_node_types=frozenset({"String1D"}),
         max_nodes=1,
         min_nodes=1,
         allowed_topologies=frozenset({"isolated_host"}),
@@ -51,8 +51,8 @@ class SimpleWaveguideTestSolver(PhysicalSolver):
 class GenericPianoNoteTestSolver(PhysicalSolver):
     name = "generic_piano_note_test"
     capabilities = SolverCapabilities(
-        allowed_node_types=frozenset({"HammerExcitation", "WaveguideString", "BodyEQ"}),
-        required_node_types=frozenset({"HammerExcitation", "WaveguideString"}),
+        allowed_node_types=frozenset({"HammerExcitation", "String1D", "BodyEQ"}),
+        required_node_types=frozenset({"HammerExcitation", "String1D"}),
         max_nodes=5,
         min_nodes=2,
         allowed_topologies=frozenset({"isolated_host", "connected_component"}),
@@ -69,7 +69,7 @@ class GenericPianoNoteTestSolver(PhysicalSolver):
 class BroadWaveguideTestSolver(PhysicalSolver):
     name = "broad_waveguide_test"
     capabilities = SolverCapabilities(
-        allowed_node_types=frozenset({"WaveguideString", "PianoWaveguideString", "BodyEQ"}),
+        allowed_node_types=frozenset({"String1D", "PianoWaveguideString", "BodyEQ"}),
         max_nodes=3,
         allowed_topologies=frozenset({"isolated_host"}),
         input_boundary_kinds=frozenset({"signal", "control"}),
@@ -97,7 +97,7 @@ class DuplicateWaveguideTestSolver(PhysicalSolver):
 class MultiTopologyWaveguideTestSolver(PhysicalSolver):
     name = "multi_topology_waveguide_test"
     capabilities = SolverCapabilities(
-        allowed_node_types=frozenset({"WaveguideString"}),
+        allowed_node_types=frozenset({"String1D"}),
         max_nodes=1,
         min_nodes=1,
         allowed_topologies=frozenset({"isolated_host", "connected_component"}),
@@ -170,7 +170,7 @@ def _tiny_physical_subsystem() -> PhysicalSubsystem:
 def test_derive_requirements_for_waveguide_subsystem():
     req = derive_subsystem_requirements(_waveguide_subsystem())
 
-    assert req.node_types == frozenset({"WaveguideString"})
+    assert req.node_types == frozenset({"String1D"})
     assert req.node_count == 1
     assert req.topology == "isolated_host"
     assert req.solver_family == "excited_waveguide_string"
@@ -252,7 +252,7 @@ def test_default_registry_excited_waveguide_still_matches():
 
     assert solver is not None
     assert solver.name == "excited_waveguide_string"
-    assert solver.capabilities.allowed_node_types == frozenset({"WaveguideString"})
+    assert solver.capabilities.allowed_node_types == frozenset({"String1D"})
 
 
 def test_list_capabilities_exposes_declarations():
@@ -260,7 +260,7 @@ def test_list_capabilities_exposes_declarations():
     caps = registry.list_capabilities()
     assert "excited_waveguide_string" in caps
     assert caps["excited_waveguide_string"]["max_nodes"] == 1
-    assert "WaveguideString" in caps["excited_waveguide_string"]["allowed_node_types"]
+    assert "String1D" in caps["excited_waveguide_string"]["allowed_node_types"]
 
 
 def test_compile_error_includes_requirements_snapshot():

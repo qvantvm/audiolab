@@ -100,7 +100,7 @@ python3 scripts/generate_migration_audit.py
 |-------|--------|
 | PASP core | `PASPHammerFelt`, `PASPHammerStringJunction`, `PASPStringLine`, `PASPBridgeTermination`, `PASPSoundboardModal`, `PASPBridgeSoundboard`, `PASPNoteModel`, `PASPBidirectionalHammerString`, `PASPNoteFamilyModel`, `PASPStringGroupNoteModel`, `PASPEventPianoModel`, `PASPPerformanceModel` |
 | Piano-specific (legacy/model) | `HammerExcitation`, `PianoWaveguideString`, `PianoStringBank`, `NonlinearHammer`, `StringModeBank`, … (see table) |
-| Generic waveguide/delay | `WaveguideString`, `FractionalDelay`, `LoopFilter`, `DispersionAllpass`, … |
+| Generic waveguide/delay | `String1D`, `FractionalDelay`, `LoopFilter`, `DispersionAllpass`, … |
 | Modal / body | `ModalResonator`, `SoundboardModalBank`, `ResonanceBank`, … |
 | Analysis / metrics | `ReferenceCompare`, `LogSTFTMetric`, `ValidityGate`, … |
 | Experimental | `PythonCustom`, `EventPassThrough`, `CompareTask`, … |

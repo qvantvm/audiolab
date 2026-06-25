@@ -5,7 +5,7 @@ from dsp_lab.app.inspector import compact_params_for_save, merged_display_params
 
 
 def test_inspector_displays_default_params_missing_from_json():
-    params = merged_display_params("WaveguideString", {"brightness": 0.7})
+    params = merged_display_params("String1D", {"brightness": 0.7})
 
     assert params["brightness"] == 0.7
     assert "decay" in params
@@ -14,14 +14,14 @@ def test_inspector_displays_default_params_missing_from_json():
 
 
 def test_inspector_saves_only_non_default_params():
-    displayed = merged_display_params("WaveguideString", {"brightness": 0.7})
-    compact = compact_params_for_save("WaveguideString", displayed)
+    displayed = merged_display_params("String1D", {"brightness": 0.7})
+    compact = compact_params_for_save("String1D", displayed)
 
     assert compact == {"brightness": 0.7}
 
 
 def test_inspector_preserves_unknown_params():
-    compact = compact_params_for_save("WaveguideString", {"custom_param": 12})
+    compact = compact_params_for_save("String1D", {"custom_param": 12})
 
     assert compact == {"custom_param": 12}
 

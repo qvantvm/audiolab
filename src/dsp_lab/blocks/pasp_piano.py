@@ -135,7 +135,8 @@ class PASPStringLine(_PASPBlockBase):
     description = "Stiff string modal propagation driven by contact excitation."
     physical_role = "stiff string wave propagation (modal approximation)"
     input_ports = {
-        "excitation": Port("excitation", "audio"),
+        "excitation": Port("excitation", "audio", required=False),
+        "contact": Port("contact", "audio", required=False),
         "frequency": Port("frequency", "control"),
         "inharmonicity_B": Port("inharmonicity_B", "control", required=False),
         "midi_note": Port("midi_note", "control", required=False),

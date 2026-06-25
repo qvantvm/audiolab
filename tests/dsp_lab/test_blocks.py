@@ -45,7 +45,7 @@ def test_assert_no_clipping_raises():
 
 
 def test_expanded_registry_has_categories_and_metadata():
-    for block_type in ["ParameterCurve", "Probe", "WaveguideString", "MultiStringUnison", "EventSource"]:
+    for block_type in ["ParameterCurve", "Probe", "String1D", "MultiStringUnison", "EventSource"]:
         assert block_type in BLOCK_REGISTRY
         info = inspect_block(block_type)
         assert info["category"]

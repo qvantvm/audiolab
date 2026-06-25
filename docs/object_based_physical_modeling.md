@@ -75,9 +75,9 @@ Examples: `PHYSICAL_PORT_INCOMPATIBLE`, `PORT_KIND_MISMATCH`, `MISSING_REQUIRED_
 
 ### Valid representation, unsupported computation (compile errors)
 
-When a graph correctly declares physical wiring such as `WaveguideString.bridge ↔ BridgeCoupler.input` but no scattering/bridge solver is registered, `compile_graph()` raises `UnsupportedComputationError` with code `UNSUPPORTED_COMPUTATION` and message prefix **"Valid representation, unsupported computation"**.
+When a graph correctly declares physical wiring such as `String1D.bridge ↔ BridgeCoupler.input` but no scattering/bridge solver is registered, `compile_graph()` raises `UnsupportedComputationError` with code `UNSUPPORTED_COMPUTATION` and message prefix **"Valid representation, unsupported computation"**.
 
-**Do not** rewrite such graphs to `WaveguideString.audio → BridgeCoupler.input` — that is a different topology and will corrupt the research loop. The compiler rejects signal edges routed into bidirectional physical inputs when an ordinary audio output is substituted for a declared physical port (e.g. `string.audio → coupler.input` instead of `string.bridge → coupler.input`).
+**Do not** rewrite such graphs to `String1D.audio → BridgeCoupler.input` — that is a different topology and will corrupt the research loop. The compiler rejects signal edges routed into bidirectional physical inputs when an ordinary audio output is substituted for a declared physical port (e.g. `string.audio → coupler.input` instead of `string.bridge → coupler.input`).
 
 ## Execution tiers
 
@@ -111,12 +111,12 @@ Bidirectional ports pass `validate_graph()` but fail at `compile_graph()` with `
 
 ### Composed piano note (mixed execution)
 
-For `HammerExcitation → WaveguideString → ModalBankBody → Output`:
+For `HammerExcitation → String1D → ModalBankBody → Output`:
 
 | Block | Tier |
 |-------|------|
 | `HammerExcitation` | T1 — signal schedule (not `physical_subsystem_host`) |
-| `WaveguideString` | T2 — isolated-host solver (`ExcitedWaveguideStringSolver`) |
+| `String1D` | T2 — isolated-host solver (`ExcitedWaveguideStringSolver`) |
 | `ModalBankBody` | T2 — isolated-host solver (`ModalBankBodySolver`) |
 | `Output` | T1 — signal schedule |
 
@@ -132,8 +132,8 @@ Reserved capability shape (not implemented):
 
 ```python
 SolverCapabilities(
-    allowed_node_types=frozenset({"HammerExcitation", "WaveguideString", "ModalBankBody"}),
-    required_node_types=frozenset({"HammerExcitation", "WaveguideString", "ModalBankBody"}),
+    allowed_node_types=frozenset({"HammerExcitation", "String1D", "ModalBankBody"}),
+    required_node_types=frozenset({"HammerExcitation", "String1D", "ModalBankBody"}),
     max_nodes=3,
     topology="compound_chain",
 )
@@ -175,10 +175,10 @@ Sympathetic resonance and half-pedal curves are deferred.
 
 | Use case | Graph pattern |
 |----------|---------------|
-| **Calibration / fixed note** | `HammerExcitation → WaveguideString → ModalBankBody` with scalar `inputs` |
+| **Calibration / fixed note** | `HammerExcitation → String1D → ModalBankBody` with scalar `inputs` |
 | **Phrases / overlapping notes** | `PolyphonicWaveguideString → ModalBankBody` with `graph.events` |
 
-`PolyphonicWaveguideString` is solver-hosted (`PolyphonicWaveguideSolver`): internal multi-voice Karplus-Strong with per-voice hammer on `note_on`. A single `WaveguideString` delay line cannot represent multiple simultaneous pitches.
+`PolyphonicWaveguideString` is solver-hosted (`PolyphonicWaveguideSolver`): internal multi-voice Karplus-Strong with per-voice hammer on `note_on`. A single `String1D` delay line cannot represent multiple simultaneous pitches.
 
 `NotePerformanceSchedule` expands events into per-buffer control trajectories (`frequency`, `velocity`, `midi_note`, `sustain_pedal`) for probes and static-chain experiments. Control ports may be **scalars or length-`n_frames` float32 buffers**.
 
@@ -226,7 +226,7 @@ Targets use shorthand `block_id.param_key` (e.g. `string.decay_seconds`, `hammer
 
 | Target | Block type(s) | Axis |
 |--------|---------------|------|
-| `frequency_hz`, `inharmonicity_B`, `decay_seconds`, `brightness` | `WaveguideString`, `PolyphonicWaveguideString`, `StiffStringModal` | note |
+| `frequency_hz`, `inharmonicity_B`, `decay_seconds`, `brightness` | `String1D`, `PolyphonicWaveguideString`, `StiffStringModal` | note |
 | `brightness`, `attack_ms`, `decay_ms` | `HammerExcitation` | velocity |
 | `hammer_brightness`, `hammer_attack_ms`, `hammer_decay_ms` | `PolyphonicWaveguideString` | note / velocity |
 

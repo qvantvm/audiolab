@@ -168,16 +168,14 @@ def generate() -> str:
             category_sections.append(section)
     body = "\n## Blocks by category\n\n" + "\n".join(category_sections).rstrip() + "\n"
 
-    rows_count = len(sections)
-    header_line_count = len(header_without_rows) + rows_count + 1
-    start_lines: dict[str, tuple[int, int]] = {}
-    current = header_line_count + 1
-    for category in sorted(categories):
-        current += 2  # category heading plus blank line
-        for block_type, section in categories[category]:
-            section_lines = section.count("\n") + 1
-            start_lines[block_type] = (current, current + section_lines - 1)
-            current += section_lines + 1
+    placeholder_rows = [
+        f"| {block_type} | {category} | {maturity} | {inputs} | {outputs} | — | — |"
+        for block_type, category, maturity, inputs, outputs, _unused, _section in sorted(
+            sections, key=lambda item: item[0]
+        )
+    ]
+    provisional = "\n".join(header_without_rows + placeholder_rows) + body
+    start_lines = _scan_block_line_ranges(provisional)
 
     rows: list[str] = []
     for block_type, category, maturity, inputs, outputs, _unused, _section in sorted(
@@ -187,6 +185,22 @@ def generate() -> str:
         rows.append(f"| {block_type} | {category} | {maturity} | {inputs} | {outputs} | {start} | {end} |")
 
     return "\n".join(header_without_rows + rows) + body
+
+
+def _scan_block_line_ranges(document: str) -> dict[str, tuple[int, int]]:
+    starts: list[tuple[str, int]] = []
+    lines = document.splitlines()
+    for index, line in enumerate(lines, start=1):
+        if not line.startswith("#### `") or not line.endswith("`"):
+            continue
+        block_type = line.removeprefix("#### `").removesuffix("`")
+        starts.append((block_type, index))
+
+    ranges: dict[str, tuple[int, int]] = {}
+    for pos, (block_type, start) in enumerate(starts):
+        next_start = starts[pos + 1][1] if pos + 1 < len(starts) else len(lines) + 1
+        ranges[block_type] = (start, next_start - 1)
+    return ranges
 
 
 def verify() -> None:

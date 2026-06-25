@@ -229,7 +229,7 @@ def _estimate_excited_waveguide_warnings(
                     node=block_id,
                     param="decay",
                     solver="excited_waveguide_string",
-                    detail="Mapped legacy WaveguideString 'decay' parameter to decay_seconds for solver execution.",
+                    detail="Mapped legacy String1D 'decay' parameter to decay_seconds for solver execution.",
                 )
             )
 
@@ -239,7 +239,7 @@ def _estimate_excited_waveguide_warnings(
 class ExcitedWaveguideStringSolver(PhysicalSolver):
     name = "excited_waveguide_string"
     capabilities = SolverCapabilities(
-        allowed_node_types=frozenset({"WaveguideString"}),
+        allowed_node_types=frozenset({"String1D"}),
         required_node_types=frozenset(),
         min_nodes=1,
         max_nodes=1,

@@ -51,13 +51,13 @@ Compare against samples, optimize parameters, report diagnostics. Existing calib
 
 ## L2 primitive family catalog
 
-Families are metadata tags on existing blocks. No alias blocks (e.g. `String1D` delegating to `WaveguideString`).
+Families are metadata tags on existing blocks. No alias blocks (e.g. `String1D` delegating to `String1D`).
 
 | Family | Block(s) | Maturity | Instruments |
 |--------|----------|----------|-------------|
-| String1D | `WaveguideString`, `PolyphonicWaveguideString`, `PianoWaveguideString`, `PASPStringLine` | prototype / modal_approx | piano, violin, guitar, harp |
-| StiffString | `StiffStringModal`, `WaveguideString` | modal_approx | piano, guitar |
-| DampedString | `StringLossFilter`, `LoopFilter`, `WaveguideString` | dsp / prototype | all strings |
+| String1D | `String1D`, `PolyphonicWaveguideString`, `PianoWaveguideString`, `PASPStringLine` | prototype / modal_approx | piano, violin, guitar, harp |
+| StiffString | `StiffStringModal`, `String1D` | modal_approx | piano, guitar |
+| DampedString | `StringLossFilter`, `LoopFilter`, `String1D` | dsp / prototype | all strings |
 | HammerStringContact | `PASPBidirectionalHammerString` + `nonlinear_hammer_string_contact` | production_solver | piano, dulcimer |
 | BowStringContact | `BowStringContact` | representation_only | violin, cello |
 | PluckExcitation | `PluckExcitation`, `HammerExcitation` | representation_only / prototype | guitar, harp |
@@ -69,7 +69,7 @@ Families are metadata tags on existing blocks. No alias blocks (e.g. `String1D` 
 | LipReed / SingleReed / JetDrive | `LipReed`, `SingleReed`, `JetDrive` | representation_only | brass, clarinet, flute |
 | RadiationImpedance | `RadiationImpedance`, `CabinetRadiation` | representation_only / dsp | all acoustic |
 | CouplingJunction | `BridgeCoupler`, `ScatteringJunction`, `StringBridgeCoupler` | representation_only | all physical solvers |
-| ImpedanceBoundary | `ImpedanceBoundary` | representation_only | bores, bodies |
+| ImpedanceBoundary | `ImpedanceBoundary`, `StringTerminationImpedance` | representation_only / prototype | bores, bodies, strings |
 
 ## L3 planned coupled solvers
 
@@ -78,8 +78,9 @@ Not in the default solver registry. Each requires a real computation path and te
 | Solver ID | Target blocks | Instrument | Notes |
 |-----------|---------------|------------|-------|
 | `nonlinear_hammer_string_contact` | `PASPBidirectionalHammerString` | piano | **Supported** — composite-host L3 physics |
+| `string_termination_impedance` | `StringTerminationImpedance` | strings | **Supported** — hosted terminal impedance boundary |
 | `hammer_string_contact_decomposed` | `PASPHammerFelt`, `PASPStringLine` | piano | Execution T3 decomposed contact |
-| `bow_string_contact` | `BowStringContact`, `WaveguideString` | violin | Stick-slip bow friction |
+| `bow_string_contact` | `BowStringContact`, `String1D` | violin | Stick-slip bow friction |
 | `membrane_shell_modal` | `ImpactContact`, `CircularMembraneModes` | drums | Modal approximation, not FDTD membrane |
 | `lip_reed_bore_coupled` | `LipReed`, `ConicalBore` | brass | Self-oscillating feedback system |
 | `scattering_junction` | `ScatteringJunction`, bridge adaptors | all | Wave/scattering junctions |
@@ -90,7 +91,7 @@ These graphs **validate** but **compile** with `UNSUPPORTED_COMPUTATION`:
 
 - `examples/violin/bow_string_representation.json` — bow contact ↔ string bridge
 - `examples/drums/membrane_impact_representation.json` — impact → membrane modes
-- `WaveguideString.bridge ↔ BridgeCoupler.input` (existing contract test)
+- `String1D.bridge ↔ BridgeCoupler.input` (existing contract test)
 
 ## Anti-patterns
 

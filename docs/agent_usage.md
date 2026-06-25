@@ -127,8 +127,8 @@ Full status: [roadmap.md](roadmap.md). Machine-readable contract: `tests/fixture
 
 **Representation only (validate passes, compile fails with `UNSUPPORTED_COMPUTATION`):**
 
-- Bidirectional bridge wiring (`WaveguideString.bridge ↔ BridgeCoupler.input`, PASP `bridge` / `bridge_input`)
-- Bow-string contact (`BowStringContact` ↔ `WaveguideString.bridge`) — `examples/violin/bow_string_representation.json`
+- Bidirectional bridge wiring (`String1D.bridge ↔ BridgeCoupler.input`, PASP `bridge` / `bridge_input`)
+- Bow-string contact (`BowStringContact` ↔ `String1D.bridge`) — `examples/violin/bow_string_representation.json`
 - Drum impact → membrane (`ImpactContact` → `CircularMembraneModes`) — `examples/drums/membrane_impact_representation.json`
 - Signal substitute for physical ports (`string.audio → BridgeCoupler.input` instead of `string.bridge`)
 
@@ -158,7 +158,7 @@ These indicate **valid representation, unsupported computation** — the graph t
 |------|---------|--------------|
 | `UNSUPPORTED_COMPUTATION` | Physical or wave-scattering wiring with no matching `PhysicalSolver`, or signal substitution for a bidirectional physical port | Do not rewrite to a signal chain; pick a supported topology or implement/register a solver |
 
-Example: `WaveguideString.bridge → BridgeCoupler.input` passes `validate_graph()` but `compile_graph()` raises `UnsupportedComputationError` until a bridge/scattering solver exists.
+Example: `String1D.bridge → BridgeCoupler.input` passes `validate_graph()` but `compile_graph()` raises `UnsupportedComputationError` until a bridge/scattering solver exists.
 
 ## CLI equivalents
 

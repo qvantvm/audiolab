@@ -33,7 +33,7 @@ def _waveguide_bridge_graph(*, include_audio_output: bool = False) -> GraphSpec:
             {"id": "excitation", "type": "NoiseBurst", "params": {"amplitude": 0.8, "decay_ms": 3.0, "seed": 0}},
             {
                 "id": "string",
-                "type": "WaveguideString",
+                "type": "String1D",
                 "params": {
                     "decay_seconds": 4.0,
                     "brightness": 0.55,

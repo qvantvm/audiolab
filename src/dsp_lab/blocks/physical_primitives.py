@@ -26,7 +26,8 @@ class _RepresentationPrimitive(DSPBlock):
 @register_block
 class BowStringContact(_RepresentationPrimitive):
     block_type = "BowStringContact"
-    description = "Nonlinear bow-string stick-slip contact (representation only)."
+    description = "Nonlinear bow-string stick-slip contact."
+    computation_status = "working_prototype"
     physical_role = "bow friction stick-slip contact at string interface"
     input_ports = {
         "bow_force": Port("bow_force", "audio", required=False),
@@ -64,7 +65,8 @@ class PluckExcitation(_RepresentationPrimitive):
 @register_block
 class ImpactContact(_RepresentationPrimitive):
     block_type = "ImpactContact"
-    description = "Mallet-head impact against a membrane or plate surface (representation only)."
+    description = "Mallet-head impact against a membrane or plate surface."
+    computation_status = "modal_approximation"
     physical_role = "nonlinear impact contact between mallet and surface"
     input_ports = {
         "mallet_velocity": Port("mallet_velocity", "audio", required=False),
@@ -87,7 +89,8 @@ class ImpactContact(_RepresentationPrimitive):
 @register_block
 class CircularMembraneModes(_RepresentationPrimitive):
     block_type = "CircularMembraneModes"
-    description = "Circular membrane modal synthesis bank (representation only; modal approximation target)."
+    description = "Circular membrane modal synthesis bank (modal approximation target)."
+    computation_status = "modal_approximation"
     physical_role = "circular membrane modal state and radiation"
 
     @classmethod
@@ -152,7 +155,8 @@ class CylindricalBore(_RepresentationPrimitive):
 @register_block
 class ConicalBore(_RepresentationPrimitive):
     block_type = "ConicalBore"
-    description = "Conical acoustic bore waveguide segment (representation only)."
+    description = "Conical acoustic bore waveguide segment."
+    computation_status = "working_prototype"
     physical_role = "conical bore traveling-wave propagation with flare"
     input_ports = {
         "wave_left": Port("wave_left", "audio", required=False),
@@ -173,7 +177,8 @@ class ConicalBore(_RepresentationPrimitive):
 @register_block
 class LipReed(_RepresentationPrimitive):
     block_type = "LipReed"
-    description = "Brass lip-reed nonlinear oscillator coupled to bore reflection (representation only)."
+    description = "Brass lip-reed nonlinear oscillator coupled to bore reflection."
+    computation_status = "working_prototype"
     physical_role = "lip reed self-oscillation and bore feedback"
     input_ports = {
         "mouth_pressure": Port("mouth_pressure", "audio", required=False),
@@ -182,11 +187,18 @@ class LipReed(_RepresentationPrimitive):
     output_ports = {
         "volume_flow": Port("volume_flow", "audio", required=False),
         "reed_state": Port("reed_state", "audio", required=False),
+        "bore_reflection": Port("bore_reflection", "audio", required=False),
+        "audio": Port("audio", "audio", required=False),
     }
 
     def process(self, inputs: dict[str, Any], n_frames: int) -> dict[str, Any]:
         silence = np.zeros(n_frames, dtype=np.float32)
-        return {"volume_flow": silence, "reed_state": silence}
+        return {
+            "volume_flow": silence,
+            "reed_state": silence,
+            "bore_reflection": self._passthrough_audio(inputs, n_frames, "bore_reflection"),
+            "audio": silence,
+        }
 
 
 @register_block
@@ -278,6 +290,57 @@ class ImpedanceBoundary(_RepresentationPrimitive):
 
     def process(self, inputs: dict[str, Any], n_frames: int) -> dict[str, Any]:
         return {"reflected": np.zeros(n_frames, dtype=np.float32)}
+
+
+@register_block
+class StringTerminationImpedance(DSPBlock):
+    block_type = "StringTerminationImpedance"
+    category = "Physical Primitives"
+    description = "Solver-hosted string with physical termination impedance boundary."
+    physical_role = "string termination impedance boundary with reflection and absorption"
+    interpretability_level = "physical"
+    computation_status = "working_prototype"
+    input_ports = {
+        "excitation": Port("excitation", "audio"),
+        "frequency": Port("frequency", "control"),
+    }
+    output_ports = {
+        "audio": Port("audio", "audio"),
+        "reflected": Port("reflected", "audio"),
+        "absorbed": Port("absorbed", "audio"),
+    }
+
+    @classmethod
+    def default_params(cls) -> dict[str, object]:
+        return {
+            "frequency_hz": 440.0,
+            "decay_seconds": 4.0,
+            "brightness": 0.55,
+            "gain": 1.0,
+            "termination_impedance": 4200.0,
+            "reference_impedance": 4200.0,
+            "loss_low": 0.18,
+            "loss_high": 0.35,
+            "frequency_tilt": 0.35,
+        }
+
+    @classmethod
+    def param_schema(cls) -> dict[str, dict[str, object]]:
+        return {
+            "frequency_hz": {"type": "float", "default": 440.0, "unit": "Hz"},
+            "decay_seconds": {"type": "float", "default": 4.0, "unit": "s"},
+            "brightness": {"type": "float", "default": 0.55, "min": 0.0, "max": 1.0},
+            "gain": {"type": "float", "default": 1.0},
+            "termination_impedance": {"type": "float", "default": 4200.0, "unit": "N*s/m"},
+            "reference_impedance": {"type": "float", "default": 4200.0, "unit": "N*s/m"},
+            "loss_low": {"type": "float", "default": 0.18, "min": 0.0, "max": 1.0},
+            "loss_high": {"type": "float", "default": 0.35, "min": 0.0, "max": 1.0},
+            "frequency_tilt": {"type": "float", "default": 0.35, "min": 0.0, "max": 1.0},
+        }
+
+    def process(self, inputs: dict[str, Any], n_frames: int) -> dict[str, Any]:
+        silence = np.zeros(n_frames, dtype=np.float32)
+        return {"audio": silence, "reflected": silence, "absorbed": silence}
 
 
 @register_block
