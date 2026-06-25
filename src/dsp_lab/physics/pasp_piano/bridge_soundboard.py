@@ -17,6 +17,9 @@ class BodyDiagnostics:
     low_band_energy: float = 0.0
     mid_band_energy: float = 0.0
     high_band_energy: float = 0.0
+    modal_participation_energy: float = 0.0
+    radiated_energy: float = 0.0
+    mic_projection_energy: float = 0.0
     modal_peak_energies: list[float] = field(default_factory=list)
 
     def summary_dict(self) -> dict[str, float | list[float]]:
@@ -26,6 +29,9 @@ class BodyDiagnostics:
             "low_band_energy": self.low_band_energy,
             "mid_band_energy": self.mid_band_energy,
             "high_band_energy": self.high_band_energy,
+            "modal_participation_energy": self.modal_participation_energy,
+            "radiated_energy": self.radiated_energy,
+            "mic_projection_energy": self.mic_projection_energy,
             "modal_peak_energies": list(self.modal_peak_energies),
         }
 
@@ -73,11 +79,14 @@ class PASPBridgeSoundboardModel:
         radiation_hz = float(p.get("radiation_lowpass_hz", 8000.0))
 
         imp_scale = min(max(bridge_imp / 4200.0, 0.1), 10.0)
-        cutoff_low = max(sample_rate * 0.45 * (1.0 - 0.65 * loss_low) * imp_scale, 400.0)
+        cutoff_low = min(
+            max(sample_rate * 0.45 * (1.0 - 0.65 * loss_low) * imp_scale, 400.0),
+            sample_rate * 0.45,
+        )
         sos_low = signal.butter(2, cutoff_low, btype="lowpass", fs=sample_rate, output="sos")
         low = signal.sosfilt(sos_low, audio)
 
-        high_cut = 4000.0 + 8000.0 * (1.0 - loss_high)
+        high_cut = min(4000.0 + 8000.0 * (1.0 - loss_high), sample_rate * 0.45)
         sos_high = signal.butter(1, high_cut, btype="highpass", fs=sample_rate, output="sos")
         high = signal.sosfilt(sos_high, audio)
 
@@ -108,7 +117,8 @@ class PASPBridgeSoundboardModel:
         rad_hz = min(max(radiation_hz, 500.0), sample_rate * 0.45)
         rad_sos = signal.butter(1, rad_hz, btype="lowpass", fs=sample_rate, output="sos")
         radiated = signal.sosfilt(rad_sos, body)
-        out = (body_mix * radiated + (1.0 - body_mix) * bridged).astype(np.float32)
+        mic_projection = body_mix * radiated + (1.0 - body_mix) * bridged
+        out = mic_projection.astype(np.float32)
         out = np.nan_to_num(out).astype(np.float32)
 
         diag = BodyDiagnostics(
@@ -117,6 +127,9 @@ class PASPBridgeSoundboardModel:
             low_band_energy=_band_energy(out, sample_rate, 80.0, 400.0),
             mid_band_energy=_band_energy(out, sample_rate, 400.0, 2000.0),
             high_band_energy=_band_energy(out, sample_rate, 2000.0, min(8000.0, sample_rate * 0.45)),
+            modal_participation_energy=_rms(wet),
+            radiated_energy=_rms(radiated),
+            mic_projection_energy=_rms(mic_projection),
             modal_peak_energies=modal_energies,
         )
         return out, diag

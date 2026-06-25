@@ -1,0 +1,47 @@
+{
+  "schema_version": "0.1",
+  "name": "piano_lifecycle_damper_pedal",
+  "description": "Hosted event-driven PASP lifecycle note with note-off, sustain pedal, damper, and re-strike diagnostics.",
+  "sample_rate": 24000,
+  "duration": 0.65,
+  "block_size": 64,
+  "blocks": [
+    {
+      "id": "piano",
+      "type": "PASPEventPianoModel",
+      "params": {
+        "events": [
+          {"time_s": 0.0, "type": "pedal_down", "pedal": "sustain"},
+          {"time_s": 0.02, "type": "note_on", "note": 60, "velocity_norm": 0.62},
+          {"time_s": 0.18, "type": "note_off", "note": 60},
+          {"time_s": 0.28, "type": "note_on", "note": 60, "velocity_norm": 0.52},
+          {"time_s": 0.42, "type": "note_off", "note": 60},
+          {"time_s": 0.52, "type": "pedal_up", "pedal": "sustain"}
+        ],
+        "use_string_groups": true,
+        "string_count": 3,
+        "num_modes": 6,
+        "oversample": 1,
+        "max_polyphony": 4,
+        "damper_enabled": true,
+        "damper_engage_delay_s": 0.01,
+        "damper_ramp_time_s": 0.04,
+        "pedal_lift_ramp_s": 0.02,
+        "pedal_release_ramp_s": 0.02,
+        "hammer_rest_position_m": 0.002,
+        "body_mix": 0.45
+      }
+    },
+    {"id": "out", "type": "Output", "params": {"peak_normalize_db": -1.0}}
+  ],
+  "connections": [
+    {"from": "piano.audio", "to": "out.audio"}
+  ],
+  "probes": ["piano.bridge_audio", "out.audio"],
+  "ui": {
+    "nodes": {
+      "piano": {"x": 180, "y": 160},
+      "out": {"x": 560, "y": 160}
+    }
+  }
+}

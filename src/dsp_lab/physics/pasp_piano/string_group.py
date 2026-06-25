@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from dsp_lab.physics.pasp_piano.bridge_admittance import BridgeAdmittanceModel
 from dsp_lab.physics.pasp_piano.bridge_soundboard import BodyDiagnostics, PASPBridgeSoundboardModel
 from dsp_lab.physics.pasp_piano.contact import (
     ContactDiagnostics,
@@ -46,6 +47,12 @@ class StringGroupDiagnostics:
     sympathetic_energy_ratio: float = 0.0
     string_group_output_energy: float = 0.0
     bridge_sum_energy: float = 0.0
+    bridge_admittance: float = 0.0
+    bridge_loading_loss: float = 0.0
+    string_to_bridge_energy: float = 0.0
+    bridge_to_body_energy: float = 0.0
+    energy_balance_error: float = 0.0
+    cross_string_transfer_energy: float = 0.0
 
     def summary_dict(self) -> dict[str, object]:
         return {
@@ -58,6 +65,12 @@ class StringGroupDiagnostics:
             "raw_string_energy_per_string": list(self.raw_string_energy_per_string),
             "summed_bridge_energy": self.summed_bridge_energy,
             "bridge_sum_energy": self.bridge_sum_energy,
+            "bridge_admittance": self.bridge_admittance,
+            "bridge_loading_loss": self.bridge_loading_loss,
+            "string_to_bridge_energy": self.string_to_bridge_energy,
+            "bridge_to_body_energy": self.bridge_to_body_energy,
+            "energy_balance_error": self.energy_balance_error,
+            "cross_string_transfer_energy": self.cross_string_transfer_energy,
             "post_body_energy": self.post_body_energy,
             "string_group_output_energy": self.string_group_output_energy,
             "contact_duration_ms": self.contact_duration_ms,
@@ -116,6 +129,8 @@ class BidirectionalStringGroupModel:
         oversample = max(1, min(int(p.get("oversample", 2)), 4))
         output_gain = float(p.get("output_gain", 1.0))
         num_modes = int(p.get("num_modes", p.get("partials", 32)))
+        bridge_admittance = BridgeAdmittanceModel(p)
+        coupling_strength = float(np.clip(float(p.get("unison_bridge_coupling", 0.04)), 0.0, 0.25))
 
         strings: list[ModalStringState] = []
         strike_couplings: list[float] = []
@@ -152,6 +167,7 @@ class BidirectionalStringGroupModel:
         recorder = ContactDiagnosticsRecorder(n_frames)
         bridge_buf = np.zeros(n_frames, dtype=np.float64)
         per_string_bufs = [np.zeros(n_frames, dtype=np.float64) for _ in range(string_count)]
+        cross_transfer = np.zeros(n_frames, dtype=np.float64)
 
         dt = 1.0 / sample_rate
         dt_sub = dt / oversample
@@ -177,9 +193,22 @@ class BidirectionalStringGroupModel:
                 hammer.v += a_h * dt_sub
                 hammer.x += hammer.v * dt_sub
 
+                bridge_velocities = [string.bridge_signal() for string in strings]
+                shared_bridge_velocity = sum(
+                    bridge_couplings[s_idx] * bridge_velocities[s_idx]
+                    for s_idx in range(string_count)
+                ) / max(sum(bridge_couplings), 1e-9)
+
                 for s_idx, string in enumerate(strings):
                     w = strike_couplings[s_idx] / strike_sum
-                    string.step(f_contact * w, dt_sub)
+                    own_bridge = bridge_velocities[s_idx]
+                    coupling_force = coupling_strength * (shared_bridge_velocity - own_bridge)
+                    cross_transfer[i] += abs(coupling_force)
+                    string.step(
+                        f_contact * w + coupling_force,
+                        dt_sub,
+                        bridge_admittance.load_multiplier(),
+                    )
 
                 f_sample = f_contact
 
@@ -208,7 +237,8 @@ class BidirectionalStringGroupModel:
         if not np.all(np.isfinite(bridge_buf)):
             raise ValueError("String group simulation produced non-finite bridge values")
 
-        raw = (bridge_buf * output_gain).astype(np.float32)
+        loaded_bridge, bridge_diag = bridge_admittance.process_bridge_buffer(bridge_buf)
+        raw = (loaded_bridge * output_gain).astype(np.float32)
         body_params = dict(p)
         body_params["_base_f0_hz"] = base_f0
         body_params["midi_note"] = midi_note if midi_note is not None else 60.0
@@ -235,6 +265,12 @@ class BidirectionalStringGroupModel:
             raw_string_energy_per_string=string_energies,
             summed_bridge_energy=_rms(bridge_buf),
             bridge_sum_energy=_rms(bridge_buf),
+            bridge_admittance=bridge_diag.bridge_admittance,
+            bridge_loading_loss=bridge_diag.bridge_loading_loss,
+            string_to_bridge_energy=bridge_diag.string_to_bridge_energy,
+            bridge_to_body_energy=bridge_diag.bridge_to_body_energy,
+            energy_balance_error=bridge_diag.energy_balance_error,
+            cross_string_transfer_energy=_rms(cross_transfer),
             post_body_energy=_rms(audio),
             string_group_output_energy=_rms(audio),
             contact_duration_ms=contact_diag.contact_duration_ms,

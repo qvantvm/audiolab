@@ -7,6 +7,7 @@ from dsp_lab.graph.physical.solvers.bell_modal_body import BellModalBodySolver
 from dsp_lab.graph.physical.solvers.excited_waveguide_string import ExcitedWaveguideStringSolver
 from dsp_lab.graph.physical.solvers.modal_bank_body import ModalBankBodySolver
 from dsp_lab.graph.physical.solvers.nonlinear_hammer_string_contact import NonlinearHammerStringContactSolver
+from dsp_lab.graph.physical.solvers.pasp_lifecycle_piano import PASPLifecyclePianoSolver
 from dsp_lab.graph.physical.solvers.polyphonic_waveguide import PolyphonicWaveguideSolver
 from dsp_lab.graph.physical.solvers.struck_bar_body import StruckBarBodySolver
 
@@ -25,6 +26,8 @@ def register_builtin_solvers(registry: SolverRegistry | None = None) -> None:
         registry.register(StruckBarBodySolver())
     if "nonlinear_hammer_string_contact" not in registry.list_solvers():
         registry.register(NonlinearHammerStringContactSolver())
+    if "pasp_lifecycle_piano" not in registry.list_solvers():
+        registry.register(PASPLifecyclePianoSolver())
 
 
 register_builtin_solvers()

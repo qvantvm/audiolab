@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 
+from dsp_lab.physics.pasp_piano.bridge_admittance import (
+    BridgeAdmittanceDiagnostics,
+    BridgeAdmittanceModel,
+)
 from dsp_lab.physics.pasp_piano.bridge_soundboard import BodyDiagnostics, PASPBridgeSoundboardModel
 from dsp_lab.physics.pasp_piano.contact import (
     ContactDiagnostics,
@@ -22,6 +26,9 @@ class BidirectionalHammerStringModel:
     Sign convention: x_h increases toward string; compression = x_h - x_s - felt_gap_m.
     Hammer receives -F_contact; string receives +F_contact at strike point.
     """
+
+    def __init__(self) -> None:
+        self.last_bridge_admittance_diagnostics: BridgeAdmittanceDiagnostics | None = None
 
     def render(
         self,
@@ -50,6 +57,7 @@ class BidirectionalHammerStringModel:
         rest_gap = max(float(p.get("hammer_rest_position_m", 0.008)), 0.0)
         oversample = max(1, min(int(p.get("oversample", 2)), 4))
         output_gain = float(p.get("output_gain", 1.0))
+        bridge_admittance = BridgeAdmittanceModel(p)
 
         string = ModalStringState(
             sample_rate=sample_rate,
@@ -82,7 +90,7 @@ class BidirectionalHammerStringModel:
                 hammer.v += a_h * dt_sub
                 hammer.x += hammer.v * dt_sub
 
-                string.step(f_contact, dt_sub)
+                string.step(f_contact, dt_sub, bridge_admittance.load_multiplier())
                 f_sample = f_contact
 
             recorder.record(
@@ -98,7 +106,9 @@ class BidirectionalHammerStringModel:
         if not np.all(np.isfinite(bridge_buf)):
             raise ValueError("Bidirectional hammer-string simulation produced non-finite values")
 
-        raw = (bridge_buf * output_gain).astype(np.float32)
+        loaded_bridge, bridge_diag = bridge_admittance.process_bridge_buffer(bridge_buf)
+        self.last_bridge_admittance_diagnostics = bridge_diag
+        raw = (loaded_bridge * output_gain).astype(np.float32)
         body_model = PASPBridgeSoundboardModel()
         audio, body_diag = body_model.process(raw, sample_rate, p)
 

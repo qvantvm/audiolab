@@ -251,9 +251,9 @@ BLOCK_OVERRIDES: dict[str, str] = {
     ),
     "PASPBidirectionalHammerString": _section(
         what="A solver-hosted PASP note block configured around nonlinear bidirectional hammer-string contact.",
-        why="It targets the most important nonlinear part of piano attack: hammer compression, felt force, rebound, and string displacement at the strike point.",
-        how="Drive it with MIDI note, velocity, and optional frequency. The `nonlinear_hammer_string_contact` solver owns contact rendering and exposes force, compression, hammer velocity, string displacement, bridge audio, and diagnostics.",
-        caveat="This is the first hosted contact solver path, not a decomposed T3 bridge/scattering solver or full fused piano solve.",
+        why="It targets the most important nonlinear part of piano attack and now includes reduced bridge loading, optional unison exchange, and body/radiation diagnostics in the hosted solver loop.",
+        how="Drive it with MIDI note, velocity, and optional frequency. The `nonlinear_hammer_string_contact` solver exposes force, compression, hammer velocity, string displacement, bridge audio, bridge admittance/loading, per-string energies when enabled, and body/radiation energy diagnostics.",
+        caveat="This computes more than a signal chain, but it is still a hosted composite path, not a decomposed T3 bridge/scattering solver or full fused piano solve.",
     ),
     "PASPNoteFamilyModel": _section(
         what="A PASP note model parameterized over a local note family rather than one isolated note.",
@@ -269,9 +269,9 @@ BLOCK_OVERRIDES: dict[str, str] = {
     ),
     "PASPEventPianoModel": _section(
         what="An event-driven PASP note renderer with lifecycle, damper, and sustain-pedal handling.",
-        why="It connects piano note models to performance events, which is necessary for release and pedal experiments.",
-        how="Feed normalized events and compare diagnostics for note_on, note_off, pedal_down, and pedal_up behavior.",
-        caveat="Lifecycle behavior can sound plausible while still failing pedal or release metrics.",
+        why="It connects piano note models to performance events, which is necessary for release, pedal, re-strike, and continuity experiments.",
+        how="Feed normalized events and use the `pasp_lifecycle_piano` hosted solver to inspect note_on, note_off, pedal_down, pedal_up, damper, active-voice, and per-note diagnostics.",
+        caveat="Lifecycle behavior can sound plausible while still failing phrase, pedal, or release metrics; treat it as reduced-order behavior until dataset tests support it.",
     ),
     "PASPPerformanceModel": _section(
         what="A phrase-level PASP piano block with multi-voice scheduling and shared body behavior.",

@@ -12,8 +12,10 @@ from dsp_lab.graph.physical.events import TimedEvent
 from dsp_lab.graph.physical.solver import CompiledPhysicalSubsystem, PhysicalSolver, SolverDeclarations
 from dsp_lab.graph.physical.subsystem import BoundaryPort, PhysicalSubsystem
 from dsp_lab.physics.pasp_piano.bidirectional import BidirectionalHammerStringModel
+from dsp_lab.physics.pasp_piano.bridge_admittance import BridgeAdmittanceDiagnostics
 from dsp_lab.physics.pasp_piano.bridge_soundboard import BodyDiagnostics
 from dsp_lab.physics.pasp_piano.contact import ContactDiagnostics
+from dsp_lab.physics.pasp_piano.string_group import BidirectionalStringGroupModel, StringGroupDiagnostics
 
 
 @dataclass(frozen=True)
@@ -54,20 +56,29 @@ class CompiledNonlinearHammerStringContact(CompiledPhysicalSubsystem):
         )
         self.config = config
         self._model = BidirectionalHammerStringModel()
+        self._string_group_model = BidirectionalStringGroupModel()
         self._last_contact: ContactDiagnostics | None = None
         self._last_body: BodyDiagnostics | None = None
+        self._last_bridge_admittance: BridgeAdmittanceDiagnostics | None = None
+        self._last_string_group: StringGroupDiagnostics | None = None
         self._last_bridge_audio: np.ndarray = np.zeros(0, dtype=np.float32)
         self._last_audio: np.ndarray = np.zeros(0, dtype=np.float32)
+        self._last_per_string_audio: list[np.ndarray] = []
 
     def reset(self) -> None:
         self._last_contact = None
         self._last_body = None
+        self._last_bridge_admittance = None
+        self._last_string_group = None
         self._last_bridge_audio = np.zeros(0, dtype=np.float32)
         self._last_audio = np.zeros(0, dtype=np.float32)
+        self._last_per_string_audio = []
 
     def get_state_snapshot(self) -> dict[str, Any]:
         contact = self._last_contact.summary_dict() if self._last_contact is not None else {}
         body = self._last_body.summary_dict() if self._last_body is not None else {}
+        bridge = self._last_bridge_admittance.summary_dict() if self._last_bridge_admittance is not None else {}
+        string_group = self._last_string_group.summary_dict() if self._last_string_group is not None else {}
         bridge_energy = _rms(self._last_bridge_audio)
         audio_energy = _rms(self._last_audio)
         return {
@@ -78,6 +89,8 @@ class CompiledNonlinearHammerStringContact(CompiledPhysicalSubsystem):
             "frequency_hz": self.config.frequency_hz,
             "contact": contact,
             "body": body,
+            "bridge_admittance": bridge,
+            "string_group": string_group,
             "energy": {
                 "bridge_audio_rms": bridge_energy,
                 "output_audio_rms": audio_energy,
@@ -91,6 +104,11 @@ class CompiledNonlinearHammerStringContact(CompiledPhysicalSubsystem):
                 "hammer_rebound_velocity_m_s": float(contact.get("hammer_rebound_velocity_m_s", 0.0)) if contact else 0.0,
                 "bridge_audio_rms": bridge_energy,
                 "output_audio_rms": audio_energy,
+                "bridge_admittance": float(bridge.get("bridge_admittance", 0.0)) if bridge else 0.0,
+                "bridge_loading_loss": float(bridge.get("bridge_loading_loss", 0.0)) if bridge else 0.0,
+                "string_to_bridge_energy": float(bridge.get("string_to_bridge_energy", 0.0)) if bridge else 0.0,
+                "bridge_to_body_energy": float(bridge.get("bridge_to_body_energy", 0.0)) if bridge else 0.0,
+                "cross_string_transfer_energy": float(string_group.get("cross_string_transfer_energy", 0.0)) if string_group else 0.0,
             },
         }
 
@@ -113,14 +131,30 @@ class CompiledNonlinearHammerStringContact(CompiledPhysicalSubsystem):
             else None
         )
         velocity_norm = _velocity_norm(velocity)
-        audio, contact, body, bridge_audio = self._model.render(
-            num_frames,
-            self.sample_rate,
-            velocity_norm,
-            self.config.params,
-            frequency_hz=frequency,
-            midi_note=midi_note,
-        )
+        if _uses_string_group(self.config.params):
+            audio, contact, body, bridge_audio, string_group, per_string = self._string_group_model.render(
+                num_frames,
+                self.sample_rate,
+                velocity_norm,
+                self.config.params,
+                frequency_hz=frequency,
+                midi_note=midi_note,
+            )
+            self._last_string_group = string_group
+            self._last_bridge_admittance = _bridge_diag_from_string_group(string_group)
+            self._last_per_string_audio = per_string
+        else:
+            audio, contact, body, bridge_audio = self._model.render(
+                num_frames,
+                self.sample_rate,
+                velocity_norm,
+                self.config.params,
+                frequency_hz=frequency,
+                midi_note=midi_note,
+            )
+            self._last_string_group = None
+            self._last_bridge_admittance = self._model.last_bridge_admittance_diagnostics
+            self._last_per_string_audio = []
         self._last_contact = contact
         self._last_body = body
         self._last_bridge_audio = np.asarray(bridge_audio, dtype=np.float32)
@@ -207,6 +241,23 @@ def _velocity_norm(velocity: float | None) -> float:
         return 0.6
     value = float(velocity)
     return float(np.clip(value / 127.0 if value > 1.0 else value, 0.0, 1.0))
+
+
+def _uses_string_group(params: Mapping[str, Any]) -> bool:
+    if bool(params.get("use_string_groups", False)):
+        return True
+    string_count = params.get("string_count")
+    return string_count is not None and int(string_count) > 1
+
+
+def _bridge_diag_from_string_group(group: StringGroupDiagnostics) -> BridgeAdmittanceDiagnostics:
+    return BridgeAdmittanceDiagnostics(
+        bridge_admittance=group.bridge_admittance,
+        bridge_loading_loss=group.bridge_loading_loss,
+        string_to_bridge_energy=group.string_to_bridge_energy,
+        bridge_to_body_energy=group.bridge_to_body_energy,
+        energy_balance_error=group.energy_balance_error,
+    )
 
 
 def _fit_signal(audio: np.ndarray, num_frames: int) -> np.ndarray:

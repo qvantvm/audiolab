@@ -214,6 +214,10 @@ BLOCK_PHYSICAL_SUBSYSTEM_METADATA: dict[str, dict[str, Any]] = {
         "solver_family": "nonlinear_hammer_string_contact",
         "physical_subsystem_host": True,
     },
+    "PASPEventPianoModel": {
+        "solver_family": "pasp_lifecycle_piano",
+        "physical_subsystem_host": True,
+    },
     "PolyphonicWaveguideString": {
         "solver_family": "polyphonic_excited_waveguide",
         "physical_subsystem_host": True,

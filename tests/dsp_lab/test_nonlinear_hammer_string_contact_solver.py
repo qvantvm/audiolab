@@ -15,6 +15,9 @@ from dsp_lab.graph.validator import validate_graph
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTACT_GRAPH = ROOT / "examples/piano/nonlinear_hammer_string_contact_A4.json"
+BRIDGE_GRAPH = ROOT / "examples/piano/bridge_admittance_contact_A4.json"
+UNISON_GRAPH = ROOT / "examples/piano/unison_hammer_string_contact_C4.json"
+LIFECYCLE_GRAPH = ROOT / "examples/piano/piano_lifecycle_damper_pedal.json"
 
 
 def _render_with_velocity(velocity: float):
@@ -103,3 +106,67 @@ def test_velocity_changes_peak_force_and_output_energy():
     assert hard_state["diagnostics"]["peak_contact_force_N"] > soft_state["diagnostics"]["peak_contact_force_N"]
     assert hard_state["energy"]["output_audio_rms"] > soft_state["energy"]["output_audio_rms"]
     assert hard_state["energy"]["bridge_audio_rms"] > soft_state["energy"]["bridge_audio_rms"]
+
+
+def test_bridge_impedance_changes_bridge_transfer_before_body_rendering():
+    low_impedance = load_graph(BRIDGE_GRAPH)
+    high_impedance = load_graph(BRIDGE_GRAPH)
+    for graph, impedance in ((low_impedance, 2500.0), (high_impedance, 9000.0)):
+        for block in graph.blocks:
+            if block.id == "note":
+                block.params["bridge_impedance"] = impedance
+
+    low_result = render_graph(low_impedance, collect_block_states=True)
+    high_result = render_graph(high_impedance, collect_block_states=True)
+
+    low_state = low_result.physical_subsystem_states["isolated_host_note"]
+    high_state = high_result.physical_subsystem_states["isolated_host_note"]
+    assert low_state["bridge_admittance"]["bridge_admittance"] > high_state["bridge_admittance"]["bridge_admittance"]
+    assert low_state["diagnostics"]["bridge_to_body_energy"] != high_state["diagnostics"]["bridge_to_body_energy"]
+
+
+def test_unison_contact_reports_per_string_and_cross_string_diagnostics():
+    result = render_graph(load_graph(UNISON_GRAPH), collect_block_states=True)
+    state = result.physical_subsystem_states["isolated_host_note"]
+    string_group = state["string_group"]
+
+    assert state["solver_mode"] == "nonlinear_hammer_string_contact"
+    assert string_group["string_count"] == 3
+    assert len(string_group["frequency_per_string"]) == 3
+    assert len(set(round(freq, 3) for freq in string_group["frequency_per_string"])) == 3
+    assert len(string_group["energy_per_string"]) == 3
+    assert all(energy > 0.0 for energy in string_group["energy_per_string"])
+    assert string_group["cross_string_transfer_energy"] > 0.0
+
+
+def test_body_radiation_reports_separate_modal_radiated_and_mic_energy():
+    result = render_graph(load_graph(BRIDGE_GRAPH), collect_block_states=True)
+    body = result.physical_subsystem_states["isolated_host_note"]["body"]
+
+    assert body["modal_participation_energy"] > 0.0
+    assert body["radiated_energy"] > 0.0
+    assert body["mic_projection_energy"] > 0.0
+    assert body["low_band_energy"] >= 0.0
+    assert body["mid_band_energy"] >= 0.0
+    assert body["high_band_energy"] >= 0.0
+
+
+def test_lifecycle_piano_example_selects_solver_and_reports_damper_pedal_state():
+    graph = load_graph(LIFECYCLE_GRAPH)
+    validation = validate_graph(graph)
+    assert validation.valid, [message.message for message in validation.messages if message.level == "error"]
+    compiled = compile_graph(graph)
+    assert compiled.block_execution_roles["piano"] == "solver_hosted"
+    assert {solver.solver_name for solver in compiled.compiled_physical_subsystems} == {"pasp_lifecycle_piano"}
+
+    result = render_graph(graph, collect_block_states=True)
+    state = result.physical_subsystem_states["isolated_host_piano"]
+    lifecycle = state["lifecycle"]
+
+    assert lifecycle["num_note_on"] == 2
+    assert lifecycle["num_note_off"] == 2
+    assert lifecycle["num_pedal_events"] == 2
+    assert lifecycle["max_active_voices"] >= 1
+    assert lifecycle["per_note"]
+    assert lifecycle["pedal"]
+    assert state["energy"]["output_audio_rms"] > 0.0

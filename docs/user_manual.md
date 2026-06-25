@@ -71,7 +71,8 @@ This table is the manual's short truth table. The canonical solver status is [`r
 | `WaveguideString` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
 | `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
 | `ModalBankBody` T2 solver | Working prototype | `modal_bank_body`, `waveguide_modal_body_A4.json` | Signal-fed body filter, not bidirectional bridge/body impedance coupling |
-| `PASPBidirectionalHammerString` contact solver | Working prototype | `nonlinear_hammer_string_contact`, `nonlinear_hammer_string_contact_A4.json` | Solver-hosted composite contact path; not decomposed T3 bridge/scattering or full piano solve |
+| `PASPBidirectionalHammerString` contact solver | Working prototype | `nonlinear_hammer_string_contact`, `nonlinear_hammer_string_contact_A4.json`, `bridge_admittance_contact_A4.json`, `unison_hammer_string_contact_C4.json` | Solver-hosted composite contact path with reduced bridge loading, unison coupling, and radiation diagnostics; not decomposed T3 bridge/scattering or full piano solve |
+| `PASPEventPianoModel` lifecycle solver | Working prototype | `pasp_lifecycle_piano`, `piano_lifecycle_damper_pedal.json` | Hosted event path for note-off, pedal, damper, and re-strike diagnostics; not a full performance-quality piano |
 | Mixed hammer → waveguide → body chains | Working prototype | `minimal_hammer_waveguide_body_A4.json`, parameter-map examples | Multiple isolated solvers connected by signal edges; not fused physics |
 | Decomposed PASP hammer/string/bridge/body chain | Demo / interpretable signal chain | `minimal_A4_note.json`, PASP docs | Physically named one-way DSP blocks; not proof of physically faithful computation |
 | Composite PASP note/performance blocks | Demo / behavior model | `pasp_performance_model_base.json`, PASP example scripts | Opaque internals compared with decomposed graphs; validate with metrics before claims |
@@ -86,7 +87,8 @@ This table is the manual's short truth table. The canonical solver status is [`r
 - A block name being physical does not mean the computation is physically coupled. `PASPHammerFelt → PASPStringLine → PASPSoundboardModal` can still be a one-way DSP approximation.
 - The current waveguide string path is closer to a Karplus-Strong/reduced-order modal prototype than a high-fidelity stiff-string piano model.
 - `inharmonicity_B` now affects the mono `WaveguideString` T2 solver through a reduced-order dispersion approximation; the polyphonic waveguide path still reports unsupported dispersion with structured warnings.
-- A solver-hosted nonlinear hammer-string contact path exists for `PASPBidirectionalHammerString`; T3 decomposed contact/bridge components and T4 fused piano solvers are not production-supported in the default registry.
+- A solver-hosted nonlinear hammer-string contact path exists for `PASPBidirectionalHammerString`, including reduced-order bridge admittance/loading, unison string exchange, and body/radiation diagnostics. T3 decomposed contact/bridge components and T4 fused piano solvers are not production-supported in the default registry.
+- A solver-hosted lifecycle path exists for `PASPEventPianoModel`; it reports note/pedal/damper transitions but should still be treated as reduced-order behavior until phrase datasets validate it.
 - Some PASP chains are physically interpretable without being physically faithful. Treat them as hypotheses until metrics, diagnostics, and listening checks support them.
 - Calibration can optimize objective metrics without producing perceptually better sound, and single-note improvement is not dataset improvement.
 - The autoresearch loop must prove improvement through baseline/candidate regression. A generated bundle is not the same as a better model.
@@ -346,6 +348,12 @@ This is not a full stiff-string PDE or hammer/string/bridge solve. It is a produ
 ### Modal body (T2)
 
 `ModalBankBodySolver` filters the string output through a bank of resonators (`frequencies`, `gains`, `mix`). It is **signal-fed**: the string and body connect via an ordinary audio edge, not a bidirectional mechanical port. Two T2 solvers in one graph means two isolated-host subsystems connected by T1 signal routing between them.
+
+### Hosted piano coupling prototypes (T2/T4-style)
+
+`NonlinearHammerStringContactSolver` hosts `PASPBidirectionalHammerString` as one composite physical computation. It now owns nonlinear contact, bridge admittance/loading, optional multi-string unison exchange, bridge-driven body/radiation projection, and diagnostics such as `bridge_admittance`, `bridge_loading_loss`, `string_to_bridge_energy`, `bridge_to_body_energy`, `energy_balance_error`, `energy_per_string`, `cross_string_transfer_energy`, `modal_participation_energy`, `radiated_energy`, and `mic_projection_energy`.
+
+`PASPLifecyclePianoSolver` hosts `PASPEventPianoModel` for event-driven note-on/note-off/pedal behavior. It reports lifecycle transitions, damper/pedal state, active voices, per-note diagnostics, and re-strike behavior. Both hosted paths are reduced-order prototypes: they compute more piano physics than signal chains, but they do not make decomposed bidirectional bridge/scattering graphs production-supported.
 
 ### Polyphonic hosting
 

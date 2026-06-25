@@ -3,7 +3,8 @@
     "excited_waveguide_string",
     "polyphonic_excited_waveguide",
     "modal_bank_body",
-    "nonlinear_hammer_string_contact"
+    "nonlinear_hammer_string_contact",
+    "pasp_lifecycle_piano"
   ],
   "planned_solvers": [
     "simple_piano_note",
@@ -16,7 +17,10 @@
     {"path": "examples/graphs/sine_test.json", "expect": "render"},
     {"path": "examples/piano/minimal_waveguide_A4.json", "expect": "render"},
     {"path": "examples/piano/waveguide_modal_body_A4.json", "expect": "render"},
-    {"path": "examples/piano/nonlinear_hammer_string_contact_A4.json", "expect": "render"}
+    {"path": "examples/piano/nonlinear_hammer_string_contact_A4.json", "expect": "render"},
+    {"path": "examples/piano/bridge_admittance_contact_A4.json", "expect": "render"},
+    {"path": "examples/piano/unison_hammer_string_contact_C4.json", "expect": "render"},
+    {"path": "examples/piano/piano_lifecycle_damper_pedal.json", "expect": "render"}
   ],
   "representation_only_graphs": [
     {"builder": "waveguide_bridge_coupler", "expect": "unsupported_computation"},

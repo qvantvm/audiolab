@@ -29,8 +29,11 @@ Registered in `dsp_lab.graph.physical.solvers` and selected automatically at com
 | `polyphonic_excited_waveguide` | `PolyphonicWaveguideString` | `examples/piano/waveguide_modal_body_A4_events.json` |
 | `modal_bank_body` | `ModalBankBody` | `examples/piano/waveguide_modal_body_A4.json` |
 | `nonlinear_hammer_string_contact` | `PASPBidirectionalHammerString` | `examples/piano/nonlinear_hammer_string_contact_A4.json` |
+| `pasp_lifecycle_piano` | `PASPEventPianoModel` | `examples/piano/piano_lifecycle_damper_pedal.json` |
 
-`NonlinearHammerStringContactSolver` is the first production contact solver path: it hosts one composite `PASPBidirectionalHammerString` block and reports contact/energy diagnostics. It is not yet a decomposed T3 solver for separate hammer, string, bridge, and body nodes.
+`NonlinearHammerStringContactSolver` hosts one composite `PASPBidirectionalHammerString` block and reports contact, bridge admittance/loading, body radiation, and optional unison string diagnostics. Its bridge loading affects string decay/transfer inside the hosted loop, but it is still not a decomposed T3 solver for separate hammer, string, bridge, and body nodes.
+
+`PASPLifecyclePianoSolver` hosts `PASPEventPianoModel` for event-driven note-on, note-off, pedal, damper, and re-strike diagnostics. It is a reduced-order lifecycle path, not a full finite-element piano or decomposed graph solver.
 
 ### Mixed T1 + T2 chains
 
