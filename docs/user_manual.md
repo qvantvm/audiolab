@@ -77,7 +77,8 @@ This table is the manual's short truth table. The canonical solver status is [`r
 | Decomposed PASP hammer/string/bridge/body chain | Demo / interpretable signal chain | `minimal_A4_note.json`, PASP docs | Physically named one-way DSP blocks; not proof of physically faithful computation |
 | Composite PASP note/performance blocks | Demo / behavior model | `pasp_performance_model_base.json`, PASP example scripts | Opaque internals compared with decomposed graphs; validate with metrics before claims |
 | Bidirectional bridge coupling | Representation only | roadmap representation-only tests | Valid graph concept; default compile failure expected until T3 solver exists |
-| Decomposed hammer-string nonlinear contact solver | Planned / partial elsewhere | roadmap follow-on T3 component solver | Production solver exists for hosted `PASPBidirectionalHammerString`, but not for separate decomposed hammer/string nodes |
+| Bow-string / drum impact primitives | Representation only | `examples/violin/bow_string_representation.json`, `examples/drums/membrane_impact_representation.json` | L2 stubs; compile fails until coupled solvers exist |
+| Decomposed hammer-string nonlinear contact | Planned | `hammer_string_contact_decomposed` in roadmap | Production solver exists for hosted `PASPBidirectionalHammerString`, not decomposed nodes |
 | Dataset autoresearch improvement | Evidence-dependent | baseline/candidate `summary.json`, `decision.json`, regression reports | Unknown until references exist and before/after dataset eval passes |
 | Calibration quality improvement | Evidence-dependent | calibration `metrics.json`, render WAVs, panel eval | Can improve metrics without perceptual improvement or dataset generalization |
 
@@ -116,7 +117,7 @@ The engine will **not** silently rewrite `string.bridge` into `string.audio → 
 | **Representation only** | validate passes; compile fails honestly |
 | **Planned** | solver named in roadmap, not in default registry |
 
-**Deep dive:** [roadmap.md](roadmap.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
+**Deep dive:** [roadmap.md](roadmap.md) · [physical_framework.md](physical_framework.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
 
 ## Evidence dashboard
 
@@ -136,17 +137,21 @@ If a local run has no baseline score, no candidate score, missing references, or
 
 ## Solver gap analysis
 
-The roadmap names the next production solver classes, but piano realism needs a larger numerical layer. Missing or incomplete solver capabilities include:
+The roadmap names the next production solver classes. Framework layers and primitive families: [physical_framework.md](physical_framework.md).
 
-| Missing solver capability | Why it matters |
-|---------------------------|----------------|
-| Nonlinear hammer-string contact | Realistic attack, velocity response, repeated strikes |
-| Stiff string / dispersion | Piano-like inharmonicity and register-dependent partial spacing |
-| Multi-string unison coupling | Beating, chorus, register realism |
-| Bridge scattering / impedance coupling | Physical energy transfer from strings into body |
-| Soundboard radiation model | Body projection and acoustic radiation beyond modal filtering |
-| Damper/contact lifecycle | Note-off, release, pedal damping, repeated-note behavior |
-| Sympathetic resonance | Pedal realism, phrase behavior, undamped-string response |
+| Missing solver capability | Why it matters | Status |
+|---------------------------|----------------|--------|
+| Nonlinear hammer-string contact (composite) | Realistic attack, velocity response, repeated strikes | **Addressed** — `nonlinear_hammer_string_contact` on `PASPBidirectionalHammerString` |
+| Nonlinear hammer-string contact (decomposed) | Separate hammer/string nodes with bidirectional coupling | Planned — `hammer_string_contact_decomposed` |
+| Bow-string stick-slip contact | Violin, cello bowed instruments | Planned — `bow_string_contact` |
+| Membrane-shell modal coupling | Drums beyond 1D strings | Planned — `membrane_shell_modal` (modal approximation) |
+| Lip-reed bore feedback | Brass self-oscillation | Planned — `lip_reed_bore_coupled` |
+| Stiff string / dispersion | Piano-like inharmonicity and register-dependent partial spacing | Partial — `inharmonicity_B` on mono waveguide |
+| Multi-string unison coupling | Beating, chorus, register realism | Partial — unison diagnostics in contact solver |
+| Bridge scattering / impedance coupling | Physical energy transfer from strings into body | Planned — `scattering_junction` |
+| Soundboard radiation model | Body projection beyond modal filtering | Partial — body diagnostics in contact solver |
+| Damper/contact lifecycle | Note-off, release, pedal damping | Partial — `pasp_lifecycle_piano` prototype |
+| Sympathetic resonance | Pedal realism, phrase behavior | Not started |
 
 Treat these as solver work, not graph-authoring work. More graph structure cannot substitute for missing numerical computation.
 

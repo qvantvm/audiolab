@@ -42,8 +42,103 @@ CATEGORY_MAP: dict[str, str] = {
     "Analysis": "analysis",
     "Calibration": "utility",
     "Experimental": "utility",
+    "Physical Primitives": "physical/primitive",
     "Debug": "utility",
     "Core": "utility",
+}
+
+ComputationStatus = Literal[
+    "representation_only",
+    "working_prototype",
+    "modal_approximation",
+    "production_solver",
+    "dsp",
+]
+
+PHYSICAL_PRIMITIVE_BLOCKS: set[str] = {
+    "BowStringContact",
+    "PluckExcitation",
+    "ImpactContact",
+    "CircularMembraneModes",
+    "PlateModes",
+    "CylindricalBore",
+    "ConicalBore",
+    "LipReed",
+    "SingleReed",
+    "JetDrive",
+    "RadiationImpedance",
+    "ScatteringJunction",
+    "ImpedanceBoundary",
+    "StringBridgeCoupler",
+}
+
+PHYSICAL_PRIMITIVE_FAMILIES: dict[str, list[str]] = {
+    "String1D": [
+        "WaveguideString",
+        "PolyphonicWaveguideString",
+        "PianoWaveguideString",
+        "PASPStringLine",
+    ],
+    "StiffString": ["StiffStringModal"],
+    "DampedString": ["StringLossFilter", "LoopFilter"],
+    "HammerStringContact": ["PASPBidirectionalHammerString", "PASPHammerFelt", "PASPHammerStringJunction"],
+    "BowStringContact": ["BowStringContact"],
+    "PluckExcitation": ["PluckExcitation", "HammerExcitation"],
+    "ImpactContact": ["ImpactContact"],
+    "CircularMembrane": ["CircularMembraneModes", "BellModalBody"],
+    "Plate2D": ["PlateModes", "StruckBarBody"],
+    "ModalBody": ["ModalBankBody", "PASPSoundboardModal", "ResonanceBank"],
+    "CylindricalBore": ["CylindricalBore"],
+    "ConicalBore": ["ConicalBore"],
+    "TubeBore": ["CylindricalBore", "ConicalBore"],
+    "LipReed": ["LipReed"],
+    "SingleReed": ["SingleReed"],
+    "JetDrive": ["JetDrive"],
+    "RadiationImpedance": ["RadiationImpedance", "CabinetRadiation"],
+    "CouplingJunction": ["BridgeCoupler", "PhysicalCouplingStub", "StringBridgeCoupler"],
+    "ScatteringJunction": ["ScatteringJunction"],
+    "ImpedanceBoundary": ["ImpedanceBoundary"],
+}
+
+BLOCK_PRIMITIVE_FAMILY: dict[str, str] = {}
+for _family, _block_types in PHYSICAL_PRIMITIVE_FAMILIES.items():
+    for _block_type in _block_types:
+        BLOCK_PRIMITIVE_FAMILY.setdefault(_block_type, _family)
+
+BLOCK_COMPUTATION_STATUS: dict[str, ComputationStatus] = {
+    "WaveguideString": "working_prototype",
+    "PolyphonicWaveguideString": "working_prototype",
+    "PianoWaveguideString": "working_prototype",
+    "PASPStringLine": "modal_approximation",
+    "StiffStringModal": "modal_approximation",
+    "StringLossFilter": "dsp",
+    "LoopFilter": "dsp",
+    "PASPBidirectionalHammerString": "production_solver",
+    "PASPHammerFelt": "modal_approximation",
+    "PASPHammerStringJunction": "modal_approximation",
+    "ModalBankBody": "working_prototype",
+    "PASPSoundboardModal": "modal_approximation",
+    "ResonanceBank": "dsp",
+    "BellModalBody": "modal_approximation",
+    "StruckBarBody": "modal_approximation",
+    "HammerExcitation": "working_prototype",
+    "CabinetRadiation": "dsp",
+    "BridgeCoupler": "representation_only",
+    "PhysicalCouplingStub": "representation_only",
+    "BowStringContact": "representation_only",
+    "PluckExcitation": "representation_only",
+    "ImpactContact": "representation_only",
+    "CircularMembraneModes": "representation_only",
+    "PlateModes": "representation_only",
+    "CylindricalBore": "representation_only",
+    "ConicalBore": "representation_only",
+    "LipReed": "representation_only",
+    "SingleReed": "representation_only",
+    "JetDrive": "representation_only",
+    "RadiationImpedance": "representation_only",
+    "ScatteringJunction": "representation_only",
+    "ImpedanceBoundary": "representation_only",
+    "StringBridgeCoupler": "representation_only",
 }
 
 PASP_CORE_BLOCKS: set[str] = {
@@ -390,6 +485,317 @@ PORT_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "proposed": False,
         },
     },
+    "BowStringContact": {
+        "input:bow_force": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "input:string_velocity": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:bow_force": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:string_velocity": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+    },
+    "PluckExcitation": {
+        "input:pluck_force": {"kind": "signal", "rate": "audio", "domain": "mechanical", "variables": ["force"]},
+        "input:pluck_position": {"kind": "control", "domain": "mechanical"},
+        "output:excitation": {"kind": "signal", "rate": "audio", "domain": "mechanical", "variables": ["force"]},
+    },
+    "ImpactContact": {
+        "input:mallet_velocity": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "input:surface_velocity": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:mallet_velocity": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:surface_velocity": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:contact_force": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force"],
+            "direction": "output",
+            "legacy_kind": "audio",
+        },
+    },
+    "CircularMembraneModes": {
+        "input:excitation": {"kind": "signal", "rate": "audio", "domain": "mechanical", "variables": ["force"]},
+        "input:surface": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:radiated_audio": {"kind": "signal", "rate": "audio", "domain": "acoustic"},
+        "output:modal_state": {"kind": "signal", "rate": "audio", "domain": "modal"},
+        "output:surface": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+    },
+    "PlateModes": {
+        "input:excitation": {"kind": "signal", "rate": "audio", "domain": "mechanical", "variables": ["force"]},
+        "output:radiated_audio": {"kind": "signal", "rate": "audio", "domain": "acoustic"},
+        "output:modal_state": {"kind": "signal", "rate": "audio", "domain": "modal"},
+    },
+    "CylindricalBore": {
+        "input:wave_left": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "input:wave_right": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:wave_left": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:wave_right": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+    },
+    "ConicalBore": {
+        "input:wave_left": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "input:wave_right": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:wave_left": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:wave_right": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+    },
+    "LipReed": {
+        "input:mouth_pressure": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["pressure"]},
+        "input:bore_reflection": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "input",
+            "legacy_kind": "audio",
+        },
+        "output:volume_flow": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["flow"]},
+        "output:reed_state": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
+    },
+    "SingleReed": {
+        "input:mouth_pressure": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["pressure"]},
+        "input:bore_reflection": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "input",
+            "legacy_kind": "audio",
+        },
+        "output:volume_flow": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["flow"]},
+        "output:reed_gap": {"kind": "signal", "rate": "audio", "domain": "mechanical"},
+    },
+    "JetDrive": {
+        "input:breath_pressure": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["pressure"]},
+        "output:jet_velocity": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["velocity"]},
+        "output:cavity_pressure": {"kind": "signal", "rate": "audio", "domain": "acoustic", "variables": ["pressure"]},
+    },
+    "RadiationImpedance": {
+        "input:acoustic": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:radiated": {"kind": "signal", "rate": "audio", "domain": "acoustic"},
+        "output:reflected": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "output",
+            "legacy_kind": "audio",
+        },
+    },
+    "ScatteringJunction": {
+        "input:incident_a": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "input",
+            "legacy_kind": "audio",
+        },
+        "input:incident_b": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "input",
+            "legacy_kind": "audio",
+        },
+        "output:reflected_a": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "output",
+            "legacy_kind": "audio",
+        },
+        "output:reflected_b": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "output",
+            "legacy_kind": "audio",
+        },
+        "output:transmitted": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "output",
+            "legacy_kind": "audio",
+        },
+    },
+    "ImpedanceBoundary": {
+        "input:incident": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "input",
+            "legacy_kind": "audio",
+        },
+        "output:reflected": {
+            "kind": "wave",
+            "rate": "audio",
+            "domain": "acoustic",
+            "variables": ["pressure"],
+            "direction": "output",
+            "legacy_kind": "audio",
+        },
+    },
+    "StringBridgeCoupler": {
+        "input:string_bridge": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:string_bridge": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+        "output:body_input": {
+            "kind": "physical",
+            "rate": "audio",
+            "domain": "mechanical",
+            "variables": ["force", "velocity"],
+            "direction": "bidirectional",
+            "legacy_kind": "audio",
+        },
+    },
 }
 
 
@@ -455,6 +861,8 @@ class BlockTypeSpec:
     needs_refactor: bool = False
     solver_family: str | None = None
     physical_subsystem_host: bool = False
+    primitive_family: str | None = None
+    computation_status: ComputationStatus | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -475,6 +883,8 @@ class BlockTypeSpec:
             "needs_refactor": self.needs_refactor,
             "solver_family": self.solver_family,
             "physical_subsystem_host": self.physical_subsystem_host,
+            "primitive_family": self.primitive_family,
+            "computation_status": self.computation_status,
         }
 
 
@@ -499,6 +909,8 @@ def _infer_category(block_type: str, legacy_category: str) -> str:
         return "physical mechanical"
     if block_type in PHYSICAL_ACOUSTIC_BLOCKS:
         return "physical acoustic"
+    if block_type in PHYSICAL_PRIMITIVE_BLOCKS:
+        return "physical/primitive"
     if block_type in NONLINEAR_BLOCKS:
         return "nonlinear"
     if block_type == "Output" or block_type == "ModelStereoOutput":
@@ -515,6 +927,8 @@ def _infer_pasp_classification(block_type: str, legacy_category: str) -> PaspCla
     if block_type in PASP_CORE_BLOCKS:
         return "pasp_core"
     if block_type in EXPERIMENTAL_BLOCKS:
+        return "experimental"
+    if block_type in PHYSICAL_PRIMITIVE_BLOCKS:
         return "experimental"
     if block_type in CALIBRATION_TASK_BLOCKS:
         return "calibration"
@@ -661,6 +1075,13 @@ def build_block_type_spec(cls: type[DSPBlock]) -> BlockTypeSpec:
     subsystem_metadata = BLOCK_PHYSICAL_SUBSYSTEM_METADATA.get(block_type, {})
     solver_family = subsystem_metadata.get("solver_family")
     physical_subsystem_host_flag = bool(subsystem_metadata.get("physical_subsystem_host", False))
+    primitive_family = BLOCK_PRIMITIVE_FAMILY.get(block_type)
+    computation_status = BLOCK_COMPUTATION_STATUS.get(block_type)
+    if block_type in PHYSICAL_PRIMITIVE_BLOCKS and computation_status is None:
+        computation_status = "representation_only"
+    class_computation_status = getattr(cls, "computation_status", None)
+    if class_computation_status:
+        computation_status = str(class_computation_status)  # type: ignore[assignment]
 
     return BlockTypeSpec(
         block_type=block_type,
@@ -680,7 +1101,17 @@ def build_block_type_spec(cls: type[DSPBlock]) -> BlockTypeSpec:
         needs_refactor=needs_refactor,
         solver_family=str(solver_family) if solver_family else None,
         physical_subsystem_host=physical_subsystem_host_flag,
+        primitive_family=primitive_family,
+        computation_status=computation_status,
     )
+
+
+def block_primitive_family(block_type: str) -> str | None:
+    return BLOCK_PRIMITIVE_FAMILY.get(block_type)
+
+
+def block_computation_status(block_type: str) -> ComputationStatus | None:
+    return BLOCK_COMPUTATION_STATUS.get(block_type)
 
 
 def get_block_physical_subsystem_metadata(block_type: str) -> dict[str, Any]:

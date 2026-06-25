@@ -138,5 +138,19 @@
   "PASPNoteFamilyModel": "**Formula**\n\nRegister/family parameterization + per-note PASP render via `NoteFamilyParameterSet` and note-family core.",
   "PASPStringGroupNoteModel": "**Formula**\n\nSame computation as `PASPNoteFamilyModel`. Adds per-string group outputs.",
   "PASPEventPianoModel": "**Formula**\n\nHosted by `pasp_lifecycle_piano`. An ordered event list drives note voices:\n\n$$e_i = (t_i, type_i, note_i, velocity_i, pedal_i)$$\n\nThe solver schedules note_on, note_off, pedal_down, and pedal_up events through the PASP voice manager, damper model, and sustain pedal state. It reports active voices, per-note lifecycle transitions, damper/pedal state, re-strike behavior, bridge energy, and output energy.",
-  "PASPPerformanceModel": "**Formula**\n\nFull performance render via `PASPPerformanceRenderer` (multi-note phrase with governance params)."
+  "PASPPerformanceModel": "**Formula**\n\nFull performance render via `PASPPerformanceRenderer` (multi-note phrase with governance params).",
+  "BowStringContact": "**Formula**\n\nRepresentation only. Target stick-slip bow friction:\n\n$$F_b = \\mu(v_{rel})\\, F_N, \\quad v_{rel} = v_{bow} - v_{string}$$\n\nNo computation until `bow_string_contact` coupled solver is registered.",
+  "PluckExcitation": "**Formula**\n\nRepresentation only. Localized pluck force $F_p(t)$ at position $\\alpha L$ on a string segment.",
+  "ImpactContact": "**Formula**\n\nRepresentation only. Target nonlinear impact:\n\n$$F_n = k\\, \\max(\\delta, 0)^\\gamma + d\\, v_{rel}$$\n\nbetween mallet and membrane/plate surface.",
+  "CircularMembraneModes": "**Formula**\n\nRepresentation only. Target modal drum head:\n\n$$u(r,\\theta,t) = \\sum_{mn} q_{mn}(t)\\, \\phi_{mn}(r,\\theta)$$\n\nwith Bessel-function modes on a circular domain (modal approximation, not FDTD).",
+  "PlateModes": "**Formula**\n\nRepresentation only. Target plate bending modes with inharmonic partials from rectangular plate theory.",
+  "CylindricalBore": "**Formula**\n\nRepresentation only. 1D acoustic waveguide:\n\n$$\\frac{\\partial^2 p}{\\partial x^2} = \\frac{1}{c^2}\\frac{\\partial^2 p}{\\partial t^2}$$\n\nwith traveling-wave ports `wave_left` / `wave_right`.",
+  "ConicalBore": "**Formula**\n\nRepresentation only. Conical bore Webster horn equation (traveling-wave target).",
+  "LipReed": "**Formula**\n\nRepresentation only. Target brass lip oscillator coupled to bore pressure reflection (self-sustained oscillation, not a filter bank).",
+  "SingleReed": "**Formula**\n\nRepresentation only. Target reed beating map from mouth pressure and bore reflection to volume flow.",
+  "JetDrive": "**Formula**\n\nRepresentation only. Target jet-drive map from breath pressure to jet velocity at labium.",
+  "RadiationImpedance": "**Formula**\n\nRepresentation only. Target radiation load $Z_{rad}(\\omega)$ relating cavity pressure to radiated acoustic power.",
+  "ScatteringJunction": "**Formula**\n\nRepresentation only. Target scattering matrix $S$ relating incident and reflected wave amplitudes at a junction.",
+  "ImpedanceBoundary": "**Formula**\n\nRepresentation only. Target terminal reflection $R = \\frac{Z_L - Z_0}{Z_L + Z_0}$.",
+  "StringBridgeCoupler": "**Formula**\n\nRepresentation only. Target bridge impedance coupling between string termination and body input DOFs."
 }

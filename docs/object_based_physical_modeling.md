@@ -97,7 +97,7 @@ Audiolab distinguishes three execution tiers at compile time. `CompiledGraph.blo
 | **T2 — Isolated-host subsystem** | `physical_subsystem_host=True`, no active physical/wave edges on the block | Registered `PhysicalSolver` per hosted block (e.g. Karplus string, modal body) |
 | **T3 — Connected-component subsystem** | `PHYSICAL_BIDIRECTIONAL` / `WAVE_SCATTERING` edge connected component | Bidirectional or scattering solver (stub or future PASP) |
 
-See [roadmap.md](roadmap.md) for the canonical **supported vs representation-only vs planned** solver list.
+See [roadmap.md](roadmap.md) for the canonical **supported vs representation-only vs planned** solver list. See [physical_framework.md](physical_framework.md) for framework layers L1–L5 and primitive families.
 
 ### Solver roadmap (summary)
 

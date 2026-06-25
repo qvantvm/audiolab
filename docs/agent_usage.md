@@ -2,6 +2,8 @@
 
 Audiolab is designed for autonomous research loops over synthesis graphs.
 
+Canonical computation status lives in [roadmap.md](roadmap.md). Check it before assuming a physical-looking block or port topology can render.
+
 ## Workflow
 
 ```
@@ -120,14 +122,19 @@ Full status: [roadmap.md](roadmap.md). Machine-readable contract: `tests/fixture
 - `ExcitedWaveguideStringSolver` — `examples/piano/minimal_waveguide_A4.json`
 - `PolyphonicWaveguideSolver` — event-driven phrases (`examples/piano/waveguide_modal_body_A4_events.json`)
 - `ModalBankBodySolver` — `examples/piano/waveguide_modal_body_A4.json`
+- `NonlinearHammerStringContactSolver` — `examples/piano/nonlinear_hammer_string_contact_A4.json` (L3 coupled physics, execution T2 composite host)
 - Mixed T1+T2 chains — e.g. `examples/piano/minimal_hammer_waveguide_body_A4.json`
 
 **Representation only (validate passes, compile fails with `UNSUPPORTED_COMPUTATION`):**
 
 - Bidirectional bridge wiring (`WaveguideString.bridge ↔ BridgeCoupler.input`, PASP `bridge` / `bridge_input`)
+- Bow-string contact (`BowStringContact` ↔ `WaveguideString.bridge`) — `examples/violin/bow_string_representation.json`
+- Drum impact → membrane (`ImpactContact` → `CircularMembraneModes`) — `examples/drums/membrane_impact_representation.json`
 - Signal substitute for physical ports (`string.audio → BridgeCoupler.input` instead of `string.bridge`)
 
-**Planned next solvers:** `SimplePianoNoteSolver`, `ScatteringJunctionSolver`, `NonlinearHammerStringContactSolver`.
+**Planned next coupled solvers:** `bow_string_contact`, `membrane_shell_modal`, `lip_reed_bore_coupled`, `hammer_string_contact_decomposed`, `ScatteringJunctionSolver`, `SimplePianoNoteSolver`.
+
+**Framework layers:** See [physical_framework.md](physical_framework.md) for L1–L5 taxonomy and primitive family registry.
 
 ## Error codes (validation)
 

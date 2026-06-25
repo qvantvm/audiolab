@@ -10,6 +10,9 @@ import pytest
 
 import dsp_lab.blocks  # noqa: F401
 import dsp_lab.graph.physical.solvers  # noqa: F401
+from dsp_lab.blocks.metadata import BLOCK_PRIMITIVE_FAMILY, PHYSICAL_PRIMITIVE_BLOCKS, PHYSICAL_PRIMITIVE_FAMILIES
+from dsp_lab.blocks.registry import BLOCK_REGISTRY
+from dsp_lab.blocks.metadata import build_block_type_spec
 from dsp_lab.graph.compiler import compile_graph
 from dsp_lab.graph.executor import render_graph
 from dsp_lab.graph.physical.errors import UnsupportedComputationError
@@ -32,7 +35,17 @@ def _graph_builders() -> dict[str, object]:
     return {
         "waveguide_bridge_coupler": _waveguide_bridge_graph,
         "pasp_bridge_to_soundboard": _pasp_bridge_to_soundboard_graph,
+        "bow_string_contact_topology": _bow_string_contact_graph,
+        "membrane_impact_topology": _membrane_impact_graph,
     }
+
+
+def _bow_string_contact_graph() -> GraphSpec:
+    return load_graph(ROOT / "examples/violin/bow_string_representation.json")
+
+
+def _membrane_impact_graph() -> GraphSpec:
+    return load_graph(ROOT / "examples/drums/membrane_impact_representation.json")
 
 
 def _pasp_bridge_to_soundboard_graph() -> GraphSpec:
@@ -112,3 +125,29 @@ def test_roadmap_doc_exists_and_lists_next_solvers():
     assert "NonlinearHammerStringContactSolver" in text
     assert "excited_waveguide_string" in text
     assert "modal_bank_body" in text
+    assert "physical_framework.md" in text or "framework layers" in text.lower()
+
+
+def test_planned_coupled_solvers_disjoint_from_registry(roadmap: dict):
+    registry = get_default_solver_registry()
+    registered = set(registry.list_solvers())
+    planned_ids = {entry["id"] for entry in roadmap.get("planned_coupled_solvers", [])}
+    assert planned_ids.isdisjoint(registered)
+    assert planned_ids <= set(roadmap.get("planned_solvers", []))
+
+
+def test_primitive_family_blocks_exist(roadmap: dict):
+    for family, block_types in roadmap.get("primitive_families", {}).items():
+        assert family in PHYSICAL_PRIMITIVE_FAMILIES
+        assert PHYSICAL_PRIMITIVE_FAMILIES[family] == block_types
+        for block_type in block_types:
+            assert block_type in BLOCK_REGISTRY, f"{block_type} missing for family {family}"
+            assert block_type in PHYSICAL_PRIMITIVE_FAMILIES.get(BLOCK_PRIMITIVE_FAMILY.get(block_type, ""), [])
+
+
+def test_representation_primitive_blocks_marked_honestly():
+    for block_type in PHYSICAL_PRIMITIVE_BLOCKS:
+        assert block_type in BLOCK_REGISTRY
+        spec = build_block_type_spec(BLOCK_REGISTRY[block_type])
+        assert spec.computation_status == "representation_only"
+        assert spec.interpretability_level == "physical"

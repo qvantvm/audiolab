@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.1",
+  "name": "bow_string_representation",
+  "description": "Representation-only bow-string contact topology. Validates but compile fails until bow_string_contact solver exists.",
+  "sample_rate": 48000,
+  "duration": 1.0,
+  "block_size": 64,
+  "inputs": {
+    "frequency_hz": 440.0
+  },
+  "blocks": [
+    {
+      "id": "bow_drive",
+      "type": "NoiseBurst",
+      "params": {"amplitude": 0.5, "decay_ms": 50.0, "seed": 1}
+    },
+    {
+      "id": "excitation",
+      "type": "NoiseBurst",
+      "params": {"amplitude": 0.01, "decay_ms": 1.0, "seed": 0}
+    },
+    {
+      "id": "bow",
+      "type": "BowStringContact",
+      "params": {}
+    },
+    {
+      "id": "string",
+      "type": "WaveguideString",
+      "params": {
+        "decay_seconds": 3.0,
+        "brightness": 0.5,
+        "gain": 1.0,
+        "frequency_hz": 440.0
+      }
+    },
+    {
+      "id": "out",
+      "type": "Output",
+      "params": {}
+    }
+  ],
+  "connections": [
+    {"from": "bow_drive.audio", "to": "bow.bow_force"},
+    {"from": "excitation.audio", "to": "string.excitation"},
+    {"from": "inputs.frequency_hz", "to": "string.frequency"},
+    {"from": "string.bridge", "to": "bow.string_velocity"},
+    {"from": "string.audio", "to": "out.audio"}
+  ],
+  "probes": ["string.audio"],
+  "ui": {
+    "nodes": {
+      "bow": {"x": 280, "y": 160},
+      "string": {"x": 480, "y": 160},
+      "out": {"x": 680, "y": 160}
+    }
+  }
+}

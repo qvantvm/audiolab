@@ -4,6 +4,8 @@ New users: start with the [user manual](../user_manual.md) (theory and practice)
 
 Plain-English guide for **reliable PASP autoresearch**: validate DSP Lab without agents, run eval → cycle → decision → governance.
 
+Before changing topology, check the canonical computation status in [roadmap.md](../roadmap.md): it separates solver-backed computation from valid representation that must compile-fail.
+
 ### Operator quick start
 
 | Step | Command |
@@ -233,7 +235,7 @@ Default accept rules (in production config): target cluster improves, `global_me
 
 ## 6. Phase D — Constrain the search space (reliability)
 
-Autoresearch stays reliable when the agent searches a **small physical grammar**, not all 117 blocks.
+Autoresearch stays reliable when the agent searches a **small physical grammar**, not the full generated block catalog.
 
 ### 6.1 Approved graph templates
 

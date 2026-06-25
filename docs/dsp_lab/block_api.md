@@ -4,7 +4,7 @@ Blocks subclass `DSPBlock`, declare typed input and output ports, implement `pro
 
 For GUI editing, blocks expose `default_params()` and optional `param_schema()`.
 
-Full per-block port and parameter reference: [blocks.md](blocks.md) (**117** blocks, auto-generated from `BLOCK_REGISTRY`).
+Full per-block port and parameter reference: [blocks.md](blocks.md) (auto-generated from `BLOCK_REGISTRY`; the catalog header contains the current block count).
 
 Regenerate after adding blocks:
 

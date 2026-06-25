@@ -184,6 +184,6 @@ In Auralis, open the **DSP** tab — same editor embedded with project root as r
 ## Related docs
 
 - [experiments.md](experiments.md) — `run-experiment` artifacts and reports
-- [blocks.md](blocks.md) — full block catalog (117 blocks)
+- [blocks.md](blocks.md) — full generated block catalog
 - [graph_schema.md](graph_schema.md) — graph JSON layout
 - [gui.md](gui.md) — editor panels and workflow

@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import dsp_lab.blocks  # noqa: E402,F401
 from block_explanations import build_block_explanations  # noqa: E402
 from block_formulas import BLOCK_FORMULAS  # noqa: E402
+from dsp_lab.blocks.metadata import BlockTypeSpec, build_block_type_spec  # noqa: E402
 from dsp_lab.blocks.registry import BLOCK_REGISTRY  # noqa: E402
 
 DOCS_PATH = ROOT / "docs" / "dsp_lab" / "blocks.md"
@@ -52,11 +53,50 @@ def _param_lines(cls: type[Any]) -> list[str]:
     return ["—"]
 
 
-def _block_section(block_type: str, cls: type[Any], explanation: str, formula: str | None) -> str:
+def _maturity_label(spec: BlockTypeSpec) -> str:
+    if spec.solver_family == "bidirectional_mechanical_stub":
+        return "test-only"
+    if spec.computation_status == "production_solver":
+        return "production"
+    if spec.computation_status == "working_prototype":
+        return "prototype"
+    if spec.computation_status == "modal_approximation":
+        return "approximation"
+    if spec.computation_status == "representation_only":
+        return "representation-only"
+    if spec.computation_status == "dsp":
+        return "working"
+    if spec.pasp_classification in {"experimental", "legacy"}:
+        return "demo"
+    return "working"
+
+
+def _status_detail(spec: BlockTypeSpec) -> str:
+    details: list[str] = [f"`{_maturity_label(spec)}`"]
+    if spec.computation_status:
+        details.append(f"computation: `{spec.computation_status}`")
+    if spec.solver_family:
+        details.append(f"solver: `{spec.solver_family}`")
+    if spec.physical_subsystem_host:
+        details.append("solver-hosted")
+    if spec.primitive_family:
+        details.append(f"primitive family: `{spec.primitive_family}`")
+    return "; ".join(details)
+
+
+def _block_section(
+    block_type: str,
+    cls: type[Any],
+    spec: BlockTypeSpec,
+    explanation: str,
+    formula: str | None,
+) -> str:
     lines = [
         f"#### `{block_type}`",
         "",
         cls.description.strip() or "No description.",
+        "",
+        f"**Maturity:** {_status_detail(spec)}.",
         "",
         explanation.strip(),
     ]
@@ -73,27 +113,29 @@ def _block_section(block_type: str, cls: type[Any], explanation: str, formula: s
     return "\n".join(lines)
 
 
-def _build_sections() -> list[tuple[str, str, str, str, str, str]]:
+def _build_sections() -> list[tuple[str, str, str, str, str, str, str]]:
     explanations = build_block_explanations(BLOCK_REGISTRY)
-    sections: list[tuple[str, str, str, str, str, str]] = []
+    sections: list[tuple[str, str, str, str, str, str, str]] = []
     for block_type, cls in sorted(BLOCK_REGISTRY.items(), key=lambda item: (item[1].category, item[0])):
+        spec = build_block_type_spec(cls)
+        maturity = _maturity_label(spec)
         inputs = ", ".join(f"`{name}` ({port.kind})" for name, port in cls.input_ports.items()) or "—"
         outputs = ", ".join(f"`{name}` ({port.kind})" for name, port in cls.output_ports.items()) or "—"
-        section = _block_section(block_type, cls, explanations[block_type], BLOCK_FORMULAS.get(block_type))
-        sections.append((block_type, cls.category, inputs, outputs, "", section))
+        section = _block_section(block_type, cls, spec, explanations[block_type], BLOCK_FORMULAS.get(block_type))
+        sections.append((block_type, cls.category, maturity, inputs, outputs, "", section))
     return sections
 
 
 def generate() -> str:
     sections = _build_sections()
     categories: dict[str, list[tuple[str, str]]] = defaultdict(list)
-    for block_type, category, _inputs, _outputs, _unused, section in sections:
+    for block_type, category, _maturity, _inputs, _outputs, _unused, section in sections:
         categories[category].append((block_type, section))
 
     header_without_rows = [
         "# DSP Lab Block Reference",
         "",
-        f"Catalog of **{len(BLOCK_REGISTRY)}** registered blocks in `dsp_lab`: ports, kinds, parameters, explanations, and formulas.",
+        f"Catalog of **{len(BLOCK_REGISTRY)}** registered blocks in `dsp_lab`: maturity labels, ports, kinds, parameters, explanations, and formulas.",
         "Port kinds: **audio** (per-block buffer), **control** (scalar), **event** (note/event payloads).",
         "",
         "Calibration workflow (`CalibrationTask`, tunables, GUI **Calibrate** button): [calibration.md](calibration.md).",
@@ -115,8 +157,8 @@ def generate() -> str:
         "",
         "Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_lab/blocks.md`).",
         "",
-        "| Block | Category | Inputs | Outputs | Start line | End line |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Block | Category | Maturity | Inputs | Outputs | Start line | End line |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
 
     category_sections: list[str] = []
@@ -138,11 +180,11 @@ def generate() -> str:
             current += section_lines + 1
 
     rows: list[str] = []
-    for block_type, category, inputs, outputs, _unused, _section in sorted(
+    for block_type, category, maturity, inputs, outputs, _unused, _section in sorted(
         sections, key=lambda item: item[0]
     ):
         start, end = start_lines[block_type]
-        rows.append(f"| {block_type} | {category} | {inputs} | {outputs} | {start} | {end} |")
+        rows.append(f"| {block_type} | {category} | {maturity} | {inputs} | {outputs} | {start} | {end} |")
 
     return "\n".join(header_without_rows + rows) + body
 

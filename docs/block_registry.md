@@ -49,6 +49,6 @@ dsp-lab inspect-block PASPStringLine
 
 ## Block count
 
-133 registered types (see [audiolab_migration_audit.md](audiolab_migration_audit.md) for the full table).
+The generated current count is in [dsp_lab/blocks.md](dsp_lab/blocks.md), which is rebuilt from `BLOCK_REGISTRY`.
 
 Categories used in migration metadata include: `signal`, `control`, `filter`, `delay/waveguide`, `piano-specific`, `physical mechanical`, `physical acoustic`, `modal/body`, `analysis`, `utility`, `output/rendering`.

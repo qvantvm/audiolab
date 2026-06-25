@@ -42,7 +42,7 @@ python3 scripts/generate_migration_audit.py
 - **Graph JSON:** schema version `0.1` — `GraphSpec` with `blocks`, `connections`, `inputs`, `probes`
 - **Runtime port kinds:** `audio`, `control`, `event` (unchanged for backward compatibility)
 - **Metadata port kinds:** `signal`, `control`, `event`, `physical`, `wave`
-- **Block count:** 133 registered types
+- **Block count:** current generated count is in `docs/dsp_lab/blocks.md`
 - **Render path:** `load_graph` → `validate_graph` → `compile_graph` → `render_graph` (whole-buffer offline)
 - **PASP piano:** 14 `PASP*` blocks backed by `physics/pasp_piano/`; strings are modal, not delay-line waveguides
 - **Legacy piano:** 23 blocks in `blocks/piano.py` (tiers 1–2 phenomenological / waveguide)

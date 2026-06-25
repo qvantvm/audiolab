@@ -1,6 +1,6 @@
 # DSP Lab Block Reference
 
-Catalog of **140** registered blocks in `dsp_lab`: ports, kinds, parameters, explanations, and formulas.
+Catalog of **154** registered blocks in `dsp_lab`: maturity labels, ports, kinds, parameters, explanations, and formulas.
 Port kinds: **audio** (per-block buffer), **control** (scalar), **event** (note/event payloads).
 
 Calibration workflow (`CalibrationTask`, tunables, GUI **Calibrate** button): [calibration.md](calibration.md).
@@ -22,148 +22,162 @@ python scripts/apply_block_formulas.py
 
 Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_lab/blocks.md`).
 
-| Block | Category | Inputs | Outputs | Start line | End line |
-| --- | --- | --- | --- | --- | --- |
-| ADSR | Envelopes | — | `audio` (audio) | 1879 | 1923 |
-| AlignedReference | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio) | 2915 | 2949 |
-| Allpass | Filters | `audio` (audio) | `audio` (audio) | 2393 | 2428 |
-| AssertFinite | Debug | `audio` (audio) | `audio` (audio) | 1466 | 1499 |
-| AssertNoClipping | Debug | `audio` (audio) | `audio` (audio) | 1501 | 1534 |
-| AssertNotSilent | Debug | `audio` (audio) | `audio` (audio) | 1536 | 1569 |
-| AttackMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 2951 | 2990 |
-| AudioHealthMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 2992 | 3028 |
-| Bandpass | Filters | `audio` (audio) | `audio` (audio) | 2430 | 2464 |
-| BatchRenderTask | Calibration | — | `result` (control) | 801 | 839 |
-| BellModalBody | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3885 | 3929 |
-| BiquadFilter | Filters | `audio` (audio) | `audio` (audio) | 2466 | 2506 |
-| BodyEQ | Body & Space | `audio` (audio) | `audio` (audio) | 424 | 463 |
-| BridgeCoupler | Experimental | `input` (audio) | `output` (audio) | 2005 | 2038 |
-| BridgeMixer | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 5008 | 5046 |
-| CabinetRadiation | Body & Space | `audio` (audio) | `audio` (audio) | 465 | 500 |
-| CalibrationTask | Calibration | — | `result` (control) | 841 | 880 |
-| Clamp | Math | `audio` (audio) | `audio` (audio) | 2725 | 2759 |
-| CompareTask | Experimental | — | `result` (control) | 2040 | 2075 |
-| Constant | Control | — | `value` (control) | 1272 | 1307 |
-| DamperReleaseEnvelope | Piano | — | `audio` (audio) | 5048 | 5081 |
-| DecayMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3030 | 3069 |
-| Delay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1643 | 1678 |
-| DifferenceSignal | Metrics | `synthetic` (audio), `reference` (audio) | `audio` (audio) | 3071 | 3105 |
-| DispersionAllpass | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1680 | 1713 |
-| DuplexScaleResonance | Body & Space | `audio` (audio) | `audio` (audio) | 502 | 536 |
-| EQ3Band | Filters | `audio` (audio) | `audio` (audio) | 2508 | 2543 |
-| EnvelopeDecayMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3107 | 3143 |
-| EnvelopeMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3145 | 3184 |
-| EnvelopeProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 170 | 204 |
-| EventPassThrough | Experimental | `event` (event) | `event` (event) | 2077 | 2110 |
-| EventSource | Experimental | — | `event` (event) | 2112 | 2147 |
-| ExponentialDecay | Envelopes | — | `control` (control), `audio` (audio) | 1925 | 1964 |
-| F0Metric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3186 | 3225 |
-| FeedbackDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1715 | 1752 |
-| FractionalDelay | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1754 | 1787 |
-| FractionalStringDelay | Piano | `audio` (audio) | `audio` (audio) | 5083 | 5116 |
-| Gain | Mixing | `audio` (audio) | `audio` (audio) | 3764 | 3799 |
-| GitCommitTask | Experimental | — | `result` (control) | 2149 | 2184 |
-| GridSearch | Calibration | — | `result` (control) | 882 | 917 |
-| HammerExcitation | Piano | `velocity` (control), `brightness` (control) | `audio` (audio) | 5118 | 5157 |
-| HammerFeltFilter | Piano | `audio` (audio) | `audio` (audio) | 5159 | 5194 |
-| HammerNoise | Piano | `velocity` (control) | `audio` (audio) | 5196 | 5231 |
-| HammerVelocityMapper | Piano | `velocity` (control) | `force` (control), `brightness` (control) | 5233 | 5270 |
-| Highpass | Filters | `audio` (audio) | `audio` (audio) | 2545 | 2578 |
-| HumanReviewTask | Experimental | — | `result` (control) | 2186 | 2221 |
-| Impulse | Sources | — | `audio` (audio) | 5940 | 5978 |
-| LogSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3227 | 3266 |
-| LookupTable | Control | `index` (control) | `value` (control) | 1309 | 1346 |
-| LoopFilter | Delay & Waveguide | `audio` (audio) | `audio` (audio) | 1789 | 1824 |
-| LossAggregator | Calibration | `loss1` (control), `loss2` (control), `loss3` (control), `loss4` (control) | `loss` (control) | 919 | 957 |
-| Lowpass | Filters | `audio` (audio) | `audio` (audio) | 2580 | 2613 |
-| MetricFamilyScore | Metrics | `metrics` (control) | `scores` (control) | 3268 | 3301 |
-| MicPositionFilter | Body & Space | `audio` (audio) | `audio` (audio) | 538 | 573 |
-| MidiToFrequency | Control | `midi_note` (control) | `frequency` (control) | 1348 | 1383 |
-| Mixer | Mixing | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 3801 | 3839 |
-| ModalBankBody | Body & Space | `audio` (audio) | `audio` (audio) | 575 | 612 |
-| ModalResonator | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3931 | 3971 |
-| ModalResonatorBank | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 3973 | 4015 |
-| ModelHammerExcitation | Piano | `midi_note` (control), `frequency` (control), `velocity` (control) | `audio` (audio) | 5272 | 5311 |
-| ModelStereoOutput | Piano | `audio` (audio) | `audio` (audio) | 5313 | 5350 |
-| MultiResSTFTMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3303 | 3339 |
-| MultiSegmentEnvelope | Envelopes | — | `audio` (audio) | 1966 | 2001 |
-| MultiStringUnison | Piano | `audio` (audio) | `audio` (audio) | 5352 | 5388 |
-| Multiply | Math | `audio` (audio), `factor` (control) | `audio` (audio) | 2761 | 2797 |
-| NoiseBurst | Sources | `velocity` (control) | `audio` (audio) | 5980 | 6019 |
-| NonlinearHammer | Piano | `audio` (audio), `force` (control) | `audio` (audio) | 5390 | 5426 |
-| Normalize | Math | `audio` (audio) | `audio` (audio) | 2799 | 2834 |
-| Notch | Filters | `audio` (audio) | `audio` (audio) | 2615 | 2649 |
-| NotePerformanceSchedule | Piano | — | `frequency` (control), `velocity` (control), `midi_note` (control), `sustain_pedal` (control) | 5428 | 5465 |
-| OnePoleHighpass | Filters | `audio` (audio) | `audio` (audio) | 2651 | 2684 |
-| OnePoleLowpass | Filters | `audio` (audio) | `audio` (audio) | 2686 | 2721 |
-| OptunaOptimizer | Calibration | — | `result` (control) | 959 | 994 |
-| Output | Mixing | `audio` (audio) | `audio` (audio) | 3841 | 3881 |
-| OverallScore | Metrics | `value1` (control), `value2` (control), `value3` (control), `value4` (control), `value5` (control), `value6` (control) | `score` (control) | 3341 | 3382 |
-| PASPBidirectionalHammerString | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4065 | 4175 |
-| PASPBridgeSoundboard | PASP Piano | `audio` (audio) | `audio` (audio) | 4177 | 4272 |
-| PASPBridgeTermination | PASP Piano | `audio` (audio) | `audio` (audio) | 4274 | 4309 |
-| PASPEventPianoModel | PASP Piano | `events` (control), `midi_note` (control), `velocity` (control) | `audio` (audio), `bridge_audio` (audio) | 4311 | 4413 |
-| PASPHammerFelt | PASP Piano | `velocity` (control), `midi_note` (control) | `force` (audio), `compression` (audio) | 4415 | 4460 |
-| PASPHammerStringJunction | PASP Piano | `force` (audio), `compression` (audio), `string_slope` (audio) | `excitation` (audio) | 4462 | 4500 |
-| PASPNoteFamilyModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4502 | 4606 |
-| PASPNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 4608 | 4709 |
-| PASPPerformanceModel | PASP Piano | `events` (control) | `audio` (audio), `bridge_audio` (audio) | 4711 | 4807 |
-| PASPSoundboardModal | PASP Piano | `audio` (audio) | `audio` (audio) | 4809 | 4844 |
-| PASPStringGroupNoteModel | PASP Piano | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio), `string_1_audio` (audio), `string_2_audio` (audio), `string_3_audio` (audio) | 4846 | 4953 |
-| PASPStringLine | PASP Piano | `excitation` (audio), `frequency` (control), `inharmonicity_B` (control), `midi_note` (control) | `audio` (audio) | 4955 | 5004 |
-| PanelMetricsTask | Metrics | — | `result` (control) | 3384 | 3421 |
-| ParameterBinding | Calibration | `value` (control) | `value` (control), `bind_path` (control) | 996 | 1033 |
-| ParameterCurve | Control | `x` (control) | `value` (control) | 1385 | 1423 |
-| ParameterSweep | Calibration | — | `result` (control) | 1035 | 1070 |
-| PartialTrackerProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 206 | 240 |
-| PeakMeter | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 242 | 276 |
-| PedalPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 3423 | 3457 |
-| PerNoteTable | Calibration | `midi_note` (control) | `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control) | 1072 | 1111 |
-| PhysicalCouplingStub | Experimental | `audio` (audio), `coupling` (audio) | `audio` (audio), `coupling` (audio) | 2223 | 2258 |
-| PianoStringBank | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control) | `audio` (audio), `brightness` (control) | 5467 | 5523 |
-| PianoWaveguideString | Piano | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control), `brightness` (control) | `audio` (audio) | 5525 | 5577 |
-| PitchPartialMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3459 | 3495 |
-| PolyphonicWaveguideString | Piano | — | `audio` (audio) | 5579 | 5622 |
-| PrintValue | Debug | `value` (control) | `value` (control) | 1571 | 1604 |
-| Probe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 278 | 312 |
-| PythonCustom | Experimental | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio), `ctrl1` (control), `ctrl2` (control), `event` (event) | `audio` (audio), `value` (control), `out2` (audio), `out3` (audio), `out4` (audio), `event` (event) | 2260 | 2315 |
-| RMSMeter | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 314 | 348 |
-| RandomSearch | Calibration | — | `result` (control) | 1113 | 1148 |
-| ReferenceCompare | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `metrics` (control), `loss` (control) | 3497 | 3533 |
-| ReferenceSample | Metrics | — | `audio` (audio) | 3535 | 3571 |
-| RenderTask | Experimental | — | `result` (control) | 2317 | 2352 |
-| ReportTask | Experimental | — | `result` (control) | 2354 | 2389 |
-| ResidualAnalyzer | Metrics | `audio` (audio) | `audio` (audio), `value` (control) | 3573 | 3607 |
-| ResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 614 | 650 |
-| SamplePlayer | Sources | — | `audio` (audio) | 6021 | 6060 |
-| ScipyOptimizer | Calibration | — | `result` (control) | 1150 | 1185 |
-| SineOscillator | Sources | `frequency` (control) | `audio` (audio) | 6062 | 6101 |
-| SoftClip | Math | `audio` (audio) | `audio` (audio) | 2836 | 2871 |
-| SoundboardConvolution | Body & Space | `audio` (audio) | `audio` (audio) | 652 | 688 |
-| SoundboardModalBank | Body & Space | `audio` (audio) | `audio` (audio) | 690 | 724 |
-| SpectralCentroidMetric | Metrics | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3609 | 3648 |
-| SpectralShapeMetric | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3650 | 3686 |
-| SpectrogramProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 350 | 384 |
-| SpectrumProbe | Analysis | `audio` (audio) | `audio` (audio), `value` (control) | 386 | 420 |
-| StateDump | Debug | — | `state` (control) | 1606 | 1639 |
-| StereoWidener | Body & Space | `audio` (audio) | `audio` (audio) | 726 | 761 |
-| StiffStringModal | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5624 | 5673 |
-| StringCouplingMatrix | Piano | `audio1` (audio), `audio2` (audio), `audio3` (audio) | `audio` (audio) | 5675 | 5712 |
-| StringDetune | Piano | `frequency` (control) | `frequency` (control) | 5714 | 5747 |
-| StringDispersion | Piano | `audio` (audio) | `audio` (audio) | 5749 | 5782 |
-| StringLossFilter | Piano | `audio` (audio) | `audio` (audio) | 5784 | 5817 |
-| StringModeBank | Piano | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 5819 | 5862 |
-| StringTermination | Piano | `audio` (audio) | `audio` (audio) | 5864 | 5897 |
-| StruckBarBody | Modal | `frequency` (control), `excitation` (audio) | `audio` (audio) | 4017 | 4061 |
-| Sum | Math | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio) | `audio` (audio) | 2873 | 2911 |
-| SustainPedalDamping | Piano | `audio` (audio), `pedal` (control) | `audio` (audio) | 5899 | 5936 |
-| SympatheticResonanceBank | Body & Space | `audio` (audio) | `audio` (audio) | 763 | 797 |
-| TrainableParameter | Calibration | — | `value` (control) | 1187 | 1231 |
-| ValidationSplit | Calibration | — | `result` (control) | 1233 | 1268 |
-| ValidityGate | Metrics | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `valid` (control), `reasons` (control) | 3688 | 3724 |
-| VelocityCurve | Control | `velocity` (control) | `value` (control) | 1425 | 1462 |
-| VelocityPanelMetric | Metrics | `panel_rows` (control) | `value` (control), `details` (control) | 3726 | 3760 |
-| WaveguideString | Delay & Waveguide | `frequency` (control), `excitation` (audio) | `audio` (audio) | 1826 | 1875 |
+| Block | Category | Maturity | Inputs | Outputs | Start line | End line |
+| --- | --- | --- | --- | --- | --- | --- |
+| ADSR | Envelopes | working | — | `audio` (audio) | 1983 | 2029 |
+| AlignedReference | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio) | 3073 | 3109 |
+| Allpass | Filters | working | `audio` (audio) | `audio` (audio) | 2523 | 2560 |
+| AssertFinite | Debug | working | `audio` (audio) | `audio` (audio) | 1548 | 1583 |
+| AssertNoClipping | Debug | working | `audio` (audio) | `audio` (audio) | 1585 | 1620 |
+| AssertNotSilent | Debug | working | `audio` (audio) | `audio` (audio) | 1622 | 1657 |
+| AttackMetric | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3111 | 3152 |
+| AudioHealthMetric | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3154 | 3192 |
+| Bandpass | Filters | working | `audio` (audio) | `audio` (audio) | 2562 | 2598 |
+| BatchRenderTask | Calibration | working | — | `result` (control) | 849 | 889 |
+| BellModalBody | Modal | approximation | `frequency` (control), `excitation` (audio) | `audio` (audio) | 4093 | 4139 |
+| BiquadFilter | Filters | working | `audio` (audio) | `audio` (audio) | 2600 | 2642 |
+| BodyEQ | Body & Space | working | `audio` (audio) | `audio` (audio) | 452 | 493 |
+| BowStringContact | Physical Primitives | representation-only | `bow_force` (audio), `string_velocity` (audio) | `bow_force` (audio), `string_velocity` (audio) | 5248 | 5289 |
+| BridgeCoupler | Experimental | representation-only | `input` (audio) | `output` (audio) | 2115 | 2150 |
+| BridgeMixer | Piano | working | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 5810 | 5850 |
+| CabinetRadiation | Body & Space | working | `audio` (audio) | `audio` (audio) | 495 | 532 |
+| CalibrationTask | Calibration | working | — | `result` (control) | 891 | 932 |
+| CircularMembraneModes | Physical Primitives | representation-only | `excitation` (audio), `surface` (audio) | `radiated_audio` (audio), `modal_state` (audio), `surface` (audio) | 5291 | 5335 |
+| Clamp | Math | working | `audio` (audio) | `audio` (audio) | 2873 | 2909 |
+| CompareTask | Experimental | demo | — | `result` (control) | 2152 | 2189 |
+| ConicalBore | Physical Primitives | representation-only | `wave_left` (audio), `wave_right` (audio) | `wave_left` (audio), `wave_right` (audio) | 5337 | 5374 |
+| Constant | Control | working | — | `value` (control) | 1344 | 1381 |
+| CylindricalBore | Physical Primitives | representation-only | `wave_left` (audio), `wave_right` (audio) | `wave_left` (audio), `wave_right` (audio) | 5376 | 5417 |
+| DamperReleaseEnvelope | Piano | working | — | `audio` (audio) | 5852 | 5887 |
+| DecayMetric | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3194 | 3235 |
+| Delay | Delay & Waveguide | working | `audio` (audio) | `audio` (audio) | 1735 | 1772 |
+| DifferenceSignal | Metrics | working | `synthetic` (audio), `reference` (audio) | `audio` (audio) | 3237 | 3273 |
+| DispersionAllpass | Delay & Waveguide | working | `audio` (audio) | `audio` (audio) | 1774 | 1809 |
+| DuplexScaleResonance | Body & Space | working | `audio` (audio) | `audio` (audio) | 534 | 570 |
+| EQ3Band | Filters | working | `audio` (audio) | `audio` (audio) | 2644 | 2681 |
+| EnvelopeDecayMetric | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3275 | 3313 |
+| EnvelopeMetric | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3315 | 3356 |
+| EnvelopeProbe | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 184 | 220 |
+| EventPassThrough | Experimental | demo | `event` (event) | `event` (event) | 2191 | 2226 |
+| EventSource | Experimental | demo | — | `event` (event) | 2228 | 2265 |
+| ExponentialDecay | Envelopes | working | — | `control` (control), `audio` (audio) | 2031 | 2072 |
+| F0Metric | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3358 | 3399 |
+| FeedbackDelay | Delay & Waveguide | working | `audio` (audio) | `audio` (audio) | 1811 | 1850 |
+| FractionalDelay | Delay & Waveguide | working | `audio` (audio) | `audio` (audio) | 1852 | 1887 |
+| FractionalStringDelay | Piano | working | `audio` (audio) | `audio` (audio) | 5889 | 5924 |
+| Gain | Mixing | working | `audio` (audio) | `audio` (audio) | 3966 | 4003 |
+| GitCommitTask | Experimental | demo | — | `result` (control) | 2267 | 2304 |
+| GridSearch | Calibration | working | — | `result` (control) | 934 | 971 |
+| HammerExcitation | Piano | prototype | `velocity` (control), `brightness` (control) | `audio` (audio) | 5926 | 5967 |
+| HammerFeltFilter | Piano | working | `audio` (audio) | `audio` (audio) | 5969 | 6006 |
+| HammerNoise | Piano | working | `velocity` (control) | `audio` (audio) | 6008 | 6045 |
+| HammerVelocityMapper | Piano | working | `velocity` (control) | `force` (control), `brightness` (control) | 6047 | 6086 |
+| Highpass | Filters | working | `audio` (audio) | `audio` (audio) | 2683 | 2718 |
+| HumanReviewTask | Experimental | demo | — | `result` (control) | 2306 | 2343 |
+| ImpactContact | Physical Primitives | representation-only | `mallet_velocity` (audio), `surface_velocity` (audio) | `mallet_velocity` (audio), `surface_velocity` (audio), `contact_force` (audio) | 5419 | 5461 |
+| ImpedanceBoundary | Physical Primitives | representation-only | `incident` (audio) | `reflected` (audio) | 5463 | 5498 |
+| Impulse | Sources | working | — | `audio` (audio) | 6788 | 6828 |
+| JetDrive | Physical Primitives | representation-only | `breath_pressure` (audio) | `jet_velocity` (audio), `cavity_pressure` (audio) | 5500 | 5536 |
+| LipReed | Physical Primitives | representation-only | `mouth_pressure` (audio), `bore_reflection` (audio) | `volume_flow` (audio), `reed_state` (audio) | 5538 | 5575 |
+| LogSTFTMetric | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3401 | 3442 |
+| LookupTable | Control | working | `index` (control) | `value` (control) | 1383 | 1422 |
+| LoopFilter | Delay & Waveguide | working | `audio` (audio) | `audio` (audio) | 1889 | 1926 |
+| LossAggregator | Calibration | working | `loss1` (control), `loss2` (control), `loss3` (control), `loss4` (control) | `loss` (control) | 973 | 1013 |
+| Lowpass | Filters | working | `audio` (audio) | `audio` (audio) | 2720 | 2755 |
+| MetricFamilyScore | Metrics | working | `metrics` (control) | `scores` (control) | 3444 | 3479 |
+| MicPositionFilter | Body & Space | working | `audio` (audio) | `audio` (audio) | 572 | 609 |
+| MidiToFrequency | Control | working | `midi_note` (control) | `frequency` (control) | 1424 | 1461 |
+| Mixer | Mixing | working | `audio1` (audio), `audio2` (audio), `audio3` (audio), `audio4` (audio) | `audio` (audio) | 4005 | 4045 |
+| ModalBankBody | Body & Space | prototype | `audio` (audio) | `audio` (audio) | 611 | 650 |
+| ModalResonator | Modal | working | `frequency` (control), `excitation` (audio) | `audio` (audio) | 4141 | 4183 |
+| ModalResonatorBank | Modal | working | `frequency` (control), `excitation` (audio) | `audio` (audio) | 4185 | 4229 |
+| ModelHammerExcitation | Piano | working | `midi_note` (control), `frequency` (control), `velocity` (control) | `audio` (audio) | 6088 | 6129 |
+| ModelStereoOutput | Piano | working | `audio` (audio) | `audio` (audio) | 6131 | 6170 |
+| MultiResSTFTMetric | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3481 | 3519 |
+| MultiSegmentEnvelope | Envelopes | working | — | `audio` (audio) | 2074 | 2111 |
+| MultiStringUnison | Piano | working | `audio` (audio) | `audio` (audio) | 6172 | 6210 |
+| Multiply | Math | working | `audio` (audio), `factor` (control) | `audio` (audio) | 2911 | 2949 |
+| NoiseBurst | Sources | working | `velocity` (control) | `audio` (audio) | 6830 | 6871 |
+| NonlinearHammer | Piano | working | `audio` (audio), `force` (control) | `audio` (audio) | 6212 | 6250 |
+| Normalize | Math | working | `audio` (audio) | `audio` (audio) | 2951 | 2988 |
+| Notch | Filters | working | `audio` (audio) | `audio` (audio) | 2757 | 2793 |
+| NotePerformanceSchedule | Piano | working | — | `frequency` (control), `velocity` (control), `midi_note` (control), `sustain_pedal` (control) | 6252 | 6291 |
+| OnePoleHighpass | Filters | working | `audio` (audio) | `audio` (audio) | 2795 | 2830 |
+| OnePoleLowpass | Filters | working | `audio` (audio) | `audio` (audio) | 2832 | 2869 |
+| OptunaOptimizer | Calibration | working | — | `result` (control) | 1015 | 1052 |
+| Output | Mixing | working | `audio` (audio) | `audio` (audio) | 4047 | 4089 |
+| OverallScore | Metrics | working | `value1` (control), `value2` (control), `value3` (control), `value4` (control), `value5` (control), `value6` (control) | `score` (control) | 3521 | 3564 |
+| PASPBidirectionalHammerString | PASP Piano | production | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4281 | 4393 |
+| PASPBridgeSoundboard | PASP Piano | working | `audio` (audio) | `audio` (audio) | 4395 | 4492 |
+| PASPBridgeTermination | PASP Piano | working | `audio` (audio) | `audio` (audio) | 4494 | 4531 |
+| PASPEventPianoModel | PASP Piano | working | `events` (control), `midi_note` (control), `velocity` (control) | `audio` (audio), `bridge_audio` (audio) | 4533 | 4637 |
+| PASPHammerFelt | PASP Piano | approximation | `velocity` (control), `midi_note` (control) | `force` (audio), `compression` (audio) | 4639 | 4686 |
+| PASPHammerStringJunction | PASP Piano | approximation | `force` (audio), `compression` (audio), `string_slope` (audio) | `excitation` (audio) | 4688 | 4728 |
+| PASPNoteFamilyModel | PASP Piano | working | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio) | 4730 | 4836 |
+| PASPNoteModel | PASP Piano | working | `midi_note` (control), `velocity` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio) | 4838 | 4941 |
+| PASPPerformanceModel | PASP Piano | working | `events` (control) | `audio` (audio), `bridge_audio` (audio) | 4943 | 5041 |
+| PASPSoundboardModal | PASP Piano | approximation | `audio` (audio) | `audio` (audio) | 5043 | 5080 |
+| PASPStringGroupNoteModel | PASP Piano | working | `midi_note` (control), `velocity` (control), `velocity_norm` (control), `frequency` (control) | `audio` (audio), `force` (audio), `compression` (audio), `hammer_velocity` (audio), `string_displacement` (audio), `bridge_audio` (audio), `string_1_audio` (audio), `string_2_audio` (audio), `string_3_audio` (audio) | 5082 | 5191 |
+| PASPStringLine | PASP Piano | approximation | `excitation` (audio), `frequency` (control), `inharmonicity_B` (control), `midi_note` (control) | `audio` (audio) | 5193 | 5244 |
+| PanelMetricsTask | Metrics | working | — | `result` (control) | 3566 | 3605 |
+| ParameterBinding | Calibration | working | `value` (control) | `value` (control), `bind_path` (control) | 1054 | 1093 |
+| ParameterCurve | Control | working | `x` (control) | `value` (control) | 1463 | 1503 |
+| ParameterSweep | Calibration | working | — | `result` (control) | 1095 | 1132 |
+| PartialTrackerProbe | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 222 | 258 |
+| PeakMeter | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 260 | 296 |
+| PedalPanelMetric | Metrics | working | `panel_rows` (control) | `value` (control), `details` (control) | 3607 | 3643 |
+| PerNoteTable | Calibration | working | `midi_note` (control) | `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control) | 1134 | 1175 |
+| PhysicalCouplingStub | Experimental | test-only | `audio` (audio), `coupling` (audio) | `audio` (audio), `coupling` (audio) | 2345 | 2382 |
+| PianoStringBank | Piano | working | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control) | `audio` (audio), `brightness` (control) | 6293 | 6351 |
+| PianoWaveguideString | Piano | prototype | `frequency` (control), `excitation` (audio), `midi_note` (control), `velocity` (control), `brightness` (control) | `audio` (audio) | 6353 | 6407 |
+| PitchPartialMetric | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3645 | 3683 |
+| PlateModes | Physical Primitives | representation-only | `excitation` (audio) | `radiated_audio` (audio), `modal_state` (audio) | 5577 | 5613 |
+| PluckExcitation | Physical Primitives | representation-only | `pluck_force` (audio), `pluck_position` (control) | `excitation` (audio) | 5615 | 5651 |
+| PolyphonicWaveguideString | Piano | prototype | — | `audio` (audio) | 6409 | 6454 |
+| PrintValue | Debug | working | `value` (control) | `value` (control) | 1659 | 1694 |
+| Probe | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 298 | 334 |
+| PythonCustom | Experimental | demo | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio), `ctrl1` (control), `ctrl2` (control), `event` (event) | `audio` (audio), `value` (control), `out2` (audio), `out3` (audio), `out4` (audio), `event` (event) | 2384 | 2441 |
+| RMSMeter | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 336 | 372 |
+| RadiationImpedance | Physical Primitives | representation-only | `acoustic` (audio) | `radiated` (audio), `reflected` (audio) | 5653 | 5689 |
+| RandomSearch | Calibration | working | — | `result` (control) | 1177 | 1214 |
+| ReferenceCompare | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `metrics` (control), `loss` (control) | 3685 | 3723 |
+| ReferenceSample | Metrics | working | — | `audio` (audio) | 3725 | 3763 |
+| RenderTask | Experimental | demo | — | `result` (control) | 2443 | 2480 |
+| ReportTask | Experimental | demo | — | `result` (control) | 2482 | 2519 |
+| ResidualAnalyzer | Metrics | working | `audio` (audio) | `audio` (audio), `value` (control) | 3765 | 3801 |
+| ResonanceBank | Body & Space | working | `audio` (audio) | `audio` (audio) | 652 | 690 |
+| SamplePlayer | Sources | working | — | `audio` (audio) | 6873 | 6914 |
+| ScatteringJunction | Physical Primitives | representation-only | `incident_a` (audio), `incident_b` (audio) | `reflected_a` (audio), `reflected_b` (audio), `transmitted` (audio) | 5691 | 5729 |
+| ScipyOptimizer | Calibration | working | — | `result` (control) | 1216 | 1253 |
+| SineOscillator | Sources | working | `frequency` (control) | `audio` (audio) | 6916 | 6957 |
+| SingleReed | Physical Primitives | representation-only | `mouth_pressure` (audio), `bore_reflection` (audio) | `volume_flow` (audio), `reed_gap` (audio) | 5731 | 5768 |
+| SoftClip | Math | working | `audio` (audio) | `audio` (audio) | 2990 | 3027 |
+| SoundboardConvolution | Body & Space | working | `audio` (audio) | `audio` (audio) | 692 | 730 |
+| SoundboardModalBank | Body & Space | working | `audio` (audio) | `audio` (audio) | 732 | 768 |
+| SpectralCentroidMetric | Metrics | working | `reference` (audio), `synthetic` (audio) | `audio` (audio), `value` (control) | 3803 | 3844 |
+| SpectralShapeMetric | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `value` (control), `details` (control) | 3846 | 3884 |
+| SpectrogramProbe | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 374 | 410 |
+| SpectrumProbe | Analysis | working | `audio` (audio) | `audio` (audio), `value` (control) | 412 | 448 |
+| StateDump | Debug | working | — | `state` (control) | 1696 | 1731 |
+| StereoWidener | Body & Space | working | `audio` (audio) | `audio` (audio) | 770 | 807 |
+| StiffStringModal | Piano | approximation | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 6456 | 6507 |
+| StringBridgeCoupler | Physical Primitives | representation-only | `string_bridge` (audio) | `string_bridge` (audio), `body_input` (audio) | 5770 | 5806 |
+| StringCouplingMatrix | Piano | working | `audio1` (audio), `audio2` (audio), `audio3` (audio) | `audio` (audio) | 6509 | 6548 |
+| StringDetune | Piano | working | `frequency` (control) | `frequency` (control) | 6550 | 6585 |
+| StringDispersion | Piano | working | `audio` (audio) | `audio` (audio) | 6587 | 6622 |
+| StringLossFilter | Piano | working | `audio` (audio) | `audio` (audio) | 6624 | 6659 |
+| StringModeBank | Piano | working | `frequency` (control), `excitation` (audio), `inharmonicity_B` (control), `decay_seconds` (control), `brightness` (control), `detune_cents` (control) | `audio` (audio) | 6661 | 6706 |
+| StringTermination | Piano | working | `audio` (audio) | `audio` (audio) | 6708 | 6743 |
+| StruckBarBody | Modal | approximation | `frequency` (control), `excitation` (audio) | `audio` (audio) | 4231 | 4277 |
+| Sum | Math | working | `in1` (audio), `in2` (audio), `in3` (audio), `in4` (audio) | `audio` (audio) | 3029 | 3069 |
+| SustainPedalDamping | Piano | working | `audio` (audio), `pedal` (control) | `audio` (audio) | 6745 | 6784 |
+| SympatheticResonanceBank | Body & Space | working | `audio` (audio) | `audio` (audio) | 809 | 845 |
+| TrainableParameter | Calibration | working | — | `value` (control) | 1255 | 1301 |
+| ValidationSplit | Calibration | working | — | `result` (control) | 1303 | 1340 |
+| ValidityGate | Metrics | working | `reference` (audio), `synthetic` (audio), `midi_note` (control) | `valid` (control), `reasons` (control) | 3886 | 3924 |
+| VelocityCurve | Control | working | `velocity` (control) | `value` (control) | 1505 | 1544 |
+| VelocityPanelMetric | Metrics | working | `panel_rows` (control) | `value` (control), `details` (control) | 3926 | 3962 |
+| WaveguideString | Delay & Waveguide | prototype | `frequency` (control), `excitation` (audio) | `audio` (audio) | 1928 | 1979 |
 ## Blocks by category
 
 ### Analysis
@@ -171,6 +185,8 @@ Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_la
 #### `EnvelopeProbe`
 
 Outputs a smoothed amplitude envelope summary.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -207,6 +223,8 @@ Window $W = f_s/200$; smoothed envelope $e = |x| * \mathrm{boxcar}(W)$; downsamp
 
 Placeholder partial tracker based on spectrum peaks.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `PartialTrackerProbe` means: Placeholder partial tracker based on spectrum peaks. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
@@ -241,6 +259,8 @@ Same computation as `SpectrumProbe`. Placeholder peak-based partial tracker summ
 #### `PeakMeter`
 
 Outputs peak level while passing audio through.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -277,6 +297,8 @@ Pass-through; $\text{value} = \max|x|$.
 
 Pass-through probe with peak/rms summary.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Probe` means: Pass-through probe with peak/rms summary. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
@@ -311,6 +333,8 @@ Pass-through audio; `value` = $\{\text{peak}: \max|x|,\; \text{rms}: \sqrt{\math
 #### `RMSMeter`
 
 Outputs RMS level while passing audio through.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -347,6 +371,8 @@ Pass-through; $\text{value} = \sqrt{\mathrm{mean}(x^2)}$.
 
 Compact spectrogram-like probe summary.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `SpectrogramProbe` means: Compact spectrogram-like probe summary. This block observes an audio signal and returns a compact diagnostic summary while usually passing the signal through.
@@ -381,6 +407,8 @@ Same computation as `SpectrumProbe`.
 #### `SpectrumProbe`
 
 Outputs a compact magnitude spectrum summary.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -418,6 +446,8 @@ Pass-through; `value.bins` = first 128 magnitudes of $|\text{RFFT}(x)|$.
 #### `BodyEQ`
 
 Stable three-band body tone shaping.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -459,6 +489,8 @@ $G$ from `low_gain_db`, `mid_gain_db`, `high_gain_db` as $10^{dB/20}$.
 
 Gentle cabinet radiation tone shaping.
 
+**Maturity:** `working`; computation: `dsp`; primitive family: `RadiationImpedance`.
+
 **Explanation**
 
 **What it means:** `CabinetRadiation` means: Gentle cabinet radiation tone shaping. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
@@ -495,6 +527,8 @@ $$y = \text{sosfilt}(H_{BP}, x)$$
 
 High-frequency duplex scale resonance approximation.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `DuplexScaleResonance` means: High-frequency duplex scale resonance approximation. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
@@ -529,6 +563,8 @@ Same computation as `ResonanceBank`. Different default frequency/gain tables.
 #### `MicPositionFilter`
 
 Simple distance/brightness microphone position filter.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -565,6 +601,8 @@ $$y = \text{sosfilt}(H_{LP}(f_c), x)$$
 #### `ModalBankBody`
 
 Soundboard modal resonance body hosted by ModalBankBodySolver.
+
+**Maturity:** `prototype`; computation: `working_prototype`; solver: `modal_bank_body`; solver-hosted; primitive family: `ModalBody`.
 
 **Explanation**
 
@@ -604,6 +642,8 @@ $$y = (1-m)x + m\,\text{ModalBank}(x; f_k, g_k)$$
 
 Adds a small bank of body resonances.
 
+**Maturity:** `working`; computation: `dsp`; primitive family: `ModalBody`.
+
 **Explanation**
 
 **What it means:** `ResonanceBank` means: Adds a small bank of body resonances. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
@@ -640,6 +680,8 @@ $$y = x + \sum_k g_k \cdot \text{iirpeak}(x, f_k, Q=8)$$
 #### `SoundboardConvolution`
 
 Convolves audio with a simple synthetic body impulse.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -678,6 +720,8 @@ $$y = (1-m)x + m \cdot \mathrm{norm}(x * h), \quad m = \texttt{mix}$$
 
 Soundboard modal resonance approximation.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** **Soundboard modal resonance approximation** means replacing a full vibrating wooden plate simulation with a small bank of resonant filters. In a piano, strings radiate little sound directly; they drive the bridge, the bridge excites the soundboard, and the soundboard amplifies, colors, and radiates the tone.
@@ -712,6 +756,8 @@ Same computation as `ResonanceBank`. Different default frequency/gain tables.
 #### `StereoWidener`
 
 Mono-compatible widening placeholder; outputs shaped mono audio.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -749,6 +795,8 @@ $$y[n] = x[n] + 0.25 \cdot x[n-D]$$ (mono-compatible widening placeholder).
 
 Light sympathetic resonance layer.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `SympatheticResonanceBank` means: Light sympathetic resonance layer. This block shapes the instrument body, room, microphone, or radiation part of the signal chain.
@@ -785,6 +833,8 @@ Same computation as `ResonanceBank`. Different default frequency/gain tables.
 #### `BatchRenderTask`
 
 Metadata for batch panel renders; runner sweeps inputs over panel rows.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -824,6 +874,8 @@ $$\text{result} = \{\,\text{block}: \texttt{BatchRenderTask},\; \text{params}: \
 #### `CalibrationTask`
 
 Metadata for calibration runner: stage, panel, tunables, optimizer.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -865,6 +917,8 @@ $$\text{result} = \{\,\text{block}: \texttt{CalibrationTask},\; \text{params}: \
 
 Describes grid-search calibration settings.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `GridSearch` means: Describes grid-search calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
@@ -900,6 +954,8 @@ $$\text{result} = \{\,\text{block}: \texttt{GridSearch},\; \text{params}: \text{
 #### `LossAggregator`
 
 Weighted sum of up to four scalar loss values.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -940,6 +996,8 @@ $$\text{loss} = \frac{\sum_i w_i \ell_i}{\sum_i w_i}$$
 
 Describes Optuna optimizer calibration settings.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `OptunaOptimizer` means: Describes Optuna optimizer calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
@@ -975,6 +1033,8 @@ $$\text{result} = \{\,\text{block}: \texttt{OptunaOptimizer},\; \text{params}: \
 #### `ParameterBinding`
 
 Metadata block mapping a tunable value to a target graph param path.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1014,6 +1074,8 @@ $$\text{value} = \text{input}, \quad \text{bind\_path} = \texttt{target\_path}$$
 
 Describes a parameter sweep for research graphs.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ParameterSweep` means: Describes a parameter sweep for research graphs. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
@@ -1049,6 +1111,8 @@ $$\text{result} = \{\,\text{block}: \texttt{ParameterSweep},\; \text{params}: \t
 #### `PerNoteTable`
 
 Interpolates per-note parameter bundles from sparse MIDI entries.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1090,6 +1154,8 @@ Outputs: `inharmonicity_B`, `decay_seconds`, `brightness`.
 
 Describes random-search calibration settings.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `RandomSearch` means: Describes random-search calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
@@ -1126,6 +1192,8 @@ $$\text{result} = \{\,\text{block}: \texttt{RandomSearch},\; \text{params}: \tex
 
 Describes scipy optimizer calibration settings.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ScipyOptimizer` means: Describes scipy optimizer calibration settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
@@ -1161,6 +1229,8 @@ $$\text{result} = \{\,\text{block}: \texttt{ScipyOptimizer},\; \text{params}: \t
 #### `TrainableParameter`
 
 Named scalar tunable parameter for calibration graphs.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1207,6 +1277,8 @@ Bounds optional; used by external calibration runner via `bind_path`.
 
 Describes train/validation split settings.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ValidationSplit` means: Describes train/validation split settings. This block describes calibration metadata or a parameter-search operation rather than ordinary sample-by-sample audio DSP.
@@ -1245,6 +1317,8 @@ $$\text{result} = \{\,\text{block}: \texttt{ValidationSplit},\; \text{params}: \
 
 Outputs a constant control value.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Constant` means: Outputs a constant control value. This block converts or maps scalar control values used by other blocks.
@@ -1280,6 +1354,8 @@ $\text{value} = \texttt{value}$ (scalar param, constant for whole render).
 #### `LookupTable`
 
 Interpolates a normalized control input over a value table.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1319,6 +1395,8 @@ $$\text{value} = \text{interp}(\texttt{index}, \text{linspace}(lo, hi, |\texttt{
 
 Converts MIDI note number to frequency.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `MidiToFrequency` means: Converts MIDI note number to frequency. This block converts or maps scalar control values used by other blocks.
@@ -1354,6 +1432,8 @@ $$f = A_4 \cdot 2^{(m - 69)/12}$$
 #### `ParameterCurve`
 
 Maps a control input through a piecewise-linear parameter curve.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1393,6 +1473,8 @@ $$\text{value} = \text{interp}(\texttt{x}, \{x_i\}, \{y_i\})$$
 #### `VelocityCurve`
 
 Maps MIDI velocity to a normalized control value.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1434,6 +1516,8 @@ $$u = v^\gamma, \quad \text{value} = \texttt{min} + u(\texttt{max} - \texttt{min
 
 Fails if audio contains NaN or Inf.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `AssertFinite` means: Fails if audio contains NaN or Inf. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
@@ -1467,6 +1551,8 @@ Pass-through $y = x$ if $\forall n\, \mathrm{finite}(x[n])$; otherwise raise `Va
 #### `AssertNoClipping`
 
 Fails if audio exceeds max peak.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1502,6 +1588,8 @@ Pass-through if $\max|x| \le \texttt{max\_peak}$; otherwise raise.
 
 Fails if audio RMS is below threshold.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `AssertNotSilent` means: Fails if audio RMS is below threshold. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
@@ -1536,6 +1624,8 @@ Pass-through if $\text{RMS}(x) = \sqrt{\mathrm{mean}(x^2)} \ge \texttt{min\_rms}
 
 Passes through a control value and exposes it for debugging.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `PrintValue` means: Passes through a control value and exposes it for debugging. This block checks or prints runtime state so a graph can fail loudly instead of producing misleading audio.
@@ -1569,6 +1659,8 @@ $\text{value}_{out} = \text{value}_{in}$ (debug pass-through).
 #### `StateDump`
 
 Outputs block state placeholder for debugging.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1606,6 +1698,8 @@ $\text{state} = \text{block internal state dict}$ (debug snapshot).
 
 Static sample/millisecond delay.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Delay` means: Static sample/millisecond delay. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
@@ -1642,6 +1736,8 @@ $$y[n] = \text{interp}(n - d, n, x[n])$$
 
 First-order allpass dispersion approximation.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `DispersionAllpass` means: First-order allpass dispersion approximation. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
@@ -1675,6 +1771,8 @@ Same computation as `Allpass`. `coefficient` from param (default 0.4).
 #### `FeedbackDelay`
 
 Simple feedback delay line.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -1714,6 +1812,8 @@ $$w[n] = x[n] + g \cdot w[n-D], \quad y[n] = (1-m)x[n] + m w[n]$$
 
 Linear-interpolated fractional delay.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `FractionalDelay` means: Linear-interpolated fractional delay. This block stores, delays, feeds back, or filters audio in a way commonly used by delay lines and waveguides.
@@ -1747,6 +1847,8 @@ Same computation as `Delay`.
 #### `LoopFilter`
 
 Lowpass loop filter used in waveguides.
+
+**Maturity:** `working`; computation: `dsp`; primitive family: `DampedString`.
 
 **Explanation**
 
@@ -1783,6 +1885,8 @@ $$y = \text{sosfilt}(H_{LP}, x)$$
 #### `WaveguideString`
 
 Karplus-Strong style waveguide string approximation.
+
+**Maturity:** `prototype`; computation: `working_prototype`; solver: `excited_waveguide_string`; solver-hosted; primitive family: `String1D`.
 
 **Explanation**
 
@@ -1836,6 +1940,8 @@ and sums damped modes whose upper partials decay faster. This makes `inharmonici
 
 Whole-buffer ADSR envelope generator.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ADSR` means: Whole-buffer ADSR envelope generator. This block generates an amplitude or control contour over the render buffer.
@@ -1881,6 +1987,8 @@ $$e[n] = \text{piecewise linear segments as above}$$
 
 Generates an exponential decay envelope.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ExponentialDecay` means: Generates an exponential decay envelope. This block generates an amplitude or control contour over the render buffer.
@@ -1921,6 +2029,8 @@ $$e[n] = A \exp(-t_n / \tau)$$
 
 Piecewise-linear whole-buffer envelope.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `MultiSegmentEnvelope` means: Piecewise-linear whole-buffer envelope. This block generates an amplitude or control contour over the render buffer.
@@ -1959,6 +2069,8 @@ $$e[n] = \text{interp}(t_n, \{t_i\}, \{v_i\})$$
 
 Bridge coupling junction with a bidirectional physical input port (representation stub).
 
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `CouplingJunction`.
+
 **Explanation**
 
 **What it means:** A representation stub for future bridge coupling topology.
@@ -1992,6 +2104,8 @@ Representation stub. Passes `input` to `output` when run as ordinary DSP, but it
 #### `CompareTask`
 
 CompareTask placeholder for research graphs.
+
+**Maturity:** `demo`.
 
 **Explanation**
 
@@ -2029,6 +2143,8 @@ $$\text{result} = \{\,\text{block}: \texttt{CompareTask},\; \text{params}: \text
 
 Passes event-shaped values through for event-port validation.
 
+**Maturity:** `demo`.
+
 **Explanation**
 
 **What it means:** `EventPassThrough` means: Passes event-shaped values through for event-port validation. This block exists for research plumbing, event experiments, or physical-topology representation tests.
@@ -2062,6 +2178,8 @@ $$\text{event}_{out} = \text{event}_{in}$$
 #### `EventSource`
 
 Emits an event-shaped value for schema and GUI experiments.
+
+**Maturity:** `demo`.
 
 **Explanation**
 
@@ -2099,6 +2217,8 @@ $$\text{event} = \{\texttt{type}, \texttt{time}, \texttt{payload}, \ldots\}$$ fr
 
 GitCommitTask placeholder for research graphs.
 
+**Maturity:** `demo`.
+
 **Explanation**
 
 **What it means:** `GitCommitTask` means: GitCommitTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
@@ -2134,6 +2254,8 @@ $$\text{result} = \{\,\text{block}: \texttt{GitCommitTask},\; \text{params}: \te
 #### `HumanReviewTask`
 
 HumanReviewTask placeholder for research graphs.
+
+**Maturity:** `demo`.
 
 **Explanation**
 
@@ -2171,6 +2293,8 @@ $$\text{result} = \{\,\text{block}: \texttt{HumanReviewTask},\; \text{params}: \
 
 Minimal stub block with a bidirectional physical coupling port for solver tests.
 
+**Maturity:** `test-only`; computation: `representation_only`; solver: `bidirectional_mechanical_stub`; primitive family: `CouplingJunction`.
+
 **Explanation**
 
 **What it means:** A minimal block for testing bidirectional physical coupling contracts.
@@ -2206,6 +2330,8 @@ Test stub. Optional `audio` input passes through to `audio`; `coupling` ports ex
 #### `PythonCustom`
 
 Runs sandboxed Python on connected inputs. Define process(inputs, n_frames, params, ctx) returning a dict of outputs, or assign to outputs in a short script body. np, math, and ctx helpers are available; imports and filesystem access are blocked.
+
+**Maturity:** `demo`.
 
 **Explanation**
 
@@ -2263,6 +2389,8 @@ No fixed formula — behavior is entirely defined by `code` param.
 
 RenderTask placeholder for research graphs.
 
+**Maturity:** `demo`.
+
 **Explanation**
 
 **What it means:** `RenderTask` means: RenderTask placeholder for research graphs. This block exists for research plumbing, event experiments, or physical-topology representation tests.
@@ -2298,6 +2426,8 @@ $$\text{result} = \{\,\text{block}: \texttt{RenderTask},\; \text{params}: \text{
 #### `ReportTask`
 
 ReportTask placeholder for research graphs.
+
+**Maturity:** `demo`.
 
 **Explanation**
 
@@ -2337,6 +2467,8 @@ $$\text{result} = \{\,\text{block}: \texttt{ReportTask},\; \text{params}: \text{
 
 First-order allpass phase shaper.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Allpass` means: First-order allpass phase shaper. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
@@ -2373,6 +2505,8 @@ $$H(z) = \frac{a + z^{-1}}{1 + a z^{-1}}$$
 
 Bandpass filter.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Bandpass` means: Bandpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
@@ -2407,6 +2541,8 @@ Same computation as `BiquadFilter`. Fixed `mode` for bandpass.
 #### `BiquadFilter`
 
 Generic second-order filter.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2449,6 +2585,8 @@ $$y = \text{sosfilt}(H, x) \quad \text{or} \quad \text{lfilter}(b,a,x)$$
 
 Simple three-band EQ.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `EQ3Band` means: Simple three-band EQ. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
@@ -2485,6 +2623,8 @@ Same computation as `BodyEQ`. Three-band EQ alias using same crossover split.
 
 Butterworth highpass filter.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Highpass` means: Butterworth highpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
@@ -2519,6 +2659,8 @@ Same computation as `BiquadFilter`. Fixed `mode` for highpass.
 
 Butterworth lowpass filter.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Lowpass` means: Butterworth lowpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
@@ -2552,6 +2694,8 @@ Same computation as `BiquadFilter`. Fixed `mode` for lowpass.
 #### `Notch`
 
 Notch filter.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2588,6 +2732,8 @@ Same computation as `BiquadFilter`. Fixed `mode` for notch.
 
 One-pole highpass filter.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `OnePoleHighpass` means: One-pole highpass filter. This block changes the spectrum of an audio signal by emphasizing, attenuating, or phase-shifting frequency regions.
@@ -2621,6 +2767,8 @@ $$y[n] = x[n] - \text{OnePoleLowpass}(x)[n]$$
 #### `OnePoleLowpass`
 
 One-pole lowpass filter.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2660,6 +2808,8 @@ $$H(z) = \frac{\alpha}{1 - (1-\alpha) z^{-1}}$$
 
 Clamps audio to a min/max range.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Clamp` means: Clamps audio to a min/max range. This block performs a generic arithmetic operation on audio or control values.
@@ -2694,6 +2844,8 @@ $$y[n] = \mathrm{clip}(x[n], \texttt{min}, \texttt{max})$$
 #### `Multiply`
 
 Multiplies an audio input by a control or audio factor.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2732,6 +2884,8 @@ where $g$ is `factor` input or param (scalar broadcast).
 
 Peak-normalizes an audio signal.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Normalize` means: Peak-normalizes an audio signal. This block performs a generic arithmetic operation on audio or control values.
@@ -2768,6 +2922,8 @@ $P$ = `peak` (default $\approx -1$ dBFS).
 
 Applies tanh soft clipping.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `SoftClip` means: Applies tanh soft clipping. This block performs a generic arithmetic operation on audio or control values.
@@ -2803,6 +2959,8 @@ $$y[n] = \tanh(d \cdot x[n])$$
 #### `Sum`
 
 Sums up to four audio/control inputs.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2845,6 +3003,8 @@ $$y[n] = \sum_i x_i[n]$$
 
 Aligns reference audio onset to synthetic audio.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `AlignedReference` means: Aligns reference audio onset to synthetic audio. This block computes or packages objective measurements from reference and synthetic audio.
@@ -2879,6 +3039,8 @@ Onset-align reference to synthetic via `align_audio_pair`; truncate/pad to $N$ f
 #### `AttackMetric`
 
 AttackMetric legacy compare metric.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2920,6 +3082,8 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 
 §5.1 basic audio health metric family.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `AudioHealthMetric` means: §5.1 basic audio health metric family. This block computes or packages objective measurements from reference and synthetic audio.
@@ -2956,6 +3120,8 @@ After alignment: $\text{details} = \text{compute\_audio\_health\_metrics}$; $\te
 #### `DecayMetric`
 
 DecayMetric legacy compare metric.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -2997,6 +3163,8 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 
 Subtracts reference audio from synthetic audio.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `DifferenceSignal` means: Subtracts reference audio from synthetic audio. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3031,6 +3199,8 @@ $$y[n] = x_{syn}[n] - x_{ref}[n]$$
 #### `EnvelopeDecayMetric`
 
 §5.3 envelope and decay metrics.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3068,6 +3238,8 @@ After alignment: $\text{details} = \text{compute\_envelope\_decay\_metrics}$; $\
 #### `EnvelopeMetric`
 
 EnvelopeMetric legacy compare metric.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3109,6 +3281,8 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 
 F0Metric legacy compare metric.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `F0Metric` means: F0Metric legacy compare metric. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3148,6 +3322,8 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 #### `LogSTFTMetric`
 
 LogSTFTMetric legacy compare metric.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3189,6 +3365,8 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 
 Maps metric family dict to normalized subscores.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `MetricFamilyScore` means: Maps metric family dict to normalized subscores. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3222,6 +3400,8 @@ $$\text{scores} = \text{compute\_metric\_family\_scores}(\text{metrics dict})$$
 #### `MultiResSTFTMetric`
 
 §5.5 multi-resolution STFT distance metrics.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3259,6 +3439,8 @@ After alignment: $\text{value} = \text{multi\_resolution\_stft\_distance}$ (or `
 #### `OverallScore`
 
 Weighted global score from metric family subscores.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3302,6 +3484,8 @@ Weighted by `weights` when family inputs not wired.
 
 Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_render runner.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `PanelMetricsTask` means: Metadata for batch panel evaluation (velocity/pedal metrics); read by batch_render runner. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3340,6 +3524,8 @@ $$\text{result} = \{\,\text{block}: \texttt{PanelMetricsTask},\; \text{params}: 
 
 §5.7 pedal and resonance metrics across pedal on/off panel rows.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `PedalPanelMetric` means: §5.7 pedal and resonance metrics across pedal on/off panel rows. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3374,6 +3560,8 @@ $$\text{details} = \text{compute\_pedal\_panel\_metrics}(\texttt{panel\_rows}), 
 #### `PitchPartialMetric`
 
 §5.2 pitch and partial structure metrics.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3412,6 +3600,8 @@ After alignment: $\text{details} = \text{compute\_pitch\_partial\_metrics}$; $\t
 
 Compares reference and synthetic audio; outputs metrics dict and scalar loss.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** A metric block that compares synthetic audio to reference audio and emits both detailed metrics and scalar loss.
@@ -3448,6 +3638,8 @@ $$\text{metrics} = \text{compare\_audio}(x_{ref}, x_{syn}, f_s), \quad \text{los
 #### `ReferenceSample`
 
 Loads reference audio from WAV path for metric graphs.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3486,6 +3678,8 @@ $$x[n] = \text{load\_wav}(\texttt{path})[n]$$
 
 Analyzes residual audio with peak/rms summary.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ResidualAnalyzer` means: Analyzes residual audio with peak/rms summary. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3520,6 +3714,8 @@ Same computation as `Probe`. Same peak/RMS summary on residual audio.
 #### `SpectralCentroidMetric`
 
 SpectralCentroidMetric legacy compare metric.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3561,6 +3757,8 @@ Audio output port passes synthetic through unchanged (legacy `_DualMetricBlock`)
 
 §5.4 spectral shape metrics.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `SpectralShapeMetric` means: §5.4 spectral shape metrics. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3597,6 +3795,8 @@ After alignment: $\text{value} = \text{spectral\_centroid\_error}$ from `compute
 #### `ValidityGate`
 
 Hard validity gate for render quality (task.md §4).
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3635,6 +3835,8 @@ $$\{\text{valid}, \text{reasons}\} = \text{check\_validity\_gate}(x_{ref}, x_{sy
 
 §5.6 velocity behavior metrics across a panel of renders.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `VelocityPanelMetric` means: §5.6 velocity behavior metrics across a panel of renders. This block computes or packages objective measurements from reference and synthetic audio.
@@ -3672,6 +3874,8 @@ $$\text{details} = \text{compute\_velocity\_panel\_metrics}(\texttt{panel\_rows}
 
 Applies gain in decibels to an audio input.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Gain` means: Applies gain in decibels to an audio input. This block combines, scales, or emits audio at graph boundaries.
@@ -3707,6 +3911,8 @@ $$y[n] = 10^{\texttt{gain\_db}/20} \cdot x[n]$$
 #### `Mixer`
 
 Mixes up to four optional audio inputs.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3746,6 +3952,8 @@ Sums all connected `audio*` ports.
 #### `Output`
 
 Final graph output with optional peak normalization.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3789,6 +3997,8 @@ Skip normalization when `peak_normalize_db` is null.
 #### `BellModalBody`
 
 Physically-informed struck bell modal body with inharmonic partial families.
+
+**Maturity:** `approximation`; computation: `modal_approximation`; solver: `bell_modal_body`; solver-hosted; primitive family: `CircularMembrane`.
 
 **Explanation**
 
@@ -3835,6 +4045,8 @@ $$y[n] = g_{out}\sum_k a_k(position, hardness) e^{-t_n/\tau_k} \sin(2\pi f_k t_n
 
 Single damped sinusoidal resonator excited by audio energy.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ModalResonator` means: Single damped sinusoidal resonator excited by audio energy. This block represents a sound as a sum of resonant modes with frequencies, amplitudes, and decays.
@@ -3875,6 +4087,8 @@ $A$ = `amplitude`, $\phi$ = `phase`, $t_n = n/f_s$.
 #### `ModalResonatorBank`
 
 Bank of damped sinusoidal resonators.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -3918,6 +4132,8 @@ No stiff-string $B$ term — use `StiffStringModal` for $f_n = n f_0 \sqrt{1 + B
 #### `StruckBarBody`
 
 Physically-informed struck bar body with damped bending modes.
+
+**Maturity:** `approximation`; computation: `modal_approximation`; solver: `struck_bar_body`; solver-hosted; primitive family: `Plate2D`.
 
 **Explanation**
 
@@ -3965,6 +4181,8 @@ $$y[n] = g_{out}\sum_k a_k(position, hardness) e^{-t_n/\tau_k} \sin(2\pi f_k t_n
 #### `PASPBidirectionalHammerString`
 
 Bidirectional PASP hammer-string contact note model.
+
+**Maturity:** `production`; computation: `production_solver`; solver: `nonlinear_hammer_string_contact`; solver-hosted; primitive family: `HammerStringContact`.
 
 **Explanation**
 
@@ -4077,6 +4295,8 @@ The hammer receives $-F_c$ and the modal string receives $+F_c$ at the strike po
 
 Unified bridge impedance, soundboard modal bank, and radiation filter.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** A composite PASP bridge/body stage that combines bridge impedance, modal soundboard response, and radiation filtering.
@@ -4173,6 +4393,8 @@ Couples bridge motion to soundboard excitation via `PASPBridgeSoundboardModel`.
 
 Bridge termination with frequency-dependent loss.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** A bridge-loss stage that shapes how string energy leaves the string side of the model.
@@ -4208,6 +4430,8 @@ Frequency-dependent bridge loss applied via `PASPBridgeModel` (bridge impedance 
 #### `PASPEventPianoModel`
 
 Event-driven PASP piano with note lifecycle, damper, and sustain pedal.
+
+**Maturity:** `working`; solver: `pasp_lifecycle_piano`; solver-hosted.
 
 **Explanation**
 
@@ -4312,6 +4536,8 @@ The solver schedules note_on, note_off, pedal_down, and pedal_up events through 
 
 Nonlinear hammer felt force envelope from velocity and felt parameters.
 
+**Maturity:** `approximation`; computation: `modal_approximation`; primitive family: `HammerStringContact`.
+
 **Explanation**
 
 **What it means:** A nonlinear felt-contact model that turns key velocity into force and compression buffers.
@@ -4358,6 +4584,8 @@ Rendered as force/compression buffers via `PASPHammerFeltModel.render`.
 
 Quasi-static hammer-string contact excitation shaping (phase-1 approximation).
 
+**Maturity:** `approximation`; computation: `modal_approximation`; primitive family: `HammerStringContact`.
+
 **Explanation**
 
 **What it means:** A junction stage that converts hammer contact force/compression into string excitation.
@@ -4396,6 +4624,8 @@ Maps contact force to string excitation via `PASPJunctionModel.shape_excitation`
 #### `PASPNoteFamilyModel`
 
 Bidirectional PASP note with note-family parameter curves (B3–D4 local family).
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -4502,6 +4732,8 @@ Register/family parameterization + per-note PASP render via `NoteFamilyParameter
 
 Coupled PASP hammer-string-bridge-soundboard note model.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** A composite single-note PASP chain: hammer, string, bridge, and soundboard inside one block.
@@ -4604,6 +4836,8 @@ Single-note PASP chain: hammer felt $\to$ string modal line $\to$ bridge $\to$ s
 
 Phrase-level PASP piano with multi-voice scheduling and shared body.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** A phrase-level PASP piano block with multi-voice scheduling and shared body behavior.
@@ -4701,6 +4935,8 @@ Full performance render via `PASPPerformanceRenderer` (multi-note phrase with go
 
 Soundboard modal radiation mix.
 
+**Maturity:** `approximation`; computation: `modal_approximation`; primitive family: `ModalBody`.
+
 **Explanation**
 
 **What it means:** The PASP soundboard stage: it turns bridge/string audio into a modal body/radiation mix.
@@ -4736,6 +4972,8 @@ Soundboard modal bank synthesis via `PASPSoundboardModel` (modal frequencies, de
 #### `PASPStringGroupNoteModel`
 
 Bidirectional PASP note with multi-string unison string groups (A3–C5 register).
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -4845,6 +5083,8 @@ Same computation as `PASPNoteFamilyModel`. Adds per-string group outputs.
 
 Stiff string modal propagation driven by contact excitation.
 
+**Maturity:** `approximation`; computation: `modal_approximation`; primitive family: `String1D`.
+
 **Explanation**
 
 **What it means:** The PASP string propagation stage driven by hammer-string contact excitation.
@@ -4891,11 +5131,561 @@ driven by excitation through `PASPStringLineModel.render`.
 | `string_loss` | float | 0.15 | dimensionless |
 | `string_tension_N` | float | 700.0 | N |
 
+### Physical Primitives
+
+#### `BowStringContact`
+
+Nonlinear bow-string stick-slip contact (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `BowStringContact`.
+
+**Explanation**
+
+**What it means:** A bidirectional bow-string stick-slip contact interface for bowed instruments.
+
+**Why it matters:** Violin and cello require nonlinear bow friction, not a filtered sawtooth exciter.
+
+**How to think about it:** Wire `bow_force` and `string_velocity` as bidirectional mechanical ports between bow and string blocks.
+
+**Caveat:** Representation only. `compile_graph()` fails until `bow_string_contact` coupled solver exists.
+
+**Formula**
+
+Representation only. Target stick-slip bow friction:
+
+$$F_b = \mu(v_{rel})\, F_N, \quad v_{rel} = v_{bow} - v_{string}$$
+
+No computation until `bow_string_contact` coupled solver is registered.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `bow_force` | audio | no |
+| `string_velocity` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `bow_force` | audio | no |
+| `string_velocity` | audio | no |
+
+**Parameters**
+
+—
+
+#### `CircularMembraneModes`
+
+Circular membrane modal synthesis bank (representation only; modal approximation target).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `CircularMembrane`.
+
+**Explanation**
+
+**What it means:** Circular membrane modal synthesis target (drum head, bell-like shells).
+
+**Why it matters:** Drums force Audiolab beyond 1D strings into 2D modal objects.
+
+**How to think about it:** First honest version is modal approximation: impact excites a bank of membrane modes, then radiation.
+
+**Caveat:** Representation only. Not finite-difference membrane simulation.
+
+**Formula**
+
+Representation only. Target modal drum head:
+
+$$u(r,\theta,t) = \sum_{mn} q_{mn}(t)\, \phi_{mn}(r,\theta)$$
+
+with Bessel-function modes on a circular domain (modal approximation, not FDTD).
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `excitation` | audio | no |
+| `surface` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `radiated_audio` | audio | no |
+| `modal_state` | audio | no |
+| `surface` | audio | no |
+
+**Parameters**
+
+- `num_modes`: `16`
+- `radius_m`: `0.18`
+- `tension_n_per_m`: `3000.0`
+
+#### `ConicalBore`
+
+Conical acoustic bore waveguide segment (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `ConicalBore`.
+
+**Explanation**
+
+**What it means:** Conical acoustic bore segment with flare (trumpet, horn, clarinet bell).
+
+**Why it matters:** Conical geometry changes impedance and partial spacing versus cylindrical tubes.
+
+**How to think about it:** Chain conical segments with scattering junctions and radiation boundaries.
+
+**Caveat:** Representation only.
+
+**Formula**
+
+Representation only. Conical bore Webster horn equation (traveling-wave target).
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `wave_left` | audio | no |
+| `wave_right` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `wave_left` | audio | no |
+| `wave_right` | audio | no |
+
+**Parameters**
+
+—
+
+#### `CylindricalBore`
+
+Cylindrical acoustic bore waveguide segment (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `CylindricalBore`.
+
+**Explanation**
+
+**What it means:** Cylindrical acoustic bore traveling-wave segment.
+
+**Why it matters:** Woodwinds and brass propagate pressure waves along tubes with well-defined waveguide semantics.
+
+**How to think about it:** Connect `wave_left` and `wave_right` as bidirectional wave ports between bore segments and junctions.
+
+**Caveat:** Representation only. No bore waveguide solver in the default registry.
+
+**Formula**
+
+Representation only. 1D acoustic waveguide:
+
+$$\frac{\partial^2 p}{\partial x^2} = \frac{1}{c^2}\frac{\partial^2 p}{\partial t^2}$$
+
+with traveling-wave ports `wave_left` / `wave_right`.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `wave_left` | audio | no |
+| `wave_right` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `wave_left` | audio | no |
+| `wave_right` | audio | no |
+
+**Parameters**
+
+—
+
+#### `ImpactContact`
+
+Mallet-head impact against a membrane or plate surface (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `ImpactContact`.
+
+**Explanation**
+
+**What it means:** Nonlinear mallet-head impact against a drum membrane or plate surface.
+
+**Why it matters:** Drums begin with stick/mallet impact, not sustained bow or breath excitation.
+
+**How to think about it:** Connect bidirectional `mallet_velocity` and `surface_velocity` ports between impact and membrane/plate primitives.
+
+**Caveat:** Representation only. `compile_graph()` fails on bidirectional impact topologies until `membrane_shell_modal` exists.
+
+**Formula**
+
+Representation only. Target nonlinear impact:
+
+$$F_n = k\, \max(\delta, 0)^\gamma + d\, v_{rel}$$
+
+between mallet and membrane/plate surface.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `mallet_velocity` | audio | no |
+| `surface_velocity` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `mallet_velocity` | audio | no |
+| `surface_velocity` | audio | no |
+| `contact_force` | audio | no |
+
+**Parameters**
+
+—
+
+#### `ImpedanceBoundary`
+
+Terminal acoustic or mechanical impedance boundary (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `ImpedanceBoundary`.
+
+**Explanation**
+
+**What it means:** Terminal frequency-dependent acoustic or mechanical impedance.
+
+**Why it matters:** Open ends, bells, and bridges impose boundary conditions on traveling waves.
+
+**How to think about it:** Terminate bore or body wave ports with reflected wave output.
+
+**Caveat:** Representation only.
+
+**Formula**
+
+Representation only. Target terminal reflection $R = \frac{Z_L - Z_0}{Z_L + Z_0}$.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `incident` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `reflected` | audio | no |
+
+**Parameters**
+
+—
+
+#### `JetDrive`
+
+Flute-style jet-drive excitation at tone-hole edge (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `JetDrive`.
+
+**Explanation**
+
+**What it means:** Flute-style air jet impinging on a labium edge.
+
+**Why it matters:** Flutes are driven by jet instability, not reeds or lips.
+
+**How to think about it:** Map `breath_pressure` into jet and cavity states feeding a bore or tone-hole network.
+
+**Caveat:** Representation only.
+
+**Formula**
+
+Representation only. Target jet-drive map from breath pressure to jet velocity at labium.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `breath_pressure` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `jet_velocity` | audio | no |
+| `cavity_pressure` | audio | no |
+
+**Parameters**
+
+—
+
+#### `LipReed`
+
+Brass lip-reed nonlinear oscillator coupled to bore reflection (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `LipReed`.
+
+**Explanation**
+
+**What it means:** Brass lip-reed nonlinear oscillator coupled to bore reflection.
+
+**Why it matters:** Trumpet and trombone are self-oscillating feedback systems, not oscillator-plus-filter chains.
+
+**How to think about it:** Close the loop: mouth pressure and bore reflection drive `volume_flow` back into the bore.
+
+**Caveat:** Representation only. `lip_reed_bore_coupled` solver is planned, not registered.
+
+**Formula**
+
+Representation only. Target brass lip oscillator coupled to bore pressure reflection (self-sustained oscillation, not a filter bank).
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `mouth_pressure` | audio | no |
+| `bore_reflection` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `volume_flow` | audio | no |
+| `reed_state` | audio | no |
+
+**Parameters**
+
+—
+
+#### `PlateModes`
+
+Rectangular plate modal synthesis bank (representation only; modal approximation target).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `Plate2D`.
+
+**Explanation**
+
+**What it means:** Rectangular plate modal synthesis target for cymbals and soundboards.
+
+**Why it matters:** Plates add inharmonic bending modes distinct from strings or circular membranes.
+
+**How to think about it:** Feed impact or bridge excitation into modal parameters; read `radiated_audio`.
+
+**Caveat:** Representation only. Modal approximation, not full plate PDE solve.
+
+**Formula**
+
+Representation only. Target plate bending modes with inharmonic partials from rectangular plate theory.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `excitation` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `radiated_audio` | audio | no |
+| `modal_state` | audio | no |
+
+**Parameters**
+
+—
+
+#### `PluckExcitation`
+
+Plucked-string excitation at a position along the string (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `PluckExcitation`.
+
+**Explanation**
+
+**What it means:** Plucked-string excitation at a position along a string.
+
+**Why it matters:** Guitar and harp attacks are localized force injections, not hammer felt contact.
+
+**How to think about it:** Drive `pluck_force` and `pluck_position` into a string primitive or waveguide excitation port.
+
+**Caveat:** Representation only. No registered pluck-string coupled solver in the default registry.
+
+**Formula**
+
+Representation only. Localized pluck force $F_p(t)$ at position $\alpha L$ on a string segment.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `pluck_force` | audio | no |
+| `pluck_position` | control | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `excitation` | audio | no |
+
+**Parameters**
+
+—
+
+#### `RadiationImpedance`
+
+Acoustic radiation impedance boundary (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `RadiationImpedance`.
+
+**Explanation**
+
+**What it means:** Acoustic radiation impedance at an instrument opening.
+
+**Why it matters:** All acoustic instruments radiate into air with frequency-dependent load.
+
+**How to think about it:** Place at bore or body openings to split radiated and reflected acoustic energy.
+
+**Caveat:** Representation only.
+
+**Formula**
+
+Representation only. Target radiation load $Z_{rad}(\omega)$ relating cavity pressure to radiated acoustic power.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `acoustic` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `radiated` | audio | no |
+| `reflected` | audio | no |
+
+**Parameters**
+
+—
+
+#### `ScatteringJunction`
+
+Multi-port wave scattering junction (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `ScatteringJunction`.
+
+**Explanation**
+
+**What it means:** Multi-port acoustic or mechanical wave scattering junction.
+
+**Why it matters:** Coupled physical solvers need explicit junctions for energy-conserving splits and reflections.
+
+**How to think about it:** Wire incident and reflected wave ports between bores, bodies, and terminators.
+
+**Caveat:** Representation only. `scattering_junction` solver is planned.
+
+**Formula**
+
+Representation only. Target scattering matrix $S$ relating incident and reflected wave amplitudes at a junction.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `incident_a` | audio | no |
+| `incident_b` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `reflected_a` | audio | no |
+| `reflected_b` | audio | no |
+| `transmitted` | audio | no |
+
+**Parameters**
+
+—
+
+#### `SingleReed`
+
+Single-reed mouthpiece oscillator (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `SingleReed`.
+
+**Explanation**
+
+**What it means:** Single-reed mouthpiece beating against a lay (clarinet, saxophone).
+
+**Why it matters:** Reed instruments use a different nonlinearity than brass lips.
+
+**How to think about it:** Couple `mouth_pressure`, `bore_reflection`, and `reed_gap` in a bore feedback loop.
+
+**Caveat:** Representation only.
+
+**Formula**
+
+Representation only. Target reed beating map from mouth pressure and bore reflection to volume flow.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `mouth_pressure` | audio | no |
+| `bore_reflection` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `volume_flow` | audio | no |
+| `reed_gap` | audio | no |
+
+**Parameters**
+
+—
+
+#### `StringBridgeCoupler`
+
+String-to-body bridge mechanical coupler (representation only).
+
+**Maturity:** `representation-only`; computation: `representation_only`; primitive family: `CouplingJunction`.
+
+**Explanation**
+
+**What it means:** String-to-body bridge mechanical coupler for violin and guitar topology.
+
+**Why it matters:** Energy leaves the string through bridge impedance into body modes.
+
+**How to think about it:** Connect bidirectional `string_bridge` and `body_input` between string and modal body primitives.
+
+**Caveat:** Representation only. Not a production bridge scattering solver.
+
+**Formula**
+
+Representation only. Target bridge impedance coupling between string termination and body input DOFs.
+
+**Inputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `string_bridge` | audio | no |
+
+**Outputs**
+
+| Port | Kind | Required |
+| --- | --- | --- |
+| `string_bridge` | audio | no |
+| `body_input` | audio | no |
+
+**Parameters**
+
+—
+
 ### Piano
 
 #### `BridgeMixer`
 
 Mixes string signals before body coupling.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -4936,6 +5726,8 @@ $$y = 10^{\texttt{gain\_db}/20} \cdot \mathrm{mean}(x_i)$$
 
 Simple damper release envelope.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `DamperReleaseEnvelope` means: Simple damper release envelope. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -4970,6 +5762,8 @@ $$e[n] = \exp(-t_n / \tau), \quad \tau = \texttt{release\_ms}/1000$$
 
 Fractional delay tuned for string experiments.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `FractionalStringDelay` means: Fractional delay tuned for string experiments. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5003,6 +5797,8 @@ $$y[n] = \text{interp}(n - d, n, x[n]), \quad d = \texttt{delay\_samples}$$
 #### `HammerExcitation`
 
 Deterministic short hammer-like excitation burst.
+
+**Maturity:** `prototype`; computation: `working_prototype`; primitive family: `PluckExcitation`.
 
 **Explanation**
 
@@ -5044,6 +5840,8 @@ $$x[n] = v \cdot e[n] \cdot \text{LP}(\mathcal{N}(0,1)), \quad \text{peak-normal
 
 Lowpass felt softness filter for hammer excitation.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `HammerFeltFilter` means: Lowpass felt softness filter for hammer excitation. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5080,6 +5878,8 @@ $$y = \text{ButterworthLP}(x, f_c)$$
 
 Short deterministic hammer noise component.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `HammerNoise` means: Short deterministic hammer noise component. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5115,6 +5915,8 @@ $$x[n] = A v \mathcal{N}(0,1)_n \exp(-t_n/\tau), \quad \tau = \texttt{decay\_ms}
 #### `HammerVelocityMapper`
 
 Maps velocity to hammer force and brightness controls.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5153,6 +5955,8 @@ $$\text{force} = v^{\texttt{force\_gamma}}, \quad \text{brightness} = v^{\texttt
 #### `ModelHammerExcitation`
 
 Hammer excitation ported from model/piano_model.py.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5194,6 +5998,8 @@ Impulse + velocity-scaled bright noise, attack envelope, one-pole smoothing with
 
 Stereo spread and normalization from model/piano_model.py.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `ModelStereoOutput` means: Stereo spread and normalization from model/piano_model.py. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5232,6 +6038,8 @@ $$L = m, \quad R = 0.97\, m[n-D] + 0.03\, m[n]$$
 
 Creates a unison-like blend with small deterministic detunes.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `MultiStringUnison` means: Creates a unison-like blend with small deterministic detunes. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5268,6 +6076,8 @@ $$y[n] = \frac{1}{S}\sum_{i=0}^{S-1} \mathrm{roll}(x, \Delta_i)$$
 #### `NonlinearHammer`
 
 Simple nonlinear hammer contact shaping.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5306,6 +6116,8 @@ $F$ = `force` input.
 
 Expands performance events into per-buffer control trajectories.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `NotePerformanceSchedule` means: Expands performance events into per-buffer control trajectories. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5343,6 +6155,8 @@ Expands sorted performance events into per-sample control buffers: active MIDI n
 #### `PianoStringBank`
 
 Piano string bank ported from model/piano_model.py.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5401,6 +6215,8 @@ Sum of detuned `_pluck_loop` voices with register-dependent unison (2 strings lo
 
 Single piano waveguide loop ported from model/piano_model.py.
 
+**Maturity:** `prototype`; computation: `working_prototype`; solver: `excited_waveguide_string`; solver-hosted; primitive family: `String1D`.
+
 **Explanation**
 
 **What it means:** `PianoWaveguideString` means: Single piano waveguide loop ported from model/piano_model.py. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5454,6 +6270,8 @@ Delay-line pluck loop (`_pluck_loop`) with note-position-dependent $T_{60}$, bri
 
 Event-driven polyphonic Karplus-Strong string bank (solver-hosted).
 
+**Maturity:** `prototype`; computation: `working_prototype`; solver: `polyphonic_excited_waveguide`; solver-hosted; primitive family: `String1D`.
+
 **Explanation**
 
 **What it means:** An event-driven version of the waveguide string path that can host several active notes.
@@ -5497,6 +6315,8 @@ Solver-hosted event-driven Karplus-Strong voice bank. `note_on` events allocate 
 #### `StiffStringModal`
 
 Simple stiff-string modal synthesis approximation.
+
+**Maturity:** `approximation`; computation: `modal_approximation`; primitive family: `StiffString`.
 
 **Explanation**
 
@@ -5548,6 +6368,8 @@ $\beta$ = `brightness`, $\tau$ = `decay_seconds`, $\phi_n$ random from `seed`. S
 
 Lightweight energy coupling for up to three string signals.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `StringCouplingMatrix` means: Lightweight energy coupling for up to three string signals. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5586,6 +6408,8 @@ $$y = (1-c) x_0 + c \bar{x}$$
 
 Applies detune in cents to a frequency control.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `StringDetune` means: Applies detune in cents to a frequency control. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5619,6 +6443,8 @@ $$f_{out} = f_{in} \cdot 2^{\texttt{cents}/1200}$$
 #### `StringDispersion`
 
 Applies allpass-like dispersion to a string signal.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5654,6 +6480,8 @@ Same computation as `Allpass`. String dispersion via allpass coefficient.
 
 Frequency-dependent string loss lowpass.
 
+**Maturity:** `working`; computation: `dsp`; primitive family: `DampedString`.
+
 **Explanation**
 
 **What it means:** `StringLossFilter` means: Frequency-dependent string loss lowpass. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5687,6 +6515,8 @@ $$y = \text{ButterworthLP}(x, \texttt{cutoff\_hz})$$
 #### `StringModeBank`
 
 Alias-style string modal bank for piano string experiments.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5732,6 +6562,8 @@ Same computation as `StiffStringModal`.
 
 Applies terminal reflection gain to a string signal.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `StringTermination` means: Applies terminal reflection gain to a string signal. This block is piano-specific DSP or a legacy/model-recreation component.
@@ -5765,6 +6597,8 @@ $$y[n] = \texttt{reflection} \cdot x[n]$$
 #### `SustainPedalDamping`
 
 Pedal-controlled sustain decay approximation.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5806,6 +6640,8 @@ $$y[n] = x[n] \exp(-t_n/\tau)$$
 
 Single-sample impulse excitation.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `Impulse` means: Single-sample impulse excitation. This block creates an audio signal without requiring an audio input.
@@ -5844,6 +6680,8 @@ $A$ = `amplitude`.
 #### `NoiseBurst`
 
 Deterministic decaying noise burst.
+
+**Maturity:** `working`.
 
 **Explanation**
 
@@ -5885,6 +6723,8 @@ Peak-normalized: $x = A v \cdot x_{raw} / \max|x_{raw}|$, $A$ = `amplitude`.
 
 Offline mono sample player for references or excitation.
 
+**Maturity:** `working`.
+
 **Explanation**
 
 **What it means:** `SamplePlayer` means: Offline mono sample player for references or excitation. This block creates an audio signal without requiring an audio input.
@@ -5924,6 +6764,8 @@ Empty path → zeros.
 #### `SineOscillator`
 
 Whole-buffer sine oscillator.
+
+**Maturity:** `working`.
 
 **Explanation**
 
