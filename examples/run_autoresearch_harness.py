@@ -17,7 +17,7 @@ DEFAULT_REGISTRY = ROOT / "workspace/experiments/model_registry"
 DEFAULT_POLICY = ROOT / "examples/governance/pasp_promotion_policy_v1.json"
 
 sys.path.insert(0, str(SRC))
-from dsp_lab.autoresearch.path_utils import resolve_baseline_eval_dir
+from audiolab.autoresearch.path_utils import resolve_baseline_eval_dir
 
 
 def _env() -> dict[str, str]:
@@ -216,7 +216,7 @@ def cmd_promote(args: argparse.Namespace) -> int:
     promote_cmd = [
         sys.executable,
         "-m",
-        "dsp_lab.governance.promote_model",
+        "audiolab.governance.promote_model",
         "--model-id",
         model_id,
         "--registry",

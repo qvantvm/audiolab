@@ -1,6 +1,6 @@
 # Audiolab architecture
 
-Audiolab (`dsp_lab`) is the sound-engine component of Project Auralis: a graph-based offline DSP engine with a 133-block library, PASP physical piano modeling, calibration, and headless autoresearch.
+Audiolab (`audiolab`) is the sound-engine component of Project Auralis: a graph-based offline DSP engine with a 133-block library, PASP physical piano modeling, calibration, and headless autoresearch.
 
 ## Layered architecture
 
@@ -20,13 +20,13 @@ block registry
 
 | Package | Role |
 |---------|------|
-| `dsp_lab/graph/` | Schema, validation, compilation, execution |
-| `dsp_lab/blocks/` | Block implementations + `metadata.py` + `registry.py` |
-| `dsp_lab/physics/pasp_piano/` | PASP physics cores (not graph-aware) |
-| `dsp_lab/audio/` | WAV I/O and `compare_audio` metrics |
-| `dsp_lab/api/` | Agent-facing `render_graph()` and `compare_audio()` wrappers |
-| `dsp_lab/experiments/` | Calibration and batch render |
-| `dsp_lab/autoresearch/` | Closed-loop research harness |
+| `audiolab/graph/` | Schema, validation, compilation, execution |
+| `audiolab/blocks/` | Block implementations + `metadata.py` + `registry.py` |
+| `audiolab/physics/pasp_piano/` | PASP physics cores (not graph-aware) |
+| `audiolab/audio/` | WAV I/O and `compare_audio` metrics |
+| `audiolab/api/` | Agent-facing `render_graph()` and `compare_audio()` wrappers |
+| `audiolab/experiments/` | Calibration and batch render |
+| `audiolab/autoresearch/` | Closed-loop research harness |
 
 ## Physical modeling tiers
 
@@ -40,8 +40,8 @@ PASP strings are **modal approximations** (`PASPStringLine`), not delay-line wav
 
 1. Inspect `list_blocks()` / `get_block_spec(type)`
 2. Author `graph.json`
-3. `validate_graph()` or `dsp-lab validate`
-4. `render_graph(graph_path, wav_path)` from `dsp_lab.api`
+3. `validate_graph()` or `audiolab validate`
+4. `render_graph(graph_path, wav_path)` from `audiolab.api`
 5. `compare_audio(candidate, reference)` for objective feedback
 6. Iterate on graph parameters and topology
 
@@ -56,4 +56,4 @@ See [agent_usage.md](agent_usage.md) and [object_based_physical_modeling.md](obj
 - [piano_blocks.md](piano_blocks.md) — piano/PASP block guide
 - [audiolab_migration_audit.md](audiolab_migration_audit.md) — full block inventory
 
-Legacy operator docs remain under `docs/dsp_lab/`.
+Legacy operator docs remain under `docs/audiolab/`.

@@ -12,9 +12,9 @@ if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
-import dsp_lab.graph.physical.solvers  # noqa: F401
-from dsp_lab.graph.hash import graph_content_hash
-from dsp_lab.graph.serialization import load_graph
+import audiolab.graph.physical.solvers  # noqa: F401
+from audiolab.graph.hash import graph_content_hash
+from audiolab.graph.serialization import load_graph
 from tests.golden_audio_utils import audio_content_hash, render_waveguide_graph
 
 MANIFEST_PATH = ROOT / "tests/fixtures/golden/minimal_waveguide_A4.json"

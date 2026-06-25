@@ -39,9 +39,9 @@ def main() -> int:
         print(f"Graph not found: {graph_path}", file=sys.stderr)
         return 1
 
-    from dsp_lab.validation import validate_graph_file
-    from dsp_lab.graph.executor import render_graph
-    from dsp_lab.graph.serialization import load_graph
+    from audiolab.validation import validate_graph_file
+    from audiolab.graph.executor import render_graph
+    from audiolab.graph.serialization import load_graph
 
     report = validate_graph_file(graph_path)
     if not report.valid:
@@ -60,7 +60,7 @@ def main() -> int:
     print(f"Blocks: {', '.join(block_types)}")
 
     if args.calibrate:
-        from dsp_lab.experiments.calibration import run_calibration_cycle
+        from audiolab.experiments.calibration import run_calibration_cycle
 
         out_dir = args.out.resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -79,7 +79,7 @@ def main() -> int:
     out_dir = args.out.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     wav_path = out_dir / "render.wav"
-    from dsp_lab.audio.io import save_wav
+    from audiolab.audio.io import save_wav
 
     save_wav(wav_path, result.audio, result.sample_rate)
     meta = {

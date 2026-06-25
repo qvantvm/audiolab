@@ -1,6 +1,6 @@
 # Graph schema
 
-Audiolab graphs are JSON files validated by Pydantic (`src/dsp_lab/graph/schema.py`). Schema version: **`0.1`**.
+Audiolab graphs are JSON files validated by Pydantic (`src/audiolab/graph/schema.py`). Schema version: **`0.1`**.
 
 ## Top-level fields
 
@@ -72,14 +72,14 @@ MidiToFrequency + PASPHammerFelt → PASPHammerStringJunction → PASPStringLine
 ## Validation
 
 ```bash
-dsp-lab validate examples/piano/minimal_A4_note.json
+audiolab validate examples/piano/minimal_A4_note.json
 ```
 
 Python:
 
 ```python
-from dsp_lab.graph.serialization import load_graph
-from dsp_lab.graph.validator import validate_graph
+from audiolab.graph.serialization import load_graph
+from audiolab.graph.validator import validate_graph
 
 graph = load_graph("examples/piano/minimal_A4_note.json")
 result = validate_graph(graph)
@@ -90,7 +90,7 @@ Validation checks include: duplicate IDs, unknown block types, port existence, p
 ## Load / save
 
 ```python
-from dsp_lab.graph.serialization import load_graph, save_graph
+from audiolab.graph.serialization import load_graph, save_graph
 ```
 
-See also `docs/dsp_lab/graph_schema.md` for historical operator notes.
+See also `docs/audiolab/graph_schema.md` for historical operator notes.

@@ -8,10 +8,10 @@ from typing import Any
 
 import numpy as np
 
-import dsp_lab.graph.physical.solvers  # noqa: F401
-from dsp_lab.audio.metrics.common import envelope, estimate_f0
-from dsp_lab.graph.executor import RenderResult, render_graph
-from dsp_lab.graph.serialization import load_graph
+import audiolab.graph.physical.solvers  # noqa: F401
+from audiolab.audio.metrics.common import envelope, estimate_f0
+from audiolab.graph.executor import RenderResult, render_graph
+from audiolab.graph.serialization import load_graph
 
 STRING_BLOCK_ID = "string"
 

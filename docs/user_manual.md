@@ -28,7 +28,7 @@ Audiolab takes a graph-based, offline, evidence-first physical-modeling research
 |--------|------------|
 | **New users** | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) |
 | **Researchers** | Part 1 (theory), then [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) and [roadmap](roadmap.md) |
-| **Operators** (baseline eval, autoresearch cycles) | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), Part 2 §6, [dsp_lab/guide.md](dsp_lab/guide.md) |
+| **Operators** (baseline eval, autoresearch cycles) | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), Part 2 §6, [audiolab/guide.md](audiolab/guide.md) |
 | **Agent authors** (Auralis consumers) | [Agent safety contract](#agent-safety-contract), [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures), [agent_usage.md](agent_usage.md) |
 
 ## Choose your path
@@ -39,11 +39,11 @@ Audiolab takes a graph-based, offline, evidence-first physical-modeling research
 | Waveguide / solver research | [Tutorial 2](#tutorial-2--intermediate-waveguide-string--modal-body) |
 | Calibration / autoresearch | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) |
 | Theory-first readers | [Part 1](#part-1--theory) |
-| Operators (full runbook) | Part 2 §6 + [dsp_lab/guide.md](dsp_lab/guide.md) |
+| Operators (full runbook) | Part 2 §6 + [audiolab/guide.md](audiolab/guide.md) |
 
 ## What Audiolab is
 
-Audiolab (`dsp_lab`) is a **standalone synthesis and research engine**. It provides:
+Audiolab (`audiolab`) is a **standalone synthesis and research engine**. It provides:
 
 - **DSP graph engine** — JSON graphs, block registry, validation, offline render
 - **PyQt graph editor** — visual authoring and calibration UI
@@ -67,7 +67,7 @@ This table is the manual's short truth table. The canonical solver status is [`r
 | Feature | Status | Evidence | Limitations |
 |---------|--------|----------|-------------|
 | T1 signal graph render | Working | `examples/graphs/sine_test.json`, `examples/piano/minimal_A4_note.json`, CLI/API render paths | Offline only; signal routing does not imply physical coupling |
-| Block registry and validation | Working | Registry docs/tests, `dsp-lab list-blocks`, `validate_graph()` | The count of blocks is inventory, not quality evidence |
+| Block registry and validation | Working | Registry docs/tests, `audiolab list-blocks`, `validate_graph()` | The count of blocks is inventory, not quality evidence |
 | `String1D` T2 solver | Working prototype | `excited_waveguide_string`, `minimal_waveguide_A4.json`, golden audio tests | Karplus-Strong-style delay loop at `B=0`; reduced-order stiff-string modal approximation when `inharmonicity_B > 0` |
 | `PolyphonicWaveguideString` T2 solver | Working prototype | `polyphonic_excited_waveguide`, event graphs | One solver-hosted polyphonic path; not full piano voice realism |
 | `StringTerminationImpedance` boundary solver | Working prototype | `string_termination_impedance`, `string_termination_impedance_A4.json` | Solver-hosted string termination with impedance reflection/loss diagnostics; not generic bridge scattering |
@@ -166,11 +166,11 @@ Audiolab provides the synthesis, evaluation, calibration, and headless autoresea
 
 | Path | What lives there |
 |------|------------------|
-| `src/dsp_lab/` | Engine, graph compiler/executor, UI, evaluation, autoresearch, governance |
+| `src/audiolab/` | Engine, graph compiler/executor, UI, evaluation, autoresearch, governance |
 | `examples/` | Runnable scripts, graph JSON, calibration configs, autoresearch policies |
 | `data/` | Evaluation manifests plus local/gitreignored reference WAV generation |
-| `docs/dsp_lab/` | Operator and subsystem guides |
-| `tests/dsp_lab/` | Pytest suite and doc integrity checks |
+| `docs/audiolab/` | Operator and subsystem guides |
+| `tests/audiolab/` | Pytest suite and doc integrity checks |
 | `workspace/` | Runtime outputs, experiments, renders, and calibration bundles (gitignored) |
 
 ## Documentation map
@@ -181,14 +181,14 @@ Audiolab provides the synthesis, evaluation, calibration, and headless autoresea
 | Understand graphs and execution tiers | Part 1 below · [architecture.md](architecture.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | See what renders today vs what is planned | [Current capability matrix](#current-capability-matrix) · [roadmap.md](roadmap.md) |
 | Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
-| Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](dsp_lab/cli.md) |
-| Calibrate parameters to a reference | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) · [calibration.md](dsp_lab/calibration.md) |
+| Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](audiolab/cli.md) |
+| Calibrate parameters to a reference | [Tutorial 3](#tutorial-3--advanced-phrases-calibration-and-honest-failures) · [calibration.md](audiolab/calibration.md) |
 | Generate local reference WAVs | Part 2 §5–6 · [data/README.md](../data/README.md) · [data/references/README.md](../data/references/README.md) |
-| Run autoresearch (no agents) | Part 2 §6 · [dsp_lab/guide.md](dsp_lab/guide.md) |
-| Register or promote a model candidate | Part 2 §6 · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
+| Run autoresearch (no agents) | Part 2 §6 · [audiolab/guide.md](audiolab/guide.md) |
+| Register or promote a model candidate | Part 2 §6 · [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md) |
 | Build an agent loop | [Agent safety contract](#agent-safety-contract) · [agent_usage.md](agent_usage.md) |
-| Look up block equations | [dsp_lab/pasp_block_io_reference.md](dsp_lab/pasp_block_io_reference.md) |
-| Find example scripts and graphs | [dsp_lab/examples_index.md](dsp_lab/examples_index.md) |
+| Look up block equations | [audiolab/pasp_block_io_reference.md](audiolab/pasp_block_io_reference.md) |
+| Find example scripts and graphs | [audiolab/examples_index.md](audiolab/examples_index.md) |
 
 ---
 
@@ -228,7 +228,7 @@ Audiolab is an **offline** engine: `render_graph()` synthesizes the **entire** `
 | Whole-buffer render | Same graph + inputs → same audio (deterministic blocks) |
 | `block_size` | Scheduling hint for the executor loop; does not imply streaming I/O |
 | `graph_hash` | SHA-256 of graph content for regression and candidate tracking |
-| Golden audio tests | Scientific checks on F0, envelope, spectral centroid ([`test_golden_audio.py`](../tests/dsp_lab/test_golden_audio.py)) |
+| Golden audio tests | Scientific checks on F0, envelope, spectral centroid ([`test_golden_audio.py`](../tests/audiolab/test_golden_audio.py)) |
 
 Because execution is offline, research loops can replay renders exactly, compare hashes across commits, and attach objective metrics without timing jitter.
 
@@ -261,7 +261,7 @@ After `validate_graph()` succeeds:
 | `solver_hosted` | Block skipped in signal loop; physical solver owns it |
 | `subsystem_internal` | Block inside a T3 connected-component subsystem |
 
-**Deep dive:** [`compiler.py`](../src/dsp_lab/graph/compiler.py) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
+**Deep dive:** [`compiler.py`](../src/audiolab/graph/compiler.py) · [object_based_physical_modeling.md](object_based_physical_modeling.md)
 
 ## 2. Blocks and the registry
 
@@ -274,7 +274,7 @@ Every block type is registered with:
 Discover blocks programmatically:
 
 ```python
-from dsp_lab.blocks.registry import list_blocks, get_block_spec
+from audiolab.blocks.registry import list_blocks, get_block_spec
 
 for spec in list_blocks():
     if spec.pasp_classification == "pasp_core":
@@ -439,7 +439,7 @@ The model-recreation track uses higher-level model blocks to recreate known inst
 
 Beyond single notes, use the specialist PASP docs for string groups, lifecycle/damper/pedal behavior, note-family/register calibration, and phrase-level performance rendering.
 
-**Deep dive:** [minimal_piano_note.md](minimal_piano_note.md) · [piano_blocks.md](piano_blocks.md) · [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) · [dsp_lab/pasp_string_group_modeling.md](dsp_lab/pasp_string_group_modeling.md) · [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) · [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) · [dsp_lab/model_recreation.md](dsp_lab/model_recreation.md) · [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md)
+**Deep dive:** [minimal_piano_note.md](minimal_piano_note.md) · [piano_blocks.md](piano_blocks.md) · [audiolab/pasp_piano_blocks.md](audiolab/pasp_piano_blocks.md) · [audiolab/pasp_string_group_modeling.md](audiolab/pasp_string_group_modeling.md) · [audiolab/pasp_lifecycle_damper_pedal.md](audiolab/pasp_lifecycle_damper_pedal.md) · [audiolab/pasp_performance_rendering.md](audiolab/pasp_performance_rendering.md) · [audiolab/model_recreation.md](audiolab/model_recreation.md) · [audiolab/pasp_modeling_discipline.md](audiolab/pasp_modeling_discipline.md)
 
 ## 5. Research and autoresearch philosophy
 
@@ -464,7 +464,7 @@ Prove the engine works **without agents** (`smoke_pasp_autoresearch.py`, baselin
 
 Cycle acceptance and model promotion are intentionally separate: an accepted cycle produces a candidate with evidence, but it does not become the active baseline unless governance gates and any required human review pass.
 
-**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md) · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md)
+**Deep dive:** [agent_usage.md](agent_usage.md) · [audiolab/pasp_streamlined_system.md](audiolab/pasp_streamlined_system.md) · [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md)
 
 ## 6. Metrics, bundles, and regression
 
@@ -497,7 +497,7 @@ Use `compare_audio()` for single-pair checks during development. Use **panel eva
 
 `graph_hash` fingerprints the graph JSON (excluding UI layout). Autoresearch uses it to track candidates, detect unintended topology drift, and gate regression. Golden audio tests combine hash checks with scientific assertions (F0 ~ 440 Hz, envelope decay, determinism).
 
-**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/calibration.md](dsp_lab/calibration.md)
+**Deep dive:** [agent_usage.md](agent_usage.md) · [audiolab/calibration.md](audiolab/calibration.md)
 
 ## 7. Design principles (research safety)
 
@@ -541,7 +541,7 @@ A candidate may be accepted only if:
 
 Cycle acceptance and model promotion are different gates. `decision.json` can accept a cycle candidate, but active-baseline promotion still requires governance policy checks and any required human review.
 
-**Deep dive:** [agent_usage.md](agent_usage.md) · [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md) · [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md)
+**Deep dive:** [agent_usage.md](agent_usage.md) · [audiolab/pasp_modeling_discipline.md](audiolab/pasp_modeling_discipline.md) · [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md)
 
 ---
 
@@ -566,21 +566,21 @@ Or follow **[Tutorial 1](#tutorial-1--beginner-your-first-piano-note)** for a gu
 
 ```bash
 # Sanity check
-dsp-lab validate examples/graphs/sine_test.json
-dsp-lab render examples/graphs/sine_test.json --out /tmp/sine.wav
+audiolab validate examples/graphs/sine_test.json
+audiolab render examples/graphs/sine_test.json --out /tmp/sine.wav
 
 # PASP decomposed A4 note
-dsp-lab validate examples/piano/minimal_A4_note.json
-dsp-lab render examples/piano/minimal_A4_note.json --out /tmp/a4.wav
+audiolab validate examples/piano/minimal_A4_note.json
+audiolab render examples/piano/minimal_A4_note.json --out /tmp/a4.wav
 
 # Waveguide + modal body
-dsp-lab render examples/piano/waveguide_modal_body_A4.json --out /tmp/waveguide_body.wav
+audiolab render examples/piano/waveguide_modal_body_A4.json --out /tmp/waveguide_body.wav
 ```
 
 ### Python API
 
 ```python
-from dsp_lab.api.render import render_graph
+from audiolab.api.render import render_graph
 
 result = render_graph(
     graph_path="examples/piano/minimal_A4_note.json",
@@ -606,14 +606,14 @@ The CLI uses the graph's `sample_rate` and `duration` fields. The agent-facing P
 
 | Command | Use |
 |---------|-----|
-| `dsp-lab list-blocks` | Browse registered block types |
-| `dsp-lab inspect-block String1D` | Inspect ports, params, and metadata for one block |
-| `dsp-lab render graph.json --out out.wav --probes probes.npz` | Render and save requested graph probes |
-| `dsp-lab compare --real ref.wav --synthetic out.wav --out metrics.json` | Compare one synthetic WAV to one reference WAV |
-| `dsp-lab run-experiment --graph graph.json --real ref.wav --out workspace/experiments/demo` | Render, optionally compare, and write a bundle |
-| `dsp-lab report --experiment workspace/experiments/demo` | Print a Markdown summary for an experiment bundle |
+| `audiolab list-blocks` | Browse registered block types |
+| `audiolab inspect-block String1D` | Inspect ports, params, and metadata for one block |
+| `audiolab render graph.json --out out.wav --probes probes.npz` | Render and save requested graph probes |
+| `audiolab compare --real ref.wav --synthetic out.wav --out metrics.json` | Compare one synthetic WAV to one reference WAV |
+| `audiolab run-experiment --graph graph.json --real ref.wav --out workspace/experiments/demo` | Render, optionally compare, and write a bundle |
+| `audiolab report --experiment workspace/experiments/demo` | Print a Markdown summary for an experiment bundle |
 
-There is no `dsp-lab calibrate` subcommand yet. Use `python examples/run_calibration_example.py` or `run_calibration_cycle()` from Python.
+There is no `audiolab calibrate` subcommand yet. Use `python examples/run_calibration_example.py` or `run_calibration_cycle()` from Python.
 
 ## 3. Authoring graphs
 
@@ -624,21 +624,21 @@ Graphs are plain JSON. Top-level fields: `schema_version`, `name`, `sample_rate`
 Always **validate before render**:
 
 ```bash
-dsp-lab validate my_graph.json --json
-dsp-lab inspect-block String1D
+audiolab validate my_graph.json --json
+audiolab inspect-block String1D
 ```
 
 ### GUI editor
 
 ```bash
-python -m dsp_lab.app.main examples/piano/minimal_A4_note.json
+python -m audiolab.app.main examples/piano/minimal_A4_note.json
 ```
 
 The GUI supports graph editing, validation, render preview, and calibration. **Render** is one offline forward pass at current parameters. **Calibrate** runs many renders from a `CalibrationTask` block, compares them to reference WAVs, writes `graph_calibrated.json`, and reloads the calibrated graph. Save the graph to disk before calibrating.
 
 For an opaque composite model-block GUI demo, open `examples/graphs/pasp_single_note_sound.json`.
 
-**Deep dive:** [dsp_lab/cli.md](dsp_lab/cli.md) · [dsp_lab/gui.md](dsp_lab/gui.md) · [graph_schema.md](graph_schema.md)
+**Deep dive:** [audiolab/cli.md](audiolab/cli.md) · [audiolab/gui.md](audiolab/gui.md) · [graph_schema.md](graph_schema.md)
 
 ## 4. Workflow guide
 
@@ -646,21 +646,21 @@ For an opaque composite model-block GUI demo, open `examples/graphs/pasp_single_
 |------------|------------|---------|
 | Learn step-by-step | [Part 3 — Tutorials](#part-3--tutorials) | This manual |
 | Render one PASP note | `examples/piano/minimal_A4_note.json` | [minimal_piano_note.md](minimal_piano_note.md) |
-| Render composite PASP note | `examples/graphs/pasp_note_c4.json` or `python examples/run_pasp_note_example.py` | [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) |
+| Render composite PASP note | `examples/graphs/pasp_note_c4.json` or `python examples/run_pasp_note_example.py` | [audiolab/pasp_piano_blocks.md](audiolab/pasp_piano_blocks.md) |
 | Karplus string research | `examples/piano/minimal_waveguide_A4.json` | [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | Waveguide + modal body | `examples/piano/waveguide_modal_body_A4.json` | [roadmap.md](roadmap.md) |
 | Phrase / polyphony | `examples/piano/waveguide_modal_body_A4_events.json` | Events in [object_based_physical_modeling.md](object_based_physical_modeling.md) |
-| Phrase-level PASP performance | `examples/graphs/pasp_performance_model_base.json` | [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) |
-| Damper/pedal lifecycle | `examples/graphs/pasp_lifecycle_c4_pedal_hold.json` | [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) |
-| Note-family calibration | `examples/graphs/pasp_family_b3_d4.json` | [dsp_lab/pasp_note_family_calibration.md](dsp_lab/pasp_note_family_calibration.md) |
-| Register A3–C5 calibration | `examples/graphs/pasp_register_a3_c5.json` | [dsp_lab/pasp_register_calibration.md](dsp_lab/pasp_register_calibration.md) |
+| Phrase-level PASP performance | `examples/graphs/pasp_performance_model_base.json` | [audiolab/pasp_performance_rendering.md](audiolab/pasp_performance_rendering.md) |
+| Damper/pedal lifecycle | `examples/graphs/pasp_lifecycle_c4_pedal_hold.json` | [audiolab/pasp_lifecycle_damper_pedal.md](audiolab/pasp_lifecycle_damper_pedal.md) |
+| Note-family calibration | `examples/graphs/pasp_family_b3_d4.json` | [audiolab/pasp_note_family_calibration.md](audiolab/pasp_note_family_calibration.md) |
+| Register A3–C5 calibration | `examples/graphs/pasp_register_a3_c5.json` | [audiolab/pasp_register_calibration.md](audiolab/pasp_register_calibration.md) |
 | Parameter maps (no MidiToFrequency wiring) | `examples/piano/hammer_waveguide_body_parameter_maps_A4.json` | Parameter maps section in OBPM doc |
-| Calibrate to reference WAV | `examples/graphs/calibration_minimal_c4.json` | [calibration.md](dsp_lab/calibration.md) |
+| Calibrate to reference WAV | `examples/graphs/calibration_minimal_c4.json` | [calibration.md](audiolab/calibration.md) |
 | Generate reference WAVs | `python data/generate_references.py` | [data/README.md](../data/README.md) |
-| Score model on full panel | `run_autoresearch_harness.py baseline` | [dsp_lab/guide.md](dsp_lab/guide.md) |
-| Run one improvement cycle | `run_autoresearch_harness.py full` | [dsp_lab/guide.md](dsp_lab/guide.md) |
-| Promote accepted candidate | `run_autoresearch_harness.py promote --cycle ...` | [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
-| Agent loop (from Auralis) | `dsp_lab.api.render` + `compare_audio` | [agent_usage.md](agent_usage.md) |
+| Score model on full panel | `run_autoresearch_harness.py baseline` | [audiolab/guide.md](audiolab/guide.md) |
+| Run one improvement cycle | `run_autoresearch_harness.py full` | [audiolab/guide.md](audiolab/guide.md) |
+| Promote accepted candidate | `run_autoresearch_harness.py promote --cycle ...` | [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md) |
+| Agent loop (from Auralis) | `audiolab.api.render` + `compare_audio` | [agent_usage.md](agent_usage.md) |
 
 ## 5. Calibration and metrics
 
@@ -706,11 +706,11 @@ python examples/run_calibration_example.py \
   --out workspace/experiments/calibration_demo
 ```
 
-Inspect `workspace/experiments/calibration_demo/` for `render.wav`, `metrics.json`, `graph_hash.txt`, calibration logs, and calibrated graph/parameter JSON. Use `dsp-lab run-experiment` for a single render/compare bundle that does not search parameters.
+Inspect `workspace/experiments/calibration_demo/` for `render.wav`, `metrics.json`, `graph_hash.txt`, calibration logs, and calibrated graph/parameter JSON. Use `audiolab run-experiment` for a single render/compare bundle that does not search parameters.
 
-**Golden audio tests** (`tests/dsp_lab/test_golden_audio.py`) guard deterministic waveguide regression (F0, envelope, spectral centroid).
+**Golden audio tests** (`tests/audiolab/test_golden_audio.py`) guard deterministic waveguide regression (F0, envelope, spectral centroid).
 
-**Deep dive:** [dsp_lab/calibration.md](dsp_lab/calibration.md)
+**Deep dive:** [audiolab/calibration.md](audiolab/calibration.md)
 
 ## 6. Autoresearch for operators
 
@@ -776,7 +776,7 @@ python examples/run_autoresearch_harness.py promote \
 
 Default governance can register candidates without auto-promoting them. Do not treat a calibrated graph or accepted cycle as the active model until promotion gates pass.
 
-**Full operator runbook:** [dsp_lab/guide.md](dsp_lab/guide.md)
+**Full operator runbook:** [audiolab/guide.md](audiolab/guide.md)
 
 ## 7. Troubleshooting
 
@@ -843,7 +843,7 @@ This is a **T1 signal chain** — every block runs via `DSPBlock.process()`; no 
 ### Step 2 — Validate (representation check)
 
 ```bash
-dsp-lab validate examples/piano/minimal_A4_note.json
+audiolab validate examples/piano/minimal_A4_note.json
 ```
 
 Validation answers: do ports exist? Do kinds match? Are parameters in range? It does **not** check whether you have the latest solver — that is compile time.
@@ -852,7 +852,7 @@ Validation answers: do ports exist? Do kinds match? Are parameters in range? It 
 
 ```bash
 mkdir -p workspace
-dsp-lab render examples/piano/minimal_A4_note.json --out workspace/tutorial_beginner_a4.wav
+audiolab render examples/piano/minimal_A4_note.json --out workspace/tutorial_beginner_a4.wav
 ```
 
 Listen to `workspace/tutorial_beginner_a4.wav`. Sonic quality is not the goal; a non-silent, finite WAV means the pipeline works.
@@ -860,7 +860,7 @@ Listen to `workspace/tutorial_beginner_a4.wav`. Sonic quality is not the goal; a
 ### Step 4 — Optional: GUI
 
 ```bash
-python -m dsp_lab.app.main examples/piano/minimal_A4_note.json
+python -m audiolab.app.main examples/piano/minimal_A4_note.json
 ```
 
 Use Validate and Render in the UI. Save the graph to disk before calibrating.
@@ -868,7 +868,7 @@ Use Validate and Render in the UI. Save the graph to disk before calibrating.
 ### Step 5 — Python API
 
 ```python
-from dsp_lab.api.render import render_graph
+from audiolab.api.render import render_graph
 
 result = render_graph(
     graph_path="examples/piano/minimal_A4_note.json",
@@ -893,7 +893,7 @@ Re-render and compare RMS or listen for shorter decay.
 Probes listed in the graph are recorded when the render pipeline collects them. Use them to verify intermediate stages (hammer force, string audio) without adding `Output` blocks on every node.
 
 ```bash
-dsp-lab render examples/piano/minimal_A4_note.json \
+audiolab render examples/piano/minimal_A4_note.json \
   --out workspace/tutorial_beginner_a4.wav \
   --probes workspace/tutorial_beginner_probes.npz
 ```
@@ -923,7 +923,7 @@ dsp-lab render examples/piano/minimal_A4_note.json \
 ### Step 1 — Minimal waveguide (one T2 solver)
 
 ```bash
-dsp-lab render examples/piano/minimal_waveguide_A4.json --out workspace/tutorial_waveguide.wav
+audiolab render examples/piano/minimal_waveguide_A4.json --out workspace/tutorial_waveguide.wav
 ```
 
 Open the graph:
@@ -943,7 +943,7 @@ In `minimal_hammer_waveguide_body_A4.json`: **two** isolated-host subsystems (`s
 ### Step 3 — Waveguide + modal body
 
 ```bash
-dsp-lab render examples/piano/waveguide_modal_body_A4.json --out workspace/tutorial_waveguide_body.wav
+audiolab render examples/piano/waveguide_modal_body_A4.json --out workspace/tutorial_waveguide_body.wav
 ```
 
 Two solvers: `excited_waveguide_string` then `modal_bank_body`, connected by a **signal** edge (`string.audio → body.audio`). Read any compile warnings in the console — they describe which solvers were selected.
@@ -951,7 +951,7 @@ Two solvers: `excited_waveguide_string` then `modal_bank_body`, connected by a *
 ### Step 4 — Mixed T1 + T2 chain
 
 ```bash
-dsp-lab render examples/piano/minimal_hammer_waveguide_body_A4.json --out workspace/tutorial_hammer_waveguide_body.wav
+audiolab render examples/piano/minimal_hammer_waveguide_body_A4.json --out workspace/tutorial_hammer_waveguide_body.wav
 ```
 
 | Block | Tier |
@@ -966,7 +966,7 @@ Hammer excitation is ordinary DSP; string and body are physical solvers. This is
 ### Step 5 — Structured warnings
 
 ```python
-from dsp_lab.api.render import render_graph
+from audiolab.api.render import render_graph
 
 result = render_graph("examples/piano/minimal_waveguide_A4.json", "workspace/wg.wav")
 for w in result.structured_warnings:
@@ -980,13 +980,13 @@ If you see `PARAM_ACCEPTED_BUT_NOT_IMPLEMENTED` for a tunable, do not tune that 
 If you have generated a matching local reference WAV under `data/` or `data/references/`:
 
 ```bash
-dsp-lab compare \
+audiolab compare \
   --real data/references/piano/A4_v100.wav \
   --synthetic workspace/tutorial_waveguide.wav \
   --out workspace/tutorial_waveguide_metrics.json
 ```
 
-Pick a reference that matches the rendered note/event. The path above is a local, gitignored A4 register reference produced by `python data/generate_references.py`; it is not shipped in git. Or use `compare_audio()` from `dsp_lab.api.compare`.
+Pick a reference that matches the rendered note/event. The path above is a local, gitignored A4 register reference produced by `python data/generate_references.py`; it is not shipped in git. Or use `compare_audio()` from `audiolab.api.compare`.
 
 ### Step 7 — Parameter maps (preview)
 
@@ -1026,7 +1026,7 @@ Open `examples/piano/waveguide_modal_body_A4_events.json`. Note `graph.events`:
 ```
 
 ```bash
-dsp-lab render examples/piano/waveguide_modal_body_A4_events.json --out workspace/tutorial_events.wav
+audiolab render examples/piano/waveguide_modal_body_A4_events.json --out workspace/tutorial_events.wav
 ```
 
 Contrast with Tutorial 2 step 3: static graphs use scalar `inputs`; event graphs drive `PolyphonicWaveguideString` via `polyphonic_excited_waveguide` with sample-accurate note_on/off.
@@ -1038,11 +1038,11 @@ Optional: `examples/piano/polyphonic_two_note_overlap.json` for overlapping note
 Bidirectional bridge wiring is **valid representation** but **unsupported computation** today.
 
 ```python
-from dsp_lab.graph.serialization import load_graph
-from dsp_lab.graph.schema import ConnectionSpec
-from dsp_lab.graph.validator import validate_graph
-from dsp_lab.graph.compiler import compile_graph
-from dsp_lab.graph.physical.errors import UnsupportedComputationError
+from audiolab.graph.serialization import load_graph
+from audiolab.graph.schema import ConnectionSpec
+from audiolab.graph.validator import validate_graph
+from audiolab.graph.compiler import compile_graph
+from audiolab.graph.physical.errors import UnsupportedComputationError
 
 graph = load_graph("examples/piano/minimal_waveguide_A4.json")
 graph.blocks.append({"id": "coupler", "type": "BridgeCoupler", "params": {}})
@@ -1119,7 +1119,7 @@ If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_me
 
 ### Next
 
-- Operators: [dsp_lab/guide.md](dsp_lab/guide.md) (full runbook)
+- Operators: [audiolab/guide.md](audiolab/guide.md) (full runbook)
 - Agents: [agent_usage.md](agent_usage.md)
 - Solver status: [roadmap.md](roadmap.md)
 
@@ -1138,41 +1138,41 @@ If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_me
 | Object-based physical modeling | [object_based_physical_modeling.md](object_based_physical_modeling.md) |
 | Solver roadmap | [roadmap.md](roadmap.md) |
 | Agent API | [agent_usage.md](agent_usage.md) |
-| Blocks (generated list) | [dsp_lab/blocks.md](dsp_lab/blocks.md) |
-| Block API | [dsp_lab/block_api.md](dsp_lab/block_api.md) |
-| CLI | [dsp_lab/cli.md](dsp_lab/cli.md) |
-| GUI | [dsp_lab/gui.md](dsp_lab/gui.md) |
-| Calibration | [dsp_lab/calibration.md](dsp_lab/calibration.md) |
-| Experiments | [dsp_lab/experiments.md](dsp_lab/experiments.md) |
-| Model recreation | [dsp_lab/model_recreation.md](dsp_lab/model_recreation.md) |
+| Blocks (generated list) | [audiolab/blocks.md](audiolab/blocks.md) |
+| Block API | [audiolab/block_api.md](audiolab/block_api.md) |
+| CLI | [audiolab/cli.md](audiolab/cli.md) |
+| GUI | [audiolab/gui.md](audiolab/gui.md) |
+| Calibration | [audiolab/calibration.md](audiolab/calibration.md) |
+| Experiments | [audiolab/experiments.md](audiolab/experiments.md) |
+| Model recreation | [audiolab/model_recreation.md](audiolab/model_recreation.md) |
 
 ### PASP modeling
 
 | Topic | Document |
 |-------|----------|
-| PASP blocks | [dsp_lab/pasp_piano_blocks.md](dsp_lab/pasp_piano_blocks.md) |
+| PASP blocks | [audiolab/pasp_piano_blocks.md](audiolab/pasp_piano_blocks.md) |
 | Piano block inventory | [piano_blocks.md](piano_blocks.md) |
-| Block I/O and equations | [dsp_lab/pasp_block_io_reference.md](dsp_lab/pasp_block_io_reference.md) |
-| Modeling discipline | [dsp_lab/pasp_modeling_discipline.md](dsp_lab/pasp_modeling_discipline.md) |
+| Block I/O and equations | [audiolab/pasp_block_io_reference.md](audiolab/pasp_block_io_reference.md) |
+| Modeling discipline | [audiolab/pasp_modeling_discipline.md](audiolab/pasp_modeling_discipline.md) |
 | Minimal piano note | [minimal_piano_note.md](minimal_piano_note.md) |
-| String-group modeling | [dsp_lab/pasp_string_group_modeling.md](dsp_lab/pasp_string_group_modeling.md) |
-| Lifecycle, damper, pedal | [dsp_lab/pasp_lifecycle_damper_pedal.md](dsp_lab/pasp_lifecycle_damper_pedal.md) |
-| Note-family calibration | [dsp_lab/pasp_note_family_calibration.md](dsp_lab/pasp_note_family_calibration.md) |
-| Register A3–C5 | [dsp_lab/pasp_register_calibration.md](dsp_lab/pasp_register_calibration.md) |
-| Performance rendering | [dsp_lab/pasp_performance_rendering.md](dsp_lab/pasp_performance_rendering.md) |
+| String-group modeling | [audiolab/pasp_string_group_modeling.md](audiolab/pasp_string_group_modeling.md) |
+| Lifecycle, damper, pedal | [audiolab/pasp_lifecycle_damper_pedal.md](audiolab/pasp_lifecycle_damper_pedal.md) |
+| Note-family calibration | [audiolab/pasp_note_family_calibration.md](audiolab/pasp_note_family_calibration.md) |
+| Register A3–C5 | [audiolab/pasp_register_calibration.md](audiolab/pasp_register_calibration.md) |
+| Performance rendering | [audiolab/pasp_performance_rendering.md](audiolab/pasp_performance_rendering.md) |
 
 ### Autoresearch
 
 | Topic | Document |
 |-------|----------|
-| Operator guide (runbook) | [dsp_lab/guide.md](dsp_lab/guide.md) |
-| System overview | [dsp_lab/pasp_streamlined_system.md](dsp_lab/pasp_streamlined_system.md) |
-| Dataset evaluation | [dsp_lab/pasp_dataset_evaluation.md](dsp_lab/pasp_dataset_evaluation.md) |
-| Autoresearch loop | [dsp_lab/pasp_autoresearch_loop.md](dsp_lab/pasp_autoresearch_loop.md) |
-| LLM planner | [dsp_lab/pasp_llm_planner.md](dsp_lab/pasp_llm_planner.md) |
-| Active learning | [dsp_lab/pasp_active_learning.md](dsp_lab/pasp_active_learning.md) |
-| Model governance | [dsp_lab/pasp_model_governance.md](dsp_lab/pasp_model_governance.md) |
-| All doc hub | [dsp_lab/README.md](dsp_lab/README.md) |
+| Operator guide (runbook) | [audiolab/guide.md](audiolab/guide.md) |
+| System overview | [audiolab/pasp_streamlined_system.md](audiolab/pasp_streamlined_system.md) |
+| Dataset evaluation | [audiolab/pasp_dataset_evaluation.md](audiolab/pasp_dataset_evaluation.md) |
+| Autoresearch loop | [audiolab/pasp_autoresearch_loop.md](audiolab/pasp_autoresearch_loop.md) |
+| LLM planner | [audiolab/pasp_llm_planner.md](audiolab/pasp_llm_planner.md) |
+| Active learning | [audiolab/pasp_active_learning.md](audiolab/pasp_active_learning.md) |
+| Model governance | [audiolab/pasp_model_governance.md](audiolab/pasp_model_governance.md) |
+| All doc hub | [audiolab/README.md](audiolab/README.md) |
 
 ### Tutorials (this manual)
 
@@ -1188,7 +1188,7 @@ If you ran the Tutorial 2 compare instead, read `workspace/tutorial_waveguide_me
 
 Runnable scripts, graph JSON, calibration configs, and autoresearch policies:
 
-- Catalog: [dsp_lab/examples_index.md](dsp_lab/examples_index.md)
+- Catalog: [audiolab/examples_index.md](audiolab/examples_index.md)
 - Layout: [examples/README.md](../examples/README.md)
 
 Key graph directories:

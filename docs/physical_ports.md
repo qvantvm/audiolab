@@ -82,7 +82,7 @@ Use the decomposed **audio signal chain** (see `examples/piano/minimal_A4_note.j
 ## Inspecting ports
 
 ```python
-from dsp_lab.blocks.registry import get_block_spec
+from audiolab.blocks.registry import get_block_spec
 spec = get_block_spec("PASPHammerFelt")
 print(spec.output_ports)
 ```

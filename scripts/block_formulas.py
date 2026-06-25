@@ -1,4 +1,4 @@
-"""Formula markdown snippets for docs/dsp_lab/blocks.md."""
+"""Formula markdown snippets for docs/audiolab/blocks.md."""
 
 from __future__ import annotations
 

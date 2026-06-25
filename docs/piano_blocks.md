@@ -19,7 +19,7 @@ Piano-related blocks span three tiers plus PASP composites. None are removed in 
 | `PASPEventPianoModel` | Note on/off, damper, sustain pedal |
 | `PASPPerformanceModel` | Phrase scheduling, polyphony |
 
-Physics implementation: `src/dsp_lab/physics/pasp_piano/`.
+Physics implementation: `src/audiolab/physics/pasp_piano/`.
 
 ## Legacy / model piano (tiers 1–2)
 
@@ -64,4 +64,4 @@ Classification: `piano_specific` or `legacy` in registry metadata.
 - Graph-level event stream execution (events in composite `params.events` today)
 - Delay-line PASP strings (PASP uses modal `PASPStringLine`)
 
-See `docs/dsp_lab/pasp_piano_blocks.md` for equations and operator detail.
+See `docs/audiolab/pasp_piano_blocks.md` for equations and operator detail.

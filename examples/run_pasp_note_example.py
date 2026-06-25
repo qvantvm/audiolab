@@ -39,11 +39,11 @@ def main() -> int:
         print(f"Graph not found: {graph_path}", file=sys.stderr)
         return 1
 
-    import dsp_lab.blocks  # noqa: F401
-    from dsp_lab.audio.io import save_wav
-    from dsp_lab.graph.executor import render_graph
-    from dsp_lab.graph.serialization import load_graph
-    from dsp_lab.graph.validator import validate_graph
+    import audiolab.blocks  # noqa: F401
+    from audiolab.audio.io import save_wav
+    from audiolab.graph.executor import render_graph
+    from audiolab.graph.serialization import load_graph
+    from audiolab.graph.validator import validate_graph
 
     graph = load_graph(graph_path)
     if args.midi_note is not None:

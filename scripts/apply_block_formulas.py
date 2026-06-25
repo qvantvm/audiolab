@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Insert **Formula** sections into docs/dsp_lab/blocks.md from block_formulas.py."""
+"""Insert **Formula** sections into docs/audiolab/blocks.md from block_formulas.py."""
 
 from __future__ import annotations
 
@@ -11,11 +11,11 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import dsp_lab.blocks  # noqa: E402
+import audiolab.blocks  # noqa: E402
 from block_formulas import BLOCK_FORMULAS  # noqa: E402
-from dsp_lab.blocks.registry import BLOCK_REGISTRY  # noqa: E402
+from audiolab.blocks.registry import BLOCK_REGISTRY  # noqa: E402
 
-DOCS_PATH = ROOT / "docs" / "dsp_lab" / "blocks.md"
+DOCS_PATH = ROOT / "docs" / "audiolab" / "blocks.md"
 
 
 def _remove_existing_formula(section: str) -> str:

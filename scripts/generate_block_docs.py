@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate docs/dsp_lab/blocks.md from the registered DSP Lab blocks."""
+"""Generate docs/audiolab/blocks.md from the registered DSP Lab blocks."""
 
 from __future__ import annotations
 
@@ -12,13 +12,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import dsp_lab.blocks  # noqa: E402,F401
+import audiolab.blocks  # noqa: E402,F401
 from block_explanations import build_block_explanations  # noqa: E402
 from block_formulas import BLOCK_FORMULAS  # noqa: E402
-from dsp_lab.blocks.metadata import BlockTypeSpec, build_block_type_spec  # noqa: E402
-from dsp_lab.blocks.registry import BLOCK_REGISTRY  # noqa: E402
+from audiolab.blocks.metadata import BlockTypeSpec, build_block_type_spec  # noqa: E402
+from audiolab.blocks.registry import BLOCK_REGISTRY  # noqa: E402
 
-DOCS_PATH = ROOT / "docs" / "dsp_lab" / "blocks.md"
+DOCS_PATH = ROOT / "docs" / "audiolab" / "blocks.md"
 
 
 def _fmt(value: Any) -> str:
@@ -135,12 +135,12 @@ def generate() -> str:
     header_without_rows = [
         "# DSP Lab Block Reference",
         "",
-        f"Catalog of **{len(BLOCK_REGISTRY)}** registered blocks in `dsp_lab`: maturity labels, ports, kinds, parameters, explanations, and formulas.",
+        f"Catalog of **{len(BLOCK_REGISTRY)}** registered blocks in `audiolab`: maturity labels, ports, kinds, parameters, explanations, and formulas.",
         "Port kinds: **audio** (per-block buffer), **control** (scalar), **event** (note/event payloads).",
         "",
         "Calibration workflow (`CalibrationTask`, tunables, GUI **Calibrate** button): [calibration.md](calibration.md).",
         "",
-        "Source of truth: `src/dsp_lab/blocks/` and `BLOCK_REGISTRY`. Regenerate this catalog:",
+        "Source of truth: `src/audiolab/blocks/` and `BLOCK_REGISTRY`. Regenerate this catalog:",
         "",
         "```bash",
         "PYTHONPATH=src python scripts/generate_block_docs.py",
@@ -155,7 +155,7 @@ def generate() -> str:
         "",
         "## Summary",
         "",
-        "Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/dsp_lab/blocks.md`).",
+        "Block detail sections are `#### ` headings (grep: `grep -n '^#### `' docs/audiolab/blocks.md`).",
         "",
         "| Block | Category | Maturity | Inputs | Outputs | Start line | End line |",
         "| --- | --- | --- | --- | --- | --- | --- |",

@@ -13,7 +13,7 @@ inspect registry → propose graph.json → validate → render WAV → compare 
 ## 1. Discover blocks
 
 ```python
-from dsp_lab.blocks.registry import list_blocks, get_block_spec
+from audiolab.blocks.registry import list_blocks, get_block_spec
 
 for spec in list_blocks():
     if spec.pasp_classification == "pasp_core":
@@ -26,8 +26,8 @@ print(hammer.parameters)
 ## 2. Validate a graph
 
 ```python
-from dsp_lab.graph.serialization import load_graph
-from dsp_lab.graph.validator import validate_graph
+from audiolab.graph.serialization import load_graph
+from audiolab.graph.validator import validate_graph
 
 graph = load_graph("examples/piano/minimal_A4_note.json")
 result = validate_graph(graph)
@@ -39,7 +39,7 @@ if not result.valid:
 Per-node validation:
 
 ```python
-from dsp_lab.blocks.registry import validate_node
+from audiolab.blocks.registry import validate_node
 
 errors = validate_node({"id": "hammer", "type": "PASPHammerFelt", "params": {"felt_p": 99}})
 ```
@@ -47,7 +47,7 @@ errors = validate_node({"id": "hammer", "type": "PASPHammerFelt", "params": {"fe
 ## 3. Render
 
 ```python
-from dsp_lab.api.render import render_graph
+from audiolab.api.render import render_graph
 
 meta = render_graph(
     graph_path="examples/piano/minimal_A4_note.json",
@@ -68,7 +68,7 @@ render_graph("examples/graphs/pasp_performance_model_base.json", "out.wav", even
 ## 4. Compare audio
 
 ```python
-from dsp_lab.api.compare import compare_audio
+from audiolab.api.compare import compare_audio
 
 result = compare_audio(
     candidate_wav="workspace/agent_a4.wav",
@@ -163,18 +163,18 @@ Example: `String1D.bridge → BridgeCoupler.input` passes `validate_graph()` but
 ## CLI equivalents
 
 ```bash
-dsp-lab list-blocks
-dsp-lab inspect-block PASPNoteModel
-dsp-lab validate examples/piano/minimal_A4_note.json --json
-dsp-lab render examples/piano/minimal_A4_note.json --out out.wav
-dsp-lab compare --real ref.wav --synthetic syn.wav --out metrics.json
+audiolab list-blocks
+audiolab inspect-block PASPNoteModel
+audiolab validate examples/piano/minimal_A4_note.json --json
+audiolab render examples/piano/minimal_A4_note.json --out out.wav
+audiolab compare --real ref.wav --synthetic syn.wav --out metrics.json
 ```
 
 ## Tests
 
 ```bash
 pip install -e ".[dev]"
-pytest tests/dsp_lab/test_block_registry_metadata.py tests/dsp_lab/test_graph_validation_migration.py tests/dsp_lab/test_agent_api.py -q
+pytest tests/audiolab/test_block_registry_metadata.py tests/audiolab/test_graph_validation_migration.py tests/audiolab/test_agent_api.py -q
 ```
 
 No external services required. Render outputs include deterministic `graph_hash` for regression checks.

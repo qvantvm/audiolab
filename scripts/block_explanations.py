@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from dsp_lab.blocks.help import build_block_explanations
+from audiolab.blocks.help import build_block_explanations
 
 __all__ = ["build_block_explanations"]

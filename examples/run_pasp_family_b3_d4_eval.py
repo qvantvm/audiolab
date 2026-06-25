@@ -52,15 +52,15 @@ def main() -> int:
     renders_dir.mkdir(parents=True, exist_ok=True)
     diagnostics_dir.mkdir(parents=True, exist_ok=True)
 
-    import dsp_lab.blocks  # noqa: F401
-    from dsp_lab.audio.metrics.contact_diagnostics import summarize_contact_diagnostics
-    from dsp_lab.audio.metrics.physical_plausibility import flag_suspicious_behavior
-    from dsp_lab.experiments.note_family_calibration import (
+    import audiolab.blocks  # noqa: F401
+    from audiolab.audio.metrics.contact_diagnostics import summarize_contact_diagnostics
+    from audiolab.audio.metrics.physical_plausibility import flag_suspicious_behavior
+    from audiolab.experiments.note_family_calibration import (
         batch_render_family_panel,
         evaluate_note_family,
         run_note_family_calibration_cycle,
     )
-    from dsp_lab.graph.serialization import load_graph
+    from audiolab.graph.serialization import load_graph
 
     graph_dict = json.loads(graph_path.read_text(encoding="utf-8"))
     eval_graph_path = graph_path

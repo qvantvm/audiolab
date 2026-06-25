@@ -1,11 +1,11 @@
 # Block registry
 
-The central registry lives in `src/dsp_lab/blocks/registry.py`. Blocks self-register via `@register_block` when their modules are imported (`dsp_lab.blocks`).
+The central registry lives in `src/audiolab/blocks/registry.py`. Blocks self-register via `@register_block` when their modules are imported (`audiolab.blocks`).
 
 ## API
 
 ```python
-from dsp_lab.blocks.registry import (
+from audiolab.blocks.registry import (
     list_blocks,
     get_block_spec,
     validate_node,
@@ -34,13 +34,13 @@ from dsp_lab.blocks.registry import (
 - `physical_role`, `interpretability_level`
 - `reuse_as_is`, `needs_metadata`, `needs_refactor`
 
-Metadata is built in `src/dsp_lab/blocks/metadata.py` from block class attributes plus PASP overrides.
+Metadata is built in `src/audiolab/blocks/metadata.py` from block class attributes plus PASP overrides.
 
 ## CLI
 
 ```bash
-dsp-lab list-blocks
-dsp-lab inspect-block PASPStringLine
+audiolab list-blocks
+audiolab inspect-block PASPStringLine
 ```
 
 ## Graph validation integration
@@ -49,6 +49,6 @@ dsp-lab inspect-block PASPStringLine
 
 ## Block count
 
-The generated current count is in [dsp_lab/blocks.md](dsp_lab/blocks.md), which is rebuilt from `BLOCK_REGISTRY`.
+The generated current count is in [audiolab/blocks.md](audiolab/blocks.md), which is rebuilt from `BLOCK_REGISTRY`.
 
 Categories used in migration metadata include: `signal`, `control`, `filter`, `delay/waveguide`, `piano-specific`, `physical mechanical`, `physical acoustic`, `modal/body`, `analysis`, `utility`, `output/rendering`.

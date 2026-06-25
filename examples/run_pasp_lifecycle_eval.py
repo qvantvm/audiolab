@@ -33,8 +33,8 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args()
 
-    import dsp_lab.blocks  # noqa: F401
-    from dsp_lab.experiments.lifecycle_calibration import (
+    import audiolab.blocks  # noqa: F401
+    from audiolab.experiments.lifecycle_calibration import (
         batch_render_lifecycle_panel,
         evaluate_lifecycle_panel,
     )

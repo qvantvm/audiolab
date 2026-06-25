@@ -12,37 +12,37 @@ python3 scripts/generate_migration_audit.py
 
 | Subsystem | Paths |
 |-----------|-------|
-| Graph schema | `src/dsp_lab/graph/schema.py`, `serialization.py` |
-| Validation | `src/dsp_lab/graph/validator.py`, `src/dsp_lab/validation/graph_file.py` |
-| Compilation / render | `src/dsp_lab/graph/compiler.py`, `executor.py` |
-| Block registry | `src/dsp_lab/blocks/registry.py`, `base.py`, `__init__.py` |
-| Block library | `src/dsp_lab/blocks/*.py` (18 modules, 133 types) |
-| PASP physics | `src/dsp_lab/physics/pasp_piano/` (24 modules) |
-| Metrics | `src/dsp_lab/audio/metrics/` |
+| Graph schema | `src/audiolab/graph/schema.py`, `serialization.py` |
+| Validation | `src/audiolab/graph/validator.py`, `src/audiolab/validation/graph_file.py` |
+| Compilation / render | `src/audiolab/graph/compiler.py`, `executor.py` |
+| Block registry | `src/audiolab/blocks/registry.py`, `base.py`, `__init__.py` |
+| Block library | `src/audiolab/blocks/*.py` (18 modules, 133 types) |
+| PASP physics | `src/audiolab/physics/pasp_piano/` (24 modules) |
+| Metrics | `src/audiolab/audio/metrics/` |
 | Examples | `examples/graphs/`, `examples/calibration/`, `examples/piano/` |
-| Tests | `tests/dsp_lab/` (38 modules) |
-| Existing docs | `docs/dsp_lab/` |
+| Tests | `tests/audiolab/` (38 modules) |
+| Existing docs | `docs/audiolab/` |
 
 ### Files added or modified in this migration
 
 | Path | Purpose |
 |------|---------|
-| `src/dsp_lab/blocks/metadata.py` | `BlockTypeSpec`, `PortSpec`, physical metadata inference |
-| `src/dsp_lab/blocks/registry.py` | `list_blocks()`, `get_block_spec()`, `validate_node()` |
-| `src/dsp_lab/graph/validator.py` | Parameter + physical port validation |
-| `src/dsp_lab/api/render.py` | Agent `render_graph()` wrapper |
-| `src/dsp_lab/api/compare.py` | Agent `compare_audio()` wrapper |
+| `src/audiolab/blocks/metadata.py` | `BlockTypeSpec`, `PortSpec`, physical metadata inference |
+| `src/audiolab/blocks/registry.py` | `list_blocks()`, `get_block_spec()`, `validate_node()` |
+| `src/audiolab/graph/validator.py` | Parameter + physical port validation |
+| `src/audiolab/api/render.py` | Agent `render_graph()` wrapper |
+| `src/audiolab/api/compare.py` | Agent `compare_audio()` wrapper |
 | `examples/piano/minimal_A4_note.json` | Minimal decomposed piano-note graph |
 | `docs/*.md` | Migration-facing documentation |
-| `tests/dsp_lab/test_*_migration*.py` | Registry, validation, render, compare tests |
+| `tests/audiolab/test_*_migration*.py` | Registry, validation, render, compare tests |
 
 ## Current architecture summary
 
-- **Package:** `audiolab` (import `dsp_lab`)
+- **Package:** `audiolab` (import `audiolab`)
 - **Graph JSON:** schema version `0.1` — `GraphSpec` with `blocks`, `connections`, `inputs`, `probes`
 - **Runtime port kinds:** `audio`, `control`, `event` (unchanged for backward compatibility)
 - **Metadata port kinds:** `signal`, `control`, `event`, `physical`, `wave`
-- **Block count:** current generated count is in `docs/dsp_lab/blocks.md`
+- **Block count:** current generated count is in `docs/audiolab/blocks.md`
 - **Render path:** `load_graph` → `validate_graph` → `compile_graph` → `render_graph` (whole-buffer offline)
 - **PASP piano:** 14 `PASP*` blocks backed by `physics/pasp_piano/`; strings are modal, not delay-line waveguides
 - **Legacy piano:** 23 blocks in `blocks/piano.py` (tiers 1–2 phenomenological / waveguide)

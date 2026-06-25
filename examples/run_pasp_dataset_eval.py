@@ -28,7 +28,7 @@ def main() -> int:
     parser.add_argument("--no-progress", action="store_true")
     args = parser.parse_args()
 
-    from dsp_lab.evaluation.run_pasp_dataset import main as run_main
+    from audiolab.evaluation.run_pasp_dataset import main as run_main
 
     argv = [
         "--dataset",

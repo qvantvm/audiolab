@@ -4,7 +4,7 @@ Audiolab is a **physical audio computation framework**, not a piano-only engine.
 
 Related: [roadmap.md](roadmap.md) (execution status), [object_based_physical_modeling.md](object_based_physical_modeling.md) (graph semantics), [solver_implementation_guide.md](solver_implementation_guide.md) (implementation checklist), [physical_ports.md](physical_ports.md) (port kinds).
 
-Machine-readable family registry: `PHYSICAL_PRIMITIVE_FAMILIES` in [`src/dsp_lab/blocks/metadata.py`](../src/dsp_lab/blocks/metadata.py) and [`tests/fixtures/roadmap/physical_solver_roadmap.json`](../tests/fixtures/roadmap/physical_solver_roadmap.json).
+Machine-readable family registry: `PHYSICAL_PRIMITIVE_FAMILIES` in [`src/audiolab/blocks/metadata.py`](../src/audiolab/blocks/metadata.py) and [`tests/fixtures/roadmap/physical_solver_roadmap.json`](../tests/fixtures/roadmap/physical_solver_roadmap.json).
 
 ## Two orthogonal tier systems
 
@@ -39,7 +39,7 @@ Each primitive carries a **computation maturity** label:
 
 ### L3 — Coupled solvers
 
-Multi-object physics: hammer–string, bow–string, lip–bore, membrane–shell, bridge–body. Implemented as `PhysicalSolver` plugins under `src/dsp_lab/graph/physical/solvers/`.
+Multi-object physics: hammer–string, bow–string, lip–bore, membrane–shell, bridge–body. Implemented as `PhysicalSolver` plugins under `src/audiolab/graph/physical/solvers/`.
 
 ### L4 — Instrument templates
 

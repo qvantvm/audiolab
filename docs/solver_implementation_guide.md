@@ -40,7 +40,7 @@ class MyPhysicalSolver(PhysicalSolver):
     )
 ```
 
-Register production solvers in `src/dsp_lab/graph/physical/solvers/__init__.py`. Test-only solvers should stay local to tests or explicit test registries.
+Register production solvers in `src/audiolab/graph/physical/solvers/__init__.py`. Test-only solvers should stay local to tests or explicit test registries.
 
 ## Example: Reduced Hammer-String Contact
 
@@ -75,15 +75,15 @@ Required diagnostics:
 
 For a production solver, expect this set:
 
-- `src/dsp_lab/graph/physical/solvers/<solver_name>.py` — solver and compiled subsystem
-- `src/dsp_lab/graph/physical/solvers/__init__.py` — registration
-- `src/dsp_lab/blocks/metadata.py` — `solver_family`, `physical_subsystem_host`, and computation status
+- `src/audiolab/graph/physical/solvers/<solver_name>.py` — solver and compiled subsystem
+- `src/audiolab/graph/physical/solvers/__init__.py` — registration
+- `src/audiolab/blocks/metadata.py` — `solver_family`, `physical_subsystem_host`, and computation status
 - `examples/.../<solver_example>.json` — smallest graph that validates, compiles, and renders
-- `tests/dsp_lab/test_<solver_name>.py` — registration, selection, render, diagnostics, and parameter-effect tests
+- `tests/audiolab/test_<solver_name>.py` — registration, selection, render, diagnostics, and parameter-effect tests
 - `tests/fixtures/roadmap/physical_solver_roadmap.json` — supported solver/example entry
 - `docs/roadmap.md` — status and limitation update
 - `docs/user_manual.md` — capability matrix update when user-facing
-- `src/dsp_lab/blocks/help.py` and `scripts/block_formulas.json` — block catalog/help text
+- `src/audiolab/blocks/help.py` and `scripts/block_formulas.json` — block catalog/help text
 
 Then regenerate:
 

@@ -4,7 +4,7 @@ Canonical status of graph execution in Audiolab: what **computes today**, what i
 
 Related: [physical framework layers](physical_framework.md), [object-based physical modeling](object_based_physical_modeling.md), [solver implementation guide](solver_implementation_guide.md), [agent usage](agent_usage.md), [physical ports](physical_ports.md).
 
-Machine-readable contract: [`tests/fixtures/roadmap/physical_solver_roadmap.json`](../tests/fixtures/roadmap/physical_solver_roadmap.json) (enforced by `tests/dsp_lab/test_physical_solver_roadmap.py`).
+Machine-readable contract: [`tests/fixtures/roadmap/physical_solver_roadmap.json`](../tests/fixtures/roadmap/physical_solver_roadmap.json) (enforced by `tests/audiolab/test_physical_solver_roadmap.py`).
 
 ## Framework layers vs execution tiers
 
@@ -25,7 +25,7 @@ Full `DSPBlock.process()` signal schedule. No physical solver required.
 
 ### Execution T2 — isolated-host physical solvers
 
-Registered in `dsp_lab.graph.physical.solvers` and selected automatically at compile time.
+Registered in `audiolab.graph.physical.solvers` and selected automatically at compile time.
 
 | Solver | Block(s) | Example graph |
 |--------|----------|---------------|
@@ -130,7 +130,7 @@ Each template states what is **not** modeled (violin body, drum shell, brass val
 ## How to extend
 
 1. Tag or add an L2 primitive in `metadata.py` and [physical_framework.md](physical_framework.md).
-2. Implement `PhysicalSolver` under `src/dsp_lab/graph/physical/solvers/` following [solver_implementation_guide.md](solver_implementation_guide.md).
+2. Implement `PhysicalSolver` under `src/audiolab/graph/physical/solvers/` following [solver_implementation_guide.md](solver_implementation_guide.md).
 3. Register in `register_builtin_solvers()` when production-ready.
 4. Add an example graph under `examples/piano/`, `examples/violin/`, `examples/drums/`, or `examples/graphs/`.
 5. Update `tests/fixtures/roadmap/physical_solver_roadmap.json` and this document.
