@@ -163,7 +163,27 @@ BLOCK_OVERRIDES: dict[str, str] = {
         ),
         caveat=(
             "This is not a full physical soundboard with wood geometry, ribs, anisotropy, bridge impedance, and radiation. "
-            "It is a useful engineering approximation for early convincing piano-body behavior."
+            "It is a useful engineering approximation for early convincing piano-body behavior. "
+            "Same resonant-coloration mechanism as `ResonanceBank`; see [user manual §Resonant coloration](../docs/user_manual.md#resonant-coloration-and-resonancebank)."
+        ),
+    ),
+    "ResonanceBank": _section(
+        what=(
+            "**Resonant coloration** means the signal keeps its identity while narrow frequency regions are emphasized — "
+            "like the same string sounding warmer through a wooden box. `ResonanceBank` keeps the dry input and adds small "
+            "band-pass resonant copies at default centers 180 Hz, 420 Hz, and 980 Hz."
+        ),
+        why=(
+            "A bare string or excitation path often sounds thin and direct. A downstream resonance bank adds body-like "
+            "warmth and register color without replacing the source signal."
+        ),
+        how=(
+            "Think `output = dry + Σ gain × bandpass(x)` at each listed frequency. Tune `frequencies` and `gains`; "
+            "Q is fixed at 8 in the implementation (`scipy.signal.iirpeak`). Place it after string or hammer output."
+        ),
+        caveat=(
+            "Subtle T1 DSP approximation, not bidirectional bridge physics. Full theory, bandwidth tables, and biquad "
+            "derivation: [user manual — Resonant coloration](../docs/user_manual.md#resonant-coloration-and-resonancebank)."
         ),
     ),
     "ModalBankBody": _section(

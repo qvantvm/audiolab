@@ -179,6 +179,7 @@ Audiolab provides the synthesis, evaluation, calibration, and headless autoresea
 |------------|-------|
 | Follow a hands-on tutorial | [Part 3 — Tutorials](#part-3--tutorials) |
 | Understand graphs and execution tiers | Part 1 below · [architecture.md](architecture.md) · [object_based_physical_modeling.md](object_based_physical_modeling.md) |
+| Learn resonant coloration and `ResonanceBank` | [§3 — Resonant coloration](#resonant-coloration-and-resonancebank) |
 | See what renders today vs what is planned | [Current capability matrix](#current-capability-matrix) · [roadmap.md](roadmap.md) |
 | Render my first WAV | [Tutorial 1](#tutorial-1--beginner-your-first-piano-note) · [minimal_piano_note.md](minimal_piano_note.md) |
 | Author or validate graphs | Part 2 §3 · [graph_schema.md](graph_schema.md) · [cli.md](audiolab/cli.md) |
@@ -356,6 +357,236 @@ This is not a full stiff-string PDE or hammer/string/bridge solve. It is a produ
 ### Modal body (T2)
 
 `ModalBankBodySolver` filters the string output through a bank of resonators (`frequencies`, `gains`, `mix`). It is **signal-fed**: the string and body connect via an ordinary audio edge, not a bidirectional mechanical port. Two T2 solvers in one graph means two isolated-host subsystems connected by T1 signal routing between them.
+
+### Resonant coloration and `ResonanceBank` {#resonant-coloration-and-resonancebank}
+
+A **resonant coloration** is when a sound is changed because some frequencies are naturally emphasized more than others.
+
+Imagine you play the same string sound through different objects:
+
+```text
+bare string signal        → thin, direct, synthetic
+string through wooden box → warmer, fuller, “instrument-like”
+string through metal tube → nasal, ringing, metallic
+string in a room          → spacious, boomy, echo-like
+```
+
+The original sound may be the same, but the object it passes through has **resonances**: frequencies it likes to vibrate at.
+
+So **resonant coloration** means:
+
+> The signal keeps its identity, but its tone is shaped by added resonant peaks.
+
+For `ResonanceBank`, the block:
+
+```text
+keeps the original audio,
+then adds small resonant boosts at 180 Hz, 420 Hz, and 980 Hz (defaults).
+```
+
+That can make the sound feel more like it passed through an instrument body.
+
+A simple analogy:
+
+```text
+Voice with no coloration:
+"ah" recorded very close to the mouth
+
+Voice with resonant coloration:
+"ah" spoken inside a wooden box, bathroom, guitar body, or metal pipe
+```
+
+The words are the same, but the **tone** changes.
+
+In audio terms, resonant coloration affects things like:
+
+```text
+warmth     → often low/mid resonances
+boxiness   → often 200–500 Hz resonances
+nasality   → often 700–1200 Hz resonances
+brightness → higher-frequency resonances
+```
+
+“Coloration” here does **not** mean visual color. It means **timbre shaping**: changing the character of the sound.
+
+#### What `ResonanceBank` computes
+
+Yes: **the block amplifies the input spectrum around selected center frequencies** by adding narrow band-pass resonant copies of the signal back into the dry signal.
+
+For each resonance:
+
+\[
+y = x + g \cdot \text{BandPass}_{f_0,Q}(x)
+\]
+
+So the block is not replacing the signal. It is doing this:
+
+```text
+output = original signal
+       + small resonant version around 180 Hz
+       + small resonant version around 420 Hz
+       + small resonant version around 980 Hz
+```
+
+The **bandwidth** is controlled by `Q`. For a resonant peak:
+
+\[
+Q = \frac{f_0}{\text{bandwidth}}
+\qquad\Rightarrow\qquad
+\text{bandwidth} = \frac{f_0}{Q}
+\]
+
+In Audiolab, `ResonanceBank` uses **fixed** \(Q = 8\) via `scipy.signal.iirpeak` (not exposed as a block parameter). You tune **`frequencies`** and **`gains`** only.
+
+With defaults \(Q = 8\), approximate bandwidths are:
+
+| Center frequency | Q | Approx. bandwidth |
+| ----------------: | -: | ----------------: |
+| 180 Hz | 8 | 22.5 Hz |
+| 420 Hz | 8 | 52.5 Hz |
+| 980 Hz | 8 | 122.5 Hz |
+
+So the 180 Hz resonance is roughly active around \(180 \pm 11.25\) Hz (approximately 168.75–191.25 Hz). The 420 Hz resonance is approximately 393.75–446.25 Hz. The 980 Hz resonance is approximately 918.75–1041.25 Hz.
+
+Important nuance: that bandwidth describes the **band-pass resonator itself**, usually around its −3 dB points. Since `ResonanceBank` adds that resonant signal back to the dry signal, the final output boost is gentler than a pure filter peak.
+
+At the exact resonant frequency, assuming ideal phase alignment, the boost is roughly:
+
+\[
+20 \log_{10}(1 + g)
+\]
+
+With default gains:
+
+| Frequency | Gain `g` | Approx. max boost |
+| --------: | -------: | ----------------: |
+| 180 Hz | 0.08 | ≈ 0.67 dB |
+| 420 Hz | 0.05 | ≈ 0.42 dB |
+| 980 Hz | 0.03 | ≈ 0.26 dB |
+
+This specific `ResonanceBank` is **subtle**. It does not radically reshape the signal. It adds small body-like resonant emphasis around those frequencies.
+
+In plain terms:
+
+```text
+Q controls width (fixed at 8 in code today).
+gain controls strength (parameter: gains).
+frequency controls where the coloration happens (parameter: frequencies).
+```
+
+Lower `Q` (for example `Q = 2`) would mean broad coloration. Higher `Q` (for example `Q = 30`) would mean narrow ringing resonance.
+
+#### Signal-flow and implementation
+
+Given input \(x[n]\), `ResonanceBank` is a **parallel bank of resonant IIR filters**, then mixes their outputs back with the dry signal:
+
+\[
+y[n] = x[n] + \sum_k g_k \, r_k[n]
+\]
+
+where each \(r_k[n]\) is the output of a resonant band-pass filter centered at \(f_k\):
+
+\[
+r_k[n] = \text{IIRPeak}_{f_k,Q}(x[n])
+\]
+
+For the default example:
+
+\[
+y[n] = x[n] + 0.08\, r_{180}[n] + 0.05\, r_{420}[n] + 0.03\, r_{980}[n]
+\]
+
+A standard second-order resonator is implemented as a **biquad**:
+
+\[
+r[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 r[n-1] - a_2 r[n-2]
+\]
+
+Each resonance has its own filter state:
+
+```text
+x[n] ───────────────┬──────────────────────────────→ + ─→ y[n]
+                    │
+                    ├─ IIRPeak 180 Hz, Q=8 ─ ×0.08 ┤
+                    │
+                    ├─ IIRPeak 420 Hz, Q=8 ─ ×0.05 ┤
+                    │
+                    └─ IIRPeak 980 Hz, Q=8 ─ ×0.03 ┘
+```
+
+One common coefficient recipe:
+
+\[
+\omega_0 = 2\pi \frac{f_0}{f_s}, \quad
+\alpha = \frac{\sin(\omega_0)}{2Q}
+\]
+
+For a band-pass resonator: \(b_0 = \alpha\), \(b_1 = 0\), \(b_2 = -\alpha\), \(a_0 = 1 + \alpha\), \(a_1 = -2\cos(\omega_0)\), \(a_2 = 1 - \alpha\), then normalize \(b_i \leftarrow b_i/a_0\), \(a_1 \leftarrow a_1/a_0\), \(a_2 \leftarrow a_2/a_0\).
+
+In code, `ResonanceBank` in `src/audiolab/blocks/body.py` calls `signal.iirpeak(freq, 8.0, fs=sample_rate)` for each \((f_k, g_k)\) pair and accumulates `out += gain * lfilter(b, a, audio)`.
+
+**Related blocks** (`SoundboardModalBank`, `SympatheticResonanceBank`, `DuplexScaleResonance`) inherit the same computation with different default frequency/gain tables.
+
+**Caveats:** This is T1 DSP body coloration downstream of the string, not bidirectional bridge impedance coupling. It is a practical approximation, not a solved soundboard plate or radiation model.
+
+#### Appendix: reference Python structure
+
+Pedagogical reference (not the production implementation):
+
+```python
+import math
+
+class BiquadBandpass:
+    def __init__(self, f0, Q, fs):
+        w0 = 2 * math.pi * f0 / fs
+        alpha = math.sin(w0) / (2 * Q)
+
+        b0 = alpha
+        b1 = 0.0
+        b2 = -alpha
+        a0 = 1.0 + alpha
+        a1 = -2.0 * math.cos(w0)
+        a2 = 1.0 - alpha
+
+        self.b0 = b0 / a0
+        self.b1 = b1 / a0
+        self.b2 = b2 / a0
+        self.a1 = a1 / a0
+        self.a2 = a2 / a0
+
+        self.x1 = 0.0
+        self.x2 = 0.0
+        self.y1 = 0.0
+        self.y2 = 0.0
+
+    def process_sample(self, x):
+        y = (
+            self.b0 * x
+            + self.b1 * self.x1
+            + self.b2 * self.x2
+            - self.a1 * self.y1
+            - self.a2 * self.y2
+        )
+        self.x2 = self.x1
+        self.x1 = x
+        self.y2 = self.y1
+        self.y1 = y
+        return y
+
+
+class ResonanceBank:
+    def __init__(self, frequencies, gains, Q, fs):
+        self.filters = [BiquadBandpass(f0=f, Q=Q, fs=fs) for f in frequencies]
+        self.gains = gains
+
+    def process_sample(self, x):
+        y = x
+        for g, filt in zip(self.gains, self.filters):
+            y += g * filt.process_sample(x)
+        return y
+```
+
+That memory (\(x[n-1], x[n-2], r[n-1], r[n-2]\)) is what creates short ringing / resonance after energy appears near that frequency.
 
 ### Hosted piano coupling prototypes (T2/T4-style)
 

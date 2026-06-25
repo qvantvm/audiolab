@@ -42,7 +42,7 @@ Classification: `piano_specific` or `legacy` in registry metadata.
 
 | Block | Role |
 |-------|------|
-| `SoundboardModalBank`, `ResonanceBank` | Modal body resonances |
+| `SoundboardModalBank`, `ResonanceBank` | Modal body resonances — see [user manual §Resonant coloration](user_manual.md#resonant-coloration-and-resonancebank) for `ResonanceBank` theory |
 | `SympatheticResonanceBank`, `DuplexScaleResonance` | Sympathetic / duplex |
 | `SoundboardConvolution` | Synthetic body IR |
 | `CabinetRadiation`, `MicPositionFilter` | Radiation / mic |

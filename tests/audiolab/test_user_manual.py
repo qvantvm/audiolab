@@ -50,6 +50,17 @@ def test_user_manual_has_core_sections():
     assert "audiolab/guide.md" in text
 
 
+def test_user_manual_documents_resonant_coloration():
+    text = USER_MANUAL.read_text(encoding="utf-8")
+    assert "resonant coloration" in text.lower()
+    assert "ResonanceBank" in text
+    assert "Q = 8" in text
+    assert "180 Hz" in text
+    assert "420 Hz" in text
+    assert "980 Hz" in text
+    assert "{#resonant-coloration-and-resonancebank}" in text
+
+
 def test_user_manual_has_three_tutorials():
     text = USER_MANUAL.read_text(encoding="utf-8")
     assert "## Tutorial 1 — Beginner" in text

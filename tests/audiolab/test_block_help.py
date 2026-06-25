@@ -12,6 +12,16 @@ def test_soundboard_modal_bank_help_explains_modal_approximation():
     assert "vibrating wooden plate" in help_info.explanation_markdown
     assert "resonant filters" in help_info.explanation_markdown
     assert "not a solved plate model" in help_info.explanation_markdown
+    assert "ResonanceBank" in help_info.explanation_markdown
+
+
+def test_resonance_bank_help_links_to_manual():
+    help_info = build_block_help("ResonanceBank")
+
+    assert help_info is not None
+    assert "resonant coloration" in help_info.explanation_markdown.lower()
+    assert "user_manual" in help_info.explanation_markdown
+    assert "180" in help_info.explanation_markdown
 
 
 def test_connection_help_resolves_audio_port_kinds():

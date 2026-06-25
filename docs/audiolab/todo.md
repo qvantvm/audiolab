@@ -2,6 +2,8 @@ You already have a **surprisingly complete single-note piano chain** for the cur
 
 `MidiToFrequency` → `HammerExcitation` → `StiffStringModal` → body (`BodyEQ` / `ResonanceBank` / `SympatheticResonanceBank`) → `SustainPedalDamping` → `Output`
 
+For what **resonant coloration** means and how `ResonanceBank` works, see [user_manual.md §Resonant coloration](../user_manual.md#resonant-coloration-and-resonancebank).
+
 Plus hammer variants (`HammerVelocityMapper`, `NonlinearHammer`, `HammerFeltFilter`), string extras (`MultiStringUnison`, `StringDispersion`, `String1D`), and `ParameterCurve` for note-dependent decay.
 
 For **pilot-panel calibration** (one note, fixed velocity/pedal, whole-buffer render), you're not blocked on missing blocks—you're blocked on **tuning and graph composition**.
