@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 import pyqtgraph as pg
-from PyQt6.QtCore import QRectF
-from PyQt6.QtWidgets import QLabel, QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtWidgets import QLabel, QStackedWidget, QTabWidget, QVBoxLayout, QWidget
+
+from audiolab.app.busy_indicator import BusyIndicator
 from scipy import signal
 
 from audiolab.app.colors import PANEL_BG_CONTENT, PANEL_FG
@@ -45,11 +47,36 @@ class MetricsPanel(QWidget):
             icon_size=18,
         )
 
+        self._busy_message = QLabel("Rendering audio…")
+        self._busy_message.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._busy_indicator = BusyIndicator(size=36)
+        self._busy_panel = QWidget()
+        busy_layout = QVBoxLayout(self._busy_panel)
+        busy_layout.setContentsMargins(0, 0, 0, 0)
+        busy_layout.addStretch(1)
+        busy_layout.addWidget(self._busy_indicator, 0, Qt.AlignmentFlag.AlignHCenter)
+        busy_layout.addSpacing(8)
+        busy_layout.addWidget(self._busy_message, 0, Qt.AlignmentFlag.AlignHCenter)
+        busy_layout.addStretch(1)
+        self._content_stack = QStackedWidget()
+        self._content_stack.addWidget(self._nav)
+        self._content_stack.addWidget(self._busy_panel)
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self._nav)
+        layout.addWidget(self._content_stack)
+
+    def set_busy(self, busy: bool, message: str = "Rendering audio…") -> None:
+        self._busy_message.setText(message)
+        if busy:
+            self._busy_indicator.start()
+            self._content_stack.setCurrentWidget(self._busy_panel)
+            return
+        self._busy_indicator.stop()
+        self._content_stack.setCurrentWidget(self._nav)
 
     def set_render(self, audio: np.ndarray, sample_rate: int, probes: dict[str, object]) -> None:
+        self.set_busy(False)
         self.waveform.clear()
         display_audio = _display_mono(audio)
         x = np.arange(display_audio.size) / sample_rate

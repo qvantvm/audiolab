@@ -44,6 +44,8 @@ from audiolab.app.panel_nav_icons import (
     render_icon,
     validation_icon,
 )
+from audiolab.app.loading_overlay import LoadingOverlay
+from audiolab.app.task_runner import BackgroundTaskRunner
 from audiolab.app.theme import ensure_app_theme
 from audiolab.app.validation_panel import ValidationPanel
 from audiolab.audio.io import save_wav
@@ -64,6 +66,9 @@ class MainWindow(QMainWindow):
         self.calibration_reference_root: Path | None = None
         self.audio_output = None
         self.audio_player = None
+        self._toolbar: QToolBar | None = None
+        self._loading_overlay: LoadingOverlay | None = None
+        self._task_runner: BackgroundTaskRunner | None = None
         self.graph_view = GraphView()
         self.inspector = InspectorPanel()
         self.help_panel = HelpPanel()
@@ -79,6 +84,7 @@ class MainWindow(QMainWindow):
         self.connections.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
 
         self._build_layout()
+        self._init_task_runner()
         self._init_audio_player()
         if not self._embedded:
             self._build_toolbar()
@@ -110,23 +116,51 @@ class MainWindow(QMainWindow):
         self._log("Graph valid" if result.valid else "Graph has validation errors")
 
     def render_current(self) -> None:
-        if not self.document:
+        if not self.document or self._task_runner is None:
+            return
+        if self._task_runner.is_busy():
             return
         result = self.document.validate()
         self.validation_panel.set_result(result)
         if not result.valid:
             self._error("Cannot render invalid graph")
             return
-        try:
-            self.last_render = render_graph(self.document.graph)
-            self.metrics_panel.set_render(self.last_render.audio, self.last_render.sample_rate, self.last_render.probes)
-            label = "unsaved in-memory graph" if self.document.dirty else str(self.document.path or "in-memory graph")
+        graph = self.document.graph
+        label = "unsaved in-memory graph" if self.document.dirty else str(self.document.path or "in-memory graph")
+        self._log(f"Rendering {label}…")
+        self.metrics_panel.set_busy(True, "Rendering audio…")
+        self._set_long_task_enabled(False)
+
+        def task() -> RenderResult:
+            return render_graph(graph)
+
+        def on_finished(render_result: RenderResult) -> None:
+            self.last_render = render_result
+            self.metrics_panel.set_busy(False)
+            self.metrics_panel.set_render(
+                render_result.audio,
+                render_result.sample_rate,
+                render_result.probes,
+            )
+            self._set_long_task_enabled(True)
             self._log(f"Rendered {label}")
-        except Exception as exc:
-            self._error(str(exc))
+
+        def on_failed(message: str) -> None:
+            self.metrics_panel.set_busy(False)
+            self._set_long_task_enabled(True)
+            self._error(message)
+
+        self._task_runner.run(
+            label="Rendering audio…",
+            fn=task,
+            on_finished=on_finished,
+            on_failed=on_failed,
+        )
 
     def calibrate_current(self) -> None:
-        if not self.document:
+        if not self.document or self._task_runner is None:
+            return
+        if self._task_runner.is_busy():
             return
         result = self.document.validate()
         self.validation_panel.set_result(result)
@@ -152,8 +186,10 @@ class MainWindow(QMainWindow):
         reference_root = self._resolve_calibration_reference_root(graph_path)
         out_dir = graph_path.parent
         self._log(f"Calibrating {graph_path.name} (reference root: {reference_root})")
+        self.metrics_panel.set_busy(True, "Calibrating graph…")
+        self._set_long_task_enabled(False)
 
-        try:
+        def task() -> dict[str, object]:
             from audiolab.experiments.calibration import run_calibration_cycle
 
             cal_result = run_calibration_cycle(
@@ -161,41 +197,77 @@ class MainWindow(QMainWindow):
                 out_dir=out_dir,
                 reference_root=reference_root,
             )
-        except Exception as exc:
-            self._error(str(exc))
+            calibrated_path = Path(str(cal_result.get("calibrated_graph_path", "")))
+            render_result: RenderResult | None = None
+            if calibrated_path.is_file():
+                calibrated_doc = GraphDocument.load(calibrated_path)
+                render_result = render_graph(calibrated_doc.graph)
+            return {
+                "cal_result": cal_result,
+                "calibrated_path": calibrated_path,
+                "params_path": Path(str(cal_result.get("calibrated_params_path", ""))),
+                "out_dir": out_dir,
+                "render_result": render_result,
+            }
+
+        def on_finished(payload: dict[str, object]) -> None:
+            self.metrics_panel.set_busy(False)
+            self._set_long_task_enabled(True)
+            cal_result = payload["cal_result"]
+            assert isinstance(cal_result, dict)
+            calibrated_path = payload["calibrated_path"]
+            params_path = payload["params_path"]
+            out_dir = payload["out_dir"]
+            render_result = payload["render_result"]
+            assert isinstance(calibrated_path, Path)
+            assert isinstance(params_path, Path)
+            assert isinstance(out_dir, Path)
+            if render_result is not None and not isinstance(render_result, RenderResult):
+                raise TypeError("Expected RenderResult from calibration task")
+
+            best_loss = cal_result.get("best_loss")
+            self._log(f"Calibration finished — best loss {best_loss}")
+            if params_path.is_file():
+                self._log(f"Calibrated params: {params_path}")
+            if calibrated_path.is_file():
+                self._log(f"Calibrated graph: {calibrated_path}")
+                try:
+                    self.document = GraphDocument.load(calibrated_path)
+                    self.inspector.set_document(self.document)
+                    self.help_panel.set_document(self.document)
+                    self._refresh_all()
+                except Exception as exc:
+                    self._error(f"Calibration succeeded but failed to load calibrated graph: {exc}")
+                    return
+
+            if render_result is not None:
+                self.last_render = render_result
+                self.metrics_panel.set_render(
+                    render_result.audio,
+                    render_result.sample_rate,
+                    render_result.probes,
+                )
+                self._log("Rendered calibrated graph for preview")
+            elif calibrated_path.is_file():
+                self._error("Calibration finished but render preview failed")
+
+            render_wav = out_dir / "render.wav"
+            if render_wav.is_file():
+                self._log(f"Render WAV: {render_wav}")
+
+        def on_failed(message: str) -> None:
+            self.metrics_panel.set_busy(False)
+            self._set_long_task_enabled(True)
+            self._error(message)
+
+        if self._task_runner is None:
             return
-
-        best_loss = cal_result.get("best_loss")
-        calibrated_path = Path(str(cal_result.get("calibrated_graph_path", "")))
-        params_path = Path(str(cal_result.get("calibrated_params_path", "")))
-        self._log(f"Calibration finished — best loss {best_loss}")
-        if params_path.is_file():
-            self._log(f"Calibrated params: {params_path}")
-        if calibrated_path.is_file():
-            self._log(f"Calibrated graph: {calibrated_path}")
-            try:
-                self.document = GraphDocument.load(calibrated_path)
-                self.inspector.set_document(self.document)
-                self.help_panel.set_document(self.document)
-                self._refresh_all()
-            except Exception as exc:
-                self._error(f"Calibration succeeded but failed to load calibrated graph: {exc}")
-                return
-
-        try:
-            self.last_render = render_graph(self.document.graph)
-            self.metrics_panel.set_render(
-                self.last_render.audio,
-                self.last_render.sample_rate,
-                self.last_render.probes,
-            )
-            self._log("Rendered calibrated graph for preview")
-        except Exception as exc:
-            self._error(f"Calibration finished but render preview failed: {exc}")
-
-        render_wav = out_dir / "render.wav"
-        if render_wav.is_file():
-            self._log(f"Render WAV: {render_wav}")
+        self._task_runner.run(
+            label="Calibrating graph…",
+            fn=task,
+            on_finished=on_finished,
+            on_failed=on_failed,
+        )
 
     def _ensure_graph_path_for_calibration(self) -> Path | None:
         if not self.document:
@@ -407,8 +479,21 @@ class MainWindow(QMainWindow):
         self.audio_player = QMediaPlayer(self)
         self.audio_player.setAudioOutput(self.audio_output)
 
+    def _init_task_runner(self) -> None:
+        central = self.centralWidget()
+        if central is None:
+            return
+        self._loading_overlay = LoadingOverlay(central)
+        self._task_runner = BackgroundTaskRunner(self._loading_overlay)
+        self._task_runner.setParent(self)
+
+    def _set_long_task_enabled(self, enabled: bool) -> None:
+        if self._toolbar is not None:
+            self._toolbar.setEnabled(enabled)
+
     def _build_toolbar(self) -> None:
         toolbar = QToolBar("Main")
+        self._toolbar = toolbar
         font = QFont()
         font.setPointSize(12)
         toolbar.setFont(font)
